@@ -134,5 +134,10 @@
  "cal.search_slide": "{title}，第 {n} 張投影片",
  "cal.search_nb": "{title}，筆記本",
  "cal.search_in": "在「{title}」中",
- "cal.search_no_class": "不在任何班級"
+ "cal.search_no_class": "不在任何班級",
+ "cal.unit_unsaved": "此單元有尚未儲存的變更。",
+ "cal.unit_discard": "捨棄變更",
+ "cal.keep_editing": "繼續編輯",
+ "cal.unit_saved_away": "已儲存你對 {name} 的變更。",
+ "cal.untitled_unit": "未命名單元"
 }

@@ -68,6 +68,8 @@
 .roster-ta{width:100%;font-family:inherit}
 .cp-fld{display:block;margin:14px 0 6px}
 .cp-fld .lab{display:block;font-size:var(--t2);font-weight:500;margin-bottom:6px}
+/* Rubric in New / Edit assignment and the card's Bring in my rubric… (class/rubricin.jsx) */
+.rubup .rurow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0 4px}.rubup p{margin:4px 0}.rubup .rugot{margin-top:8px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r2)}.rubup .rurows{margin:4px 0 8px;padding-left:20px}.rubup .rurows li{margin:2px 0}.rubup .cb{display:flex;margin:4px 0}
 .mvlist{list-style:none;margin:0;padding:0}
 @media (max-width:760px){
   .pgrid{grid-template-columns:minmax(0,1fr)}
@@ -555,6 +557,7 @@ button.seat[data-n]:hover{border-color:var(--acc)}
 .exspics{display:flex;flex-direction:column;gap:12px;align-items:center}
 .exspics img{width:calc(var(--exz,1) * min(900px,92vw));max-width:none}
 .exsnote{display:flex;gap:8px;align-items:flex-start;max-width:900px;margin:0;font-size:var(--t4);line-height:1.4}
+.wltrend{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0}
 .wltime{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
 .wltime li{display:flex;gap:12px;align-items:flex-start;padding-left:10px;border-left:3px solid var(--line)}
 .wltime li.w{border-left-color:var(--warn)}
@@ -565,6 +568,8 @@ button.seat[data-n]:hover{border-color:var(--acc)}
 .wlstrip img,.wlstrip .exph{width:120px;height:90px;object-fit:cover;object-position:top;border:1px solid var(--line);border-radius:var(--r2)}
 .wlkey summary{cursor:pointer;font-size:var(--t2);color:var(--mute)}
 .wlkey ul{margin:6px 0 0;padding-left:18px;font-size:var(--t2)}
+/* an assignment's Examples tab (AsgExamples) */
+.excard.exnone{justify-content:center;border-style:dashed;background:none;color:var(--mute);text-align:center;padding:16px}.exfrom{display:flex;gap:4px;align-items:center;margin:0}.asgex .exgroup h3{display:flex;gap:6px;align-items:center}
 @media (max-width:700px){.exgrid{grid-template-columns:1fr 1fr}.exbar .exfind{max-width:none}}
 /* Use as an example and a screenshot kept (exsave.jsx) */
 .esuse{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:18px}
@@ -573,7 +578,7 @@ button.seat[data-n]:hover{border-color:var(--acc)}
 .espg{position:relative;touch-action:none}
 .espg>span{position:absolute;right:6px;bottom:6px;background:var(--s);padding:0 4px;border-radius:var(--r1)}
 .espg canvas{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:var(--r2);background:#fff}
-.espg.part canvas{cursor:crosshair}
+.espg canvas{cursor:crosshair}.escrop.cover{border:0;background:rgba(17,17,17,.75)}.estags{display:flex;flex-wrap:wrap;gap:6px}
 .escrop{position:absolute;border:2px solid var(--acc);background:var(--acc-ring);pointer-events:none}
 .esside{display:flex;flex-direction:column;gap:12px}
 @media (max-width:700px){.esuse{grid-template-columns:1fr;min-width:0}}
@@ -646,3 +651,24 @@ dialog.dlg:has([data-wl-ask]){width:min(760px,calc(100vw - 32px));margin-top:6vh
 .cp-ch .rng{fill:color-mix(in oklab,var(--mute) 35%,transparent)}.cp-ch .iqr{fill:color-mix(in oklab,var(--acc) 55%,var(--s))}.cp-ch .mid{stroke:var(--ink);stroke-width:2}
 .chleg{display:flex;gap:16px;flex-wrap:wrap;font-size:var(--t1);color:var(--mute);margin-top:6px}.chleg i{display:inline-block;width:14px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle}
 .rpcuts{margin:8px 0 12px;align-items:center}.rpcuts input{width:5.5em}
+/* MYP charts (class/charts-myp.jsx): one stacked bar per criterion, a segment per band */
+.cp-ibstacks{display:grid;gap:6px;max-width:640px}
+.cp-ibstack{display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr) 44px;gap:10px;align-items:center;font-size:var(--t2)}
+.cp-ibstack>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cp-ibstack .num{text-align:right;font-weight:500;font-variant-numeric:tabular-nums}
+.ibsegs{display:flex;height:18px;border-radius:4px;overflow:hidden;background:var(--g100)}
+.ibseg{display:flex;align-items:center;justify-content:center;font-style:normal;font-size:10.5px;min-width:14px;color:var(--ink)}
+.ibseg.s0{background:var(--g200,var(--line))}
+.ibseg.s1{background:color-mix(in oklab,var(--acc) 18%,var(--s))}
+.ibseg.s2{background:color-mix(in oklab,var(--acc) 40%,var(--s))}
+.ibseg.s3{background:color-mix(in oklab,var(--acc) 65%,var(--s));color:var(--white)}
+.ibseg.s4{background:var(--acc);color:var(--white)}
+.ibseg.sn{background:repeating-linear-gradient(45deg,var(--g100),var(--g100) 3px,var(--s) 3px,var(--s) 6px);color:var(--mute)}
+.cp-ibtasks{border-collapse:collapse;font-size:var(--t2)}
+.cp-ibtasks th,.cp-ibtasks td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.cp-ibtasks thead th{font-weight:500;color:var(--mute)}
+.cp-ibtasks tbody th{font-weight:400}
+.cp-ibtasks tr.fm th{color:var(--mute)}
+[data-myp-often] .cp-band{grid-template-columns:minmax(0,220px) 1fr auto}
+[data-myp-often] .warn{color:var(--warn);font-weight:500}
+@media (max-width:720px){.cp-ibstack{grid-template-columns:minmax(0,90px) minmax(0,1fr) 36px}}

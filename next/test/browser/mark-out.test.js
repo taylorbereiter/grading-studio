@@ -434,7 +434,108 @@ test('share with your assistant (src/app/claude.js): from Insights, a ZIP of pap
   await ctx.close();
 });
 
-test('B-066: an assignment\'s views each have an address: grades/sheet opens the Grade sheet, insights/consistency opens Consistency, and examples opens Library > Examples for that assignment', async () => {
+// Stage 8, slice D: the Return tab's second-level controls (rebuild/gaps/D.md). D-030 D-031 the check before returning, D-029 who got
+// theirs early, D-032 the options' summary and their open state, D-033 D-034 the mark key's hint and its link, D-035 the files an
+// export left out, A-020 A-021 A-022 Ask your assistant, A-023 Rescans, A-081 Mark as returned after leaving the tab. Made-up students.
+test('Return (D-029 D-030 D-031 D-032 D-033 D-034 D-035 A-020 A-021 A-022 A-023 A-081): the check before returning, early names, options summary, mark key, failed files, assistant and rescan cards; the current app reads the same', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const old = await mainSide(ctx, errors);
+  // main's page: one paper sent early, one page flagged for a rescan, and main's own check for comparison
+  const m0 = await page(ctx, errors);
+  await m0.goto(srv.url); await appReady(m0);
+  await m0.evaluate(id => window.__gs.reopenKept(id), old.id);
+  await m0.waitForFunction(() => window.__gs.state().batch, { timeout: 60000 });
+  const mainCheck = await m0.evaluate(async () => {
+    const G = window.__gs, b = G.state().batch;
+    b.students[2].grade.sent = Date.now() - 60000;
+    const f2 = b.students[2].files[0]; (f2.marks[0] ||= []).push({ t: 'stamp', k: 'check', x: 300, y: 300, size: 16, color: '#1F8A4C' });
+    const f = b.students[0].files[0]; f.sc = { ...(f.sc || {}), 0: { ...((f.sc || {})[0] || {}), re: 1 } };
+    G.saveNow(); await G.scanAll();
+    const c = G.exportCheck(); return Object.fromEntries(Object.entries(c).map(([k, v]) => [k, v.map(o => o.i)]));
+  });
+  await m0.close();
+  const p = await page(ctx, errors), url = srv.url + 'next/#/mark/' + encodeURIComponent(old.id) + '/return';
+  await p.goto(url);
+  await p.waitForSelector('[data-xcheck]', { timeout: 60000 });
+  // D-030: the same groups as the current app's check, the same students in each
+  const now = await p.evaluate(() => Object.fromEntries(Object.entries(window.__mark.out.check()).map(([k, v]) => [k, v.map(o => o.i)])));
+  assert.deepEqual(now, mainCheck, 'the same things to look at as the current app');
+  const n = Object.values(now).reduce((a, v) => a + v.length, 0);
+  assert.ok(n > 0, 'something to look at (unscored papers)');
+  assert.equal(await p.$eval('[data-xcheck]', e => e.dataset.xcheck), String(n));
+  assert.match(await p.$eval('#xCheck summary', e => e.textContent), new RegExp(n + ' things? to look at before you return these'));
+  await p.click('#xCheck summary');
+  const first = now.unfinished[0];
+  await p.click('[data-group="unfinished"] [data-chk="' + first + '"]');
+  await p.waitForFunction(i => window.__mark.state().cur === i && !/\/return/.test(location.hash), { timeout: 30000 }, first);
+  // D-029: who got theirs early, by name, and what the box does
+  await p.goto(url); await p.waitForSelector('[data-xearly]', { timeout: 60000 });
+  const early = await p.evaluate(() => ({ say: document.querySelector('[data-xearly]').textContent, who: window.__mark.state().batch.students[2].key }));
+  assert.ok(early.say.includes(early.who), 'the early student is named');
+  // D-032: the options say what's on before they're opened, and stay open once opened, in either app (gs.xopts)
+  await p.waitForFunction(() => /^Options: /.test(document.querySelector('[data-xoptssay]').textContent), { timeout: 30000 });
+  const sum = await p.$eval('[data-xoptssay]', e => e.textContent);
+  assert.match(sum, /^Options: /); assert.match(sum, /student folders/); assert.match(sum, /grade sheet/);
+  assert.equal(await p.$eval('details.xopts', e => e.open), false);
+  await p.click('[data-xoptssay]');
+  await p.waitForFunction(() => localStorage.getItem('gs.xopts') === 'true');
+  await p.reload(); await p.waitForSelector('[data-xoptssay]', { timeout: 60000 });
+  assert.equal(await p.$eval('details.xopts', e => e.open), true, 'remembered open');
+  // D-033: how many files get a mark key (one file has a proofreading mark); D-034 Change what they mean opens Settings, Marking at the key
+  await p.waitForSelector('[data-xkeysay]', { timeout: 30000 });
+  assert.match(await p.$eval('[data-xkeysay]', e => e.textContent), /files? gets? one|The file gets one/);
+  await p.click('[data-mkey]');
+  await p.waitForFunction(() => /#\/settings\/marking/.test(location.hash) && document.querySelector('[data-sgmk]'), { timeout: 30000 });
+  // A-020 A-021 A-022: Ask your assistant opens Share at papers, marks only, and Bring back
+  await p.goto(url); await p.waitForSelector('[data-rtask="marks"]', { timeout: 60000 });
+  await p.click('[data-rtask="marks"]');
+  await p.waitForSelector('dialog[open] [data-share] .seg [data-v="marks"][aria-checked="true"]', { timeout: 30000 });
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('dialog[open] [data-share]'));
+  await p.click('[data-rtask="papers"]');
+  await p.waitForSelector('dialog[open] [data-share] .seg [data-v="papers"][aria-checked="true"]', { timeout: 30000 });
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('dialog[open] [data-share]'));
+  await p.click('[data-rtask="back"]');
+  await p.waitForSelector('dialog[open] [data-bbtext]', { timeout: 30000 });
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('dialog[open] [data-bbtext]'));
+  // A-023: the flagged page, and Show lists it; picking it opens that paper on the Mark tab
+  await p.waitForSelector('#rtRescan', { timeout: 30000 });
+  assert.match(await p.$eval('#rtRescan', e => e.textContent), /1 page is flagged for a rescan/);
+  await p.click('[data-rtask="rescan"]');
+  await p.waitForSelector('[data-rsgo="0"]', { timeout: 30000 });
+  await p.click('[data-rsgo="0"]');
+  await p.waitForFunction(() => window.__mark.state().cur === 0 && !/\/return/.test(location.hash), { timeout: 30000 });
+  // D-035: a file that can't be drawn is named in a list that stays until closed
+  await p.goto(url); await p.waitForSelector('[data-go="zip"]', { timeout: 60000 });
+  await p.evaluate(() => { const st = window.__mark.state().batch.students[0]; st.files[0].numPages = 0; st.files[0].data = new Uint8Array([37, 80, 68, 70, 45, 120]); });
+  const dl = await catchDownloads(p);
+  await dl.next(() => p.click('[data-go="zip"]'));
+  await p.waitForSelector('#xFails li', { timeout: 60000 });
+  assert.match(await p.$eval('#xFails', e => e.textContent), /files? (isn’t|aren’t) in this export/);
+  await new Promise(r => setTimeout(r, 4500));
+  assert.ok(await p.$('#xFails'), 'still there after a toast would have gone');
+  await p.click('[data-xfailsclose]'); await p.waitForFunction(() => !document.querySelector('#xFails'));
+  // A-081: start an export, leave for the Mark tab, and the toast offers Mark as returned
+  await p.goto(url); await p.waitForSelector('[data-go="zip"]', { timeout: 60000 });
+  await p.evaluate(() => { const b = window.__mark.state().batch; delete b.returned; });
+  await p.click('[data-go="zip"]');
+  await p.evaluate(() => { location.hash = location.hash.replace(/\/return$/, ''); });
+  await p.waitForFunction(() => [...document.querySelectorAll('.toast button')].some(b => b.textContent === 'Mark as returned'), { timeout: 90000 });
+  await p.evaluate(() => [...document.querySelectorAll('.toast button')].find(b => b.textContent === 'Mark as returned').click());
+  await p.waitForFunction(() => (window.__mark.state().batch.returned || {}).ok > 0);
+  await p.evaluate(() => window.__mark.saved());
+  const back = await p.evaluate(() => window.__mark.state().batch.returned);
+  await dl.close(); await p.close();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url); await appReady(m);
+  await m.evaluate(id => window.__gs.reopenKept(id), old.id);
+  await m.waitForFunction(() => window.__gs.state().batch, { timeout: 60000 });
+  assert.deepEqual(await m.evaluate(() => window.__gs.state().batch.returned), back, 'the current app reads the same Returned');
+  assert.equal(await m.evaluate(() => localStorage.getItem('gs.xopts')), 'true');
+  assert.deepEqual(errors.filter(e => !/couldn.t|PDF|page/i.test(e)), []);
+  await ctx.close();
+});
+
+test('B-066: an assignment\'s views each have an address: grades/sheet opens the Grade sheet, insights/consistency opens Consistency, and examples opens the assignment\'s Examples tab', async () => {
   const ctx = await browser.createBrowserContext(), errors = [];
   const m = await page(ctx, errors);
   await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
@@ -448,9 +549,10 @@ test('B-066: an assignment\'s views each have an address: grades/sheet opens the
   await p.waitForSelector('[data-sheet] .gs-tbl', { timeout: 60000 });
   await p.goto(srv.url + 'blank'); await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id) + '/insights/consistency');
   await p.waitForSelector('[data-cons]', { timeout: 60000 });
+  // the assignment's own Examples tab, as the current app's #/a/<id>/examples (D-020)
   await p.goto(srv.url + 'blank'); await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id) + '/examples');
-  await p.waitForFunction(id => location.hash === '#/library/examples/a/' + encodeURIComponent(id), { timeout: 60000 }, id);
-  await p.waitForSelector('[data-examples]', { timeout: 60000 });
+  await p.waitForSelector('[data-asgex]', { timeout: 60000 });
+  assert.equal(await p.evaluate(() => location.hash.split('/').pop()), 'examples', 'stays at its own address');
   assert.deepEqual(errors, []);
   await ctx.close();
 });

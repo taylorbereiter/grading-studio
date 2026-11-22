@@ -83,6 +83,7 @@ export const PARTS = {
   // own like pdf.js (each library is its own chunk, under the any-chunk budget)
   out: () => import('./screens/mark-out.jsx'),
   outEngine: () => import('./mark/out.js'),
+  retcards: () => import('./mark/retcards.jsx'),
   // the Grade sheet on the Grades tab
   sheet: () => import('./mark/sheet.jsx'),
   cons: () => import('./mark/cons.jsx'),
@@ -98,6 +99,8 @@ export const PARTS = {
   pdflib: () => import('pdf-lib'),
   zip: () => import('fflate'),
   h2c: () => import('html2canvas'),
+  // mammoth: a Word paper the app's own reader can't open still becomes pages (mark/out.js wordTools; H-029)
+  mammoth: () => import('mammoth/mammoth.browser.min.js'),
   // the screenshot on the marking screen (S, Alt S)
   snip: () => import('./mark/snip.jsx'),
   // the save layer for marking (students/write.js), loaded with the first save
@@ -106,6 +109,10 @@ export const PARTS = {
   work: () => import('./screens/class-work.jsx'),
   // an assignment made, changed or deleted there, and its less common tools (no papers, forget, a unit's link)
   asg: () => import('./class/assignment.jsx'),
+  // a rubric brought in for an assignment from its card (New and Edit assignment, the Bring in menu)
+  rubricin: () => import('./class/rubricin.jsx'),
+  // Home's To do card, with the To do engine (app/home/todo-card.jsx)
+  hometodo: () => import('./home/todo-card.jsx'),
   // a class's People and Grades tabs (app/class/), each with the gradebook's engine
   people: () => import('./class/people.jsx'),
   clink: () => import('./class/classlink.jsx'),
@@ -121,6 +128,7 @@ export const PARTS = {
   goals: () => import('./class/goals.jsx'),
   reports: () => import('./class/reports.jsx'),
   sheets: () => import('./class/sheets.jsx'),
+  mypCharts: () => import('./class/charts-myp.jsx'),
   examples: () => import('./class/examples.jsx'),
   exsave: () => import('./class/exsave.jsx'),
   linked: () => import('./class/linked.jsx'),

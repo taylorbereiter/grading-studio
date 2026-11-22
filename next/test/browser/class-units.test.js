@@ -140,7 +140,10 @@ test('Files to match to a roster: outside files matched to the class names, one 
   await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
   await p.click('[data-bring-for="i9"]');
   await p.waitForFunction(() => [...document.querySelectorAll('.pop [role="menuitem"]')].some(e => /match to a roster/.test(e.textContent)));
-  const [ch] = await Promise.all([p.waitForFileChooser(), p.evaluate(() => [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => /match to a roster/.test(e.textContent)).click())]);
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => /match to a roster/.test(e.textContent)).click());
+  // D-002: files or a whole folder first, with what it's for
+  await p.waitForSelector('dialog[open] [data-fof="match"]', { timeout: 30000 });
+  const [ch] = await Promise.all([p.waitForFileChooser(), p.click('dialog[open] [data-pf]')]);
   await ch.accept(files);
   await p.waitForSelector('[data-mr]', { timeout: 30000 });
   assert.equal(await p.$eval('[data-mrcls]', e => e.value), 'c1');
@@ -377,6 +380,198 @@ test('order: cards and units moved, a unit to another class, its plan link; a cl
   assert.deepEqual(back.loose.units, []);
   assert.deepEqual(back.classes.map(c => [c.id, c.units.map(u => [u.id, u.items.map(i => i.id)])]), [placed[1], placed[0]]);
   assert.ok(back.classes[1].units.every(u => u.items.every(i => i.classId === 'c1')));
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// Stage 8 slice D: D-002 a whole folder to match (the Mac app's own folder chooser, D-005, stands in for the browser's), B-009 the
+// Again menu's scan, match and no papers for an assignment with papers, D-028 Find's "Match files to a roster" with no assignment.
+test('Match files (D-002 D-005 D-028 B-009): a whole folder through the Mac app chooser, the Again menu, and Find with no assignment', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  const pdfs = await Promise.all(['Aria Testwell', 'Bram Sample'].map(n => makePaper({ title: n })));
+  await p.evaluateOnNewDocument(b64s => {
+    const bytes = b => Uint8Array.from(atob(b), c => c.charCodeAt(0));
+    window.gsNative = { pickFolder: async () => ({ name: 'Speeches' }), readFolder: async () => ({ name: 'Speeches', files: [{ rel: 'Aria Testwell/speech.pdf', data: bytes(b64s[0]), mtime: 1 }, { rel: 'Bram Sample/speech.pdf', data: bytes(b64s[1]), mtime: 1 }] }) };
+  }, pdfs.map(b => Buffer.from(b).toString('base64')));
+  await p.goto(srv.url + 'blank'); await plant(p, withCard());
+  // D-028: Find's job opens the matcher straight away, with no assignment
+  await p.goto(srv.url + 'next/#/class/c1/work/match');
+  await p.waitForSelector('dialog[open] [data-fof="match"]', { timeout: 60000 });
+  await p.click('dialog[open] [data-pd]');
+  await p.waitForSelector('[data-mr]', { timeout: 30000 });
+  const tags = await p.$$eval('[data-mrrow]', rs => rs.map(r => [r.querySelector('.bf-path').textContent, r.lastElementChild.textContent]));
+  assert.deepEqual(tags, [['Speeches/Aria Testwell/speech.pdf', 'Matched by name'], ['Speeches/Bram Sample/speech.pdf', 'Matched by name']], 'folder names kept, so the names match');
+  await p.click('[data-mrgo]');
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready, { timeout: 60000 });
+  const got = await p.evaluate(() => { const b = window.__mark.state().batch; return { name: b.name, cls: b.classId, have: b.students.filter(s => s.files.length).map(s => s.key).sort() }; });
+  assert.equal(got.name, 'Matched files'); assert.equal(got.cls, 'c1'); assert.deepEqual(got.have, ['Aria Testwell', 'Bram Sample']);
+  // B-009: an assignment with papers: the Again menu has the scan, the match and no papers, as Open other papers… does
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.click('[data-bring-for="i9"]');
+  await p.waitForFunction(() => [...document.querySelectorAll('.pop [role="menuitem"]')].some(e => /match to a roster/.test(e.textContent)));
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => /match to a roster/.test(e.textContent)).click());
+  await p.waitForSelector('dialog[open] [data-fof="match"]', { timeout: 30000 });
+  await p.click('dialog[open] [data-pd]');
+  await p.waitForSelector('[data-mrgo]:not([disabled])', { timeout: 30000 });
+  await p.click('[data-mrgo]');
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready, { timeout: 60000 });
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-again-for="i9"]', { timeout: 60000 });
+  await p.click('[data-again-for="i9"]');
+  await p.waitForSelector('.pop [role="menuitem"]');
+  const items = await p.$$eval('.pop [role="menuitem"]', es => es.map(e => e.textContent));
+  for (const want of [/A scan to split/, /match to a roster/, /No papers/]) assert.ok(items.some(x => want.test(x)), String(want));
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// D-022: an assignment with no papers starts with Videos and partners (src/video.js openStartNotes): a link for one student, a partner
+// picked, their own scores; once the pages open the video is added, the partner gets it and the group is made, as the current app reads.
+test('D-022: No papers with a video and a partner: the pages open with the video added and the group made; the current app reads the same', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, withCard());
+  await p.evaluate(() => new Promise(res => { const r = indexedDB.open('grading-studio-added', 1); r.onupgradeneeded = () => r.result.createObjectStore('files'); r.onsuccess = () => { r.result.close(); res(); }; }));
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await pickItem(p, '[data-bring-for="i9"]', 'presentations or videos');
+  await p.waitForSelector('dialog[open] [data-pv] [data-pvlink="0"]', { timeout: 30000 });
+  assert.match(await p.$eval('dialog[open]', d => d.textContent), /Videos and partners/);
+  const [a, b] = await p.$$eval('[data-pvrow]', rs => rs.slice(0, 2).map(r => r.dataset.pvrow));
+  await p.type('[data-pvlink="0"]', 'https://www.youtube.com/watch?v=abcdefghijk');
+  await p.click('[data-pvp="0"]');
+  await p.waitForSelector(`[data-pvto="${b}"]`);
+  await p.click(`[data-pvto="${b}"]`);
+  await p.click('[data-pvdone]');
+  assert.match(await p.$eval(`[data-pvrow="${b}"]`, e => e.textContent), new RegExp('Same video as: ' + a));
+  await p.evaluate(() => [...document.querySelectorAll('dialog[open] [data-pv] .seg button, dialog[open] [data-pv] [role="radio"]')].find(x => /Their own scores/.test(x.textContent)).click());
+  await p.click('dialog[open] [data-sngo]');
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready, { timeout: 60000 });
+  await p.waitForFunction((a, b) => { const g = window.__mark.state().batch.groups || []; return g.length === 1 && g[0].k[0] === a && g[0].k.includes(b) && g[0].own; }, { timeout: 60000 }, a, b);
+  const files = await p.evaluate((a, b) => [a, b].map(k => window.__mark.state().batch.students.find(s => s.key === k).files.map(f => f.name).sort()), a, b);
+  assert.ok(files[0].includes('Presentation video.url') && files[1].includes('Presentation video.url'), JSON.stringify(files));
+  const id = await p.evaluate(() => window.__mark.state().batch.id);
+  const made = await p.evaluate(() => JSON.parse(JSON.stringify(window.__mark.state().batch.groups)));
+  await p.evaluate(() => window.__mark.saved());
+  await p.close();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url); await appReady(m);
+  await m.evaluate(id => window.__gs.reopenKept(id), id);
+  await m.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
+  assert.deepEqual(await m.evaluate(() => JSON.parse(JSON.stringify(window.__gs.state().batch.groups || []))), made);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// A rubric brought in from the card (src/rubricup.js): a Word rubric's table read for its rows, a PDF with no table kept as the copy
+// to mark on. D-901 B-001: New assignment's Rubric, applied on Save and shared with the group's copies. B-008: Edit assignment's
+// Rubric, to the linked copy too. B-004: Bring in my rubric… on the card's Bring in menu, used at once, then the papers open with it.
+const { makeDocx } = require('../../../test/helpers/fixtures.js');
+const { zipSync, unzipSync, strToU8 } = require('fflate');
+const wordRubric = () => {
+  const cell = t => '<w:tc><w:p><w:r><w:t>' + t + '</w:t></w:r></w:p></w:tc>', row = r => '<w:tr>' + r.map(cell).join('') + '</w:tr>';
+  const tbl = '<w:tbl>' + row(['Criteria', '4', '3', '2', '1']) + row(['Voice', 'Clear and confident', 'Mostly clear', 'Hard to hear', 'Not heard']) + row(['Evidence', 'Strong evidence', 'Some evidence', 'Little evidence', 'None']) + row(['Structure', 'Logical', 'Mostly logical', 'Hard to follow', 'No order']) + '</w:tbl>';
+  return zipSync({ ...unzipSync(makeDocx('x')), 'word/document.xml': strToU8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' + tbl + '</w:body></w:document>') });
+};
+const rubricFile = async (p, file) => { const inp = await p.waitForSelector('dialog[open] input[data-rufile]'); await inp.uploadFile(file); await p.waitForSelector('dialog[open] [data-rugot]', { timeout: 30000 }); };
+const waitCards = async (p, name, ok) => { for (let i = 0; i < 150; i++) { const c = cards(await libOf(p), name); if (ok(c)) return c; await new Promise(r => setTimeout(r, 200)); } throw new Error('the cards called ' + name + ' never changed'); };
+const ticked = (p, sel) => p.$eval(`dialog[open] ${sel} input`, e => e.checked);
+
+test('D-901 B-001 B-008: New and Edit assignment bring in a rubric: a Word rubric\'s rows and a copy for every student, a PDF as the copy only, to the linked copy too; the current app reads the cards', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gs-rub-'));
+  const docx = path.join(dir, 'Speech rubric.docx'), pdf = path.join(dir, 'Plain rubric.pdf');
+  fs.writeFileSync(docx, wordRubric()); fs.writeFileSync(pdf, await makePaper({ title: 'Plain rubric' }));
+  await p.goto(srv.url + 'blank'); await plant(p, linkedSeed());
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-newasg]', { timeout: 60000 });
+  await p.click('[data-newasg]');
+  await p.waitForSelector('dialog[open] [data-asg-dlg]');
+  await p.type('dialog[open] input[data-asg-name]', 'Book talk');
+  assert.match(await p.$eval('dialog[open] [data-rubup]', e => e.textContent), /Not set yet/);
+  await rubricFile(p, docx);
+  const got = await p.$eval('dialog[open] [data-rugot]', e => e.textContent);
+  for (const w of ['Speech rubric.docx', 'Voice', 'Evidence', 'Structure', '4: Clear and confident']) assert.ok(got.includes(w), w + ' in ' + got + errors.join('|'));
+  assert.equal(await ticked(p, '[data-rurows]'), true, 'rows found: Score with these rows is ticked');
+  assert.equal(await ticked(p, '[data-rucopy]'), false);
+  await p.$eval('dialog[open] [data-rucopy] input', e => e.click());
+  await p.click('[data-asg-ok]');
+  let made = await waitCards(p, 'Book talk', c => c.length === 2 && c.every(i => i.setup && i.setup.rubricPage));
+  for (const c of made) {
+    assert.equal(c.setup.mode, 'rubric');
+    assert.deepEqual(c.setup.criteria, ['Voice', 'Evidence', 'Structure']);
+    assert.equal(c.setup.levels[0][4], 'Clear and confident');
+    assert.equal(c.setup.rubricPage.name, 'Speech rubric.docx');
+    assert.equal(c.setup.rubricPos, 'start', 'a Word rubric sits above their work');
+  }
+  assert.ok(await p.evaluate(id => !!localStorage.getItem('gs.rp.' + id), made[0].setup.rubricPage.id), 'the copy to mark on is kept');
+  const id = made[0].id;
+  await p.waitForSelector(`[data-item="${id}"]`);
+
+  // Edit assignment…: what it has now, and a PDF with no table: just the copy, the linked copy too
+  await pickItem(p, `[data-more-for="${id}"]`, '^Edit assignment');
+  await p.waitForSelector('dialog[open] [data-rubup]');
+  assert.match(await p.$eval('dialog[open] [data-rusays]', e => e.textContent), /Rubric rows: Voice · Evidence · Structure.*Speech rubric\.docx/);
+  await rubricFile(p, pdf);
+  assert.ok(await p.$('dialog[open] [data-runo]'), 'no table: says so');
+  assert.equal(await p.$('dialog[open] [data-rurows]'), null);
+  assert.equal(await ticked(p, '[data-rucopy]'), true, 'no rows: the copy is ticked');
+  assert.equal(await p.$eval('dialog[open] [data-asg-also] input', e => e.checked), true);
+  await p.click('[data-asg-ok]');
+  made = await waitCards(p, 'Book talk', c => c.every(i => i.setup.rubricPage.name === 'Plain rubric.pdf'));
+  for (const c of made) { assert.deepEqual(c.setup.criteria, ['Voice', 'Evidence', 'Structure'], 'the rows stay'); assert.equal(c.setup.rubricPos, 'end'); }
+  const lib = await libOf(p);
+  await p.close();
+
+  const m = await page(ctx, errors);
+  await m.goto(srv.url); await appReady(m);
+  assert.deepEqual(cards(await m.evaluate(() => window.__gs.state().lib), 'Book talk'), cards(lib, 'Book talk'));
+  fs.rmSync(dir, { recursive: true, force: true });
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('B-004: Bring in my rubric… from the card\'s Bring in menu, used at once; the papers open with its rows and a copy each; the current app opens them the same', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gs-rub-'));
+  const docx = path.join(dir, 'Speech rubric.docx'); fs.writeFileSync(docx, wordRubric());
+  const papers = ['Aria Testwell speech.pdf', 'Bram Sample speech.pdf'].map(n => path.join(dir, n));
+  for (const f of papers) fs.writeFileSync(f, await makePaper({ title: path.basename(f) }));
+  await p.goto(srv.url + 'blank'); await plant(p, withCard());
+  await p.evaluate(() => new Promise(res => { const r = indexedDB.open('grading-studio-added', 1); r.onupgradeneeded = () => r.result.createObjectStore('files'); r.onsuccess = () => { r.result.close(); res(); }; }));
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await pickItem(p, '[data-bring-for="i9"]', 'Bring in my rubric');
+  await p.waitForSelector('dialog[open] [data-rubup]', { timeout: 30000 });
+  assert.match(await p.$eval('dialog[open]', d => d.textContent), /Rubric for “Speech”/);
+  await rubricFile(p, docx);
+  await p.$eval('dialog[open] [data-rucopy] input', e => e.click());
+  await p.click('dialog[open] [data-ruuse]');
+  await p.waitForFunction(() => !document.querySelector('dialog[open] [data-rubup]'));
+  const [card] = await waitCards(p, 'Speech', c => c[0] && c[0].setup && c[0].setup.rubricPage);
+  assert.deepEqual(card.setup.criteria, ['Voice', 'Evidence', 'Structure']);
+  // the papers come in and open with it
+  await p.click('[data-bring-for="i9"]');
+  await p.waitForSelector('.pop [role="menuitem"]');
+  const [ch] = await Promise.all([p.waitForFileChooser(), p.click('.pop [role="menuitem"]')]);
+  await ch.accept(papers);
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready, { timeout: 60000 });
+  await p.waitForFunction(() => { const s = window.__mark.state(); return s.setup.rubricPage && s.batch.students.filter(st => st.files.length).every(st => st.files.some(f => f.virtual)); }, { timeout: 30000 });
+  const su = await p.evaluate(() => { const s = window.__mark.state().setup; return { criteria: s.criteria, page: s.rubricPage, pos: s.rubricPos }; });
+  assert.deepEqual(su, { criteria: ['Voice', 'Evidence', 'Structure'], page: card.setup.rubricPage, pos: 'start' });
+  const id = await p.evaluate(() => window.__mark.state().batch.id);
+  await p.evaluate(() => window.__mark.saved());
+  await p.close();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url); await appReady(m);
+  await m.evaluate(id => window.__gs.reopenKept(id), id);
+  await m.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
+  assert.deepEqual(await m.evaluate(() => { const s = window.__gs.state().setup; return { criteria: s.criteria, page: s.rubricPage, pos: s.rubricPos }; }), su);
+  fs.rmSync(dir, { recursive: true, force: true });
   assert.deepEqual(errors, []);
   await ctx.close();
 });

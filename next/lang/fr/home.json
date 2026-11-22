@@ -69,5 +69,64 @@
   "one": "Relancer {n} élève pour un travail manquant",
   "other": "Relancer {n} élèves pour un travail manquant"
  },
- "home.plan_tomorrow": "Préparer la leçon de {cls} de demain"
+ "home.plan_tomorrow": "Préparer la leçon de {cls} de demain",
+ "home.look_h": "À vérifier",
+ "home.look_partly": {
+  "one": "{n} copie est notée en partie",
+  "other": "{n} copies sont notées en partie"
+ },
+ "home.look_notkept": "Copies non gardées dans ce navigateur",
+ "home.look_notkept_s": "{name} : redéposez le téléchargement pour le rouvrir",
+ "home.look_backup_none": "Votre travail n’est pas sauvegardé",
+ "home.look_backup_old": {
+  "one": "Votre fichier à emporter date d’un jour",
+  "other": "Votre fichier à emporter date de {n} jours"
+ },
+ "home.look_backup_s": "Choisissez un dossier ou faites un fichier à emporter, dans Réglages",
+ "home.look_more": "et {n} de plus",
+ "home.earlier_h": "Travail précédent",
+ "home.earlier_all": "Tout afficher ({n})",
+ "home.earlier_newest": "N’afficher que les plus récents",
+ "home.old_stale": "une copie plus ancienne : votre travail a continué dans une plus récente",
+ "home.old_returned": "rendu le {date}",
+ "home.old_worked": "dernier travail le {date}",
+ "home.old_scored": "{done} sur {of} notées",
+ "home.old_notkept": "copies non gardées, redéposez le téléchargement",
+ "home.row_more": "Plus pour {name}",
+ "home.forget": "Oublier",
+ "home.a_download": "Un téléchargement",
+ "home.taught": "faite",
+ "home.taught_to": "faite jusqu’à la diapositive {n} sur {of}",
+ "home.row_go": "{cls} : {what}",
+ "home.td_none": "Rien sur votre liste pour aujourd’hui.",
+ "home.td_add": "Ajouter une tâche…",
+ "home.td_more": {
+  "one": "{n} autre sur votre liste",
+  "other": "{n} autres sur votre liste"
+ },
+ "home.td_all": "Tout voir",
+ "home.td_step_tick": "Cocher une tâche",
+ "home.td_step_add": "Ajouter une tâche",
+ "home.nx_h": "Ce dont la classe a besoin ensuite",
+ "home.nx_weak": "{row} était la ligne la plus faible sur {name}.",
+ "home.nx_weak_cls": "{cls} : {row} était la ligne la plus faible sur {name}.",
+ "home.nx_flat": "Toutes les lignes sont au même niveau sur {name}.",
+ "home.nx_flat_cls": "{cls} : toutes les lignes sont au même niveau sur {name}.",
+ "home.nx_who": {
+  "one": "Un élève a eu {half} ou moins sur {row}.",
+  "other": "{n} élèves ont eu {half} ou moins sur {row}."
+ },
+ "home.nx_nobody": "Personne n’a eu {half} ou moins sur {row}.",
+ "home.nx_see": "Voir qui",
+ "home.nx_open": "Ouvrir Analyse",
+ "home.nx_last": "le dernier lot de copies",
+ "home.nx_bar": "{name} {avg} sur {top}",
+ "home.att_take": "Faire l’appel",
+ "home.att_done": "Appel fait · {say}",
+ "home.att_all": "tout le monde est là",
+ "home.att_l": "{n} en retard",
+ "home.att_a": "{n} absents",
+ "home.att_e": "{n} excusés",
+ "home.foot": "Vos annotations, notes, unités et listes sont gardées dans ce navigateur : vous pouvez fermer l’onglet et revenir reprendre là où vous en étiez.",
+ "home.try_sample": "Essayer avec une classe d’exemple"
 }

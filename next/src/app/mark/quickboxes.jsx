@@ -12,9 +12,11 @@ import { shownName } from '../../engines/gdraw.js';
 import * as Z from '../../engines/gquiz.js';
 import * as S from '../../engines/gsetup.js';
 import { prefs } from '../../students/prefs.js';
+import { library } from '../../students/index.js';
 import { libs } from './paper.js';
 import { t } from '../../i18n/t.js';
 import * as C from './change.js';
+import { PARTS } from '../router.js';
 import './lines.js';
 import './paper-lines.js';
 
@@ -157,6 +159,11 @@ export function QuickBoxes({ onClose, onSaved }) {
   const setPts = (q, v) => { v = +v; if (v > 0 && v <= 100) q.pts = Math.round(v * 2) / 2; re(); };
   const setKind = (q, v) => { q.kind = v; if (v === 'scale' && (+q.pts || 1) <= 1) q.pts = 2; re(); };   // a scale of 0 to 1 is right or wrong
   const goals = S.goalList();
+  // Edit goals… / Tag questions with learning goals… (src/quiz.js data-qgoals; D-011): the teacher's list, then a Goal on each question
+  const [gbox, setGbox] = useState(null);
+  const editGoals = () => PARTS.goals().then(m => setGbox(() => m.GoalsDialog), e => console.error(e));
+  // the list as it was saved, on the screen's own copy of the library, so the Goal on each question offers it now
+  const goalsBack = () => { const l = library.json(null), cur = state().lib; if (l && cur) for (const k of ['goals', 'goalsGone']) { if (l[k]) cur[k] = l[k]; else delete cur[k]; } setGbox(null); re(); };
   const tops = [...new Set(W.qs.filter(Z.qzByPts).map(q => +q.pts || 1))].sort((a, b2) => a - b2);
   const lvNote = k => {
     const tb = Z.ibQzRaw(W, k), max = Z.ibQzMax(W, c, k);
@@ -189,7 +196,7 @@ export function QuickBoxes({ onClose, onSaved }) {
   };
   const q = qOf(sel);
   const row = (k, on, list, set, attr) => <Segmented size="sm" label={k} value={on} onChange={v => { set(v); re(); }} options={list.map(([value, label]) => ({ value, label }))} data-attr={attr} />;
-  return <dialog class="dlg mk-qb" aria-labelledby="qbT" {...p} onKeyDown={keys} data-qb>
+  return <><dialog class="dlg mk-qb" aria-labelledby="qbT" {...p} onKeyDown={keys} data-qb>
     <header><h2 id="qbT">{t('paper.qb_title')}</h2>
       <label class="qbwho"><span>{t('paper.qb_on')}</span><select class="input sm" value={si} onChange={e => { setSi(+e.currentTarget.value); }} data-qbwho data-raw>{who.map(i => <option value={i}>{shownName(bb.students[i], i)}</option>)}</select></label></header>
     <div class="body qbwrap">
@@ -211,7 +218,7 @@ export function QuickBoxes({ onClose, onSaved }) {
       })}</div>
       <div class="qbside">
         <p class="mute">{t('paper.qb_about')}</p>
-        {W.qs.length ? <table class="qbt"><thead><tr><th>{t('paper.qb_q')}</th><th>{t('paper.qb_pts')}</th><th>{t('paper.qb_kind')}</th><th>{t('paper.qb_how')}</th><th>{t('paper.qb_key')}</th><th /></tr></thead>
+        {W.qs.length ? <><table class="qbt"><thead><tr><th>{t('paper.qb_q')}</th><th>{t('paper.qb_pts')}</th><th>{t('paper.qb_kind')}</th><th>{t('paper.qb_how')}</th><th>{t('paper.qb_key')}</th><th /></tr></thead>
           <tbody>{W.qs.map((x, i) => <Fragment key={x.id}><tr class={x.id === sel ? 'on' : ''} onFocusIn={() => { if (sel !== x.id) pick(x.id); }} data-qbrow={x.id}>
             <td><input class="input sm" value={x.lab || String(i + 1)} aria-label={t('paper.qb_q_name')} maxLength={12} onInput={e => { x.lab = e.currentTarget.value.trim() === String(i + 1) ? '' : e.currentTarget.value; re(); }} data-qlab data-raw /></td>
             <td><input class="input sm" type="number" min="0.5" step="0.5" value={String(x.pts)} aria-label={t('paper.qb_pts')} onInput={e => setPts(x, e.currentTarget.value)} data-qpts /></td>
@@ -223,6 +230,7 @@ export function QuickBoxes({ onClose, onSaved }) {
               {c && <label>{t('paper.qb_crit')} <select class="input sm" value={Z.ibQzOf(x, c)} aria-label={t('paper.qb_crit_for', { q: Z.quizLabel(x, i) })} onChange={e => { x.ib = e.currentTarget.value; re(); }} data-qib data-raw>{S.ibCrit(c).map(y => <option value={y.k}>{y.k + ' ' + y.name}</option>)}</select></label>}
               {goals.length > 0 && <label>{t('paper.qb_goal')} <select class="input sm" value={x.goal || ''} aria-label={t('paper.qb_goal_for', { q: Z.quizLabel(x, i) })} onChange={e => { if (e.currentTarget.value) x.goal = e.currentTarget.value; else delete x.goal; re(); }} data-qgoal data-raw>
                 <option value="">{t('paper.qb_goal_none')}</option>{goals.map(g => <option value={g.id}>{g.name}</option>)}</select></label>}</td></tr>}</Fragment>)}</tbody></table>
+          <p class="hsm goalline"><button type="button" class="link" onClick={editGoals} data-qgoals>{t(goals.length ? 'paper.qb_goals_edit' : 'paper.qb_goals_tag')}</button></p></>
           : <p class="mute">{t('paper.qb_none')}</p>}
         {c && W.qs.length > 0 && <div class="qbwords ibqlv" data-qblv><p><b>{t('paper.qb_lv_h')}</b> <span class="mute">{t('paper.qb_lv_sub')}</span></p>
           {Z.ibQzUsed(W, c).map(k => { const tb = Z.ibQzRaw(W, k) || [], max = Z.ibQzMax(W, c, k), x = S.ibCrit(c).find(y => y.k === k);
@@ -254,5 +262,6 @@ export function QuickBoxes({ onClose, onSaved }) {
     </div>
     <footer><span class="mute grow" data-qbsum>{W.qs.length ? t(W.qs.length === 1 ? 'paper.qb_sum1' : 'paper.qb_sum', { n: W.qs.length, pts: fmtNum(sum) }) : t('paper.qb_none')}</span>
       <Button onClick={close} data-qbcancel>{t('paper.qb_cancel')}</Button><Button variant="primary" disabled={busy} onClick={save} data-qbsave>{t('paper.qb_save')}</Button></footer>
-  </dialog>;
+  </dialog>
+  {gbox && h(gbox, { lib: state().lib, onClose: goalsBack })}</>;
 }

@@ -17,7 +17,7 @@ import { installTouch } from '../mark/touch.js';
 import { use, gradeOf, maxPoints, fmtNum, state, rowSteps, rowTop, setupOver, DEFAULT_SETUP, SCALE12, SCALE_FIVES, noScore, xcSay, ibSetup, quizOn } from '../../engines/gcore.js';
 import { prefs } from '../../students/prefs.js';
 import { onSaved } from '../../shared/saved.js';
-import { shownName, anonOn, anonOrder } from '../../engines/gdraw.js';
+import { shownName, anonOn, anonOrder, quizLabel } from '../../engines/gdraw.js';
 import { toast } from '../../ui/index.js';
 import '../mark/lines.js';
 
@@ -25,10 +25,12 @@ import '../mark/lines.js';
 const seam = { state, gradeOf, renderPage, ready: false, maths: { state, gradeOf, setupOver, DEFAULT_SETUP, SCALE12, SCALE_FIVES, fmtNum }, saved: () => (MK ? MK.M.saveNowDone() : Promise.resolve()) };
 if (typeof window !== 'undefined') window.__mark = seam;
 
-const TABS = ['mark', 'grades', 'insights', 'return'];
+const TABS = ['mark', 'grades', 'insights', 'examples', 'return'];
 // buttons that belong together: one stop in the Tab order, the arrow keys among them (mark/rove.js)
 function Rove({ as = 'div', vertical, children, ...rest }) { const rv = useRove(vertical); return h(as, { ...rest, ...rv }, children); }
-const TAB_LINE = { mark: () => t('mark.mark'), grades: () => t('mark.grades'), insights: () => t('mark.insights'), return: () => t('mark.return') };
+const TAB_LINE = { mark: () => t('mark.mark'), grades: () => t('mark.grades'), insights: () => t('mark.insights'), examples: () => t('mark.examples'), return: () => t('mark.return') };
+// The assignment's copies in linked classes (one group, src/linked.js lkTwins): their examples show on its Examples tab when asked.
+const twinsOf = (lib, a) => (a && a.group ? [...((lib && lib.classes) || []), ...(lib && lib.loose ? [lib.loose] : [])].flatMap(c => c.units.flatMap(u => u.items.filter(x => x.group === a.group && x.id !== a.id).map(x => x.id))) : []);
 const keep = (k, v) => { try { if (v === undefined) return JSON.parse(sessionStorage.getItem('gsn.mark.' + k)); sessionStorage.setItem('gsn.mark.' + k, JSON.stringify(v)); } catch {} return null; };
 
 // What a student's row says: their score as a percent, or missing / excused / late.
@@ -273,7 +275,7 @@ function Paper({ batch, cur, zoom, ver, FU, ctl, onSp, onZoom }) {
     {!st ? null : !st.files.length ? <><EmptyState icon="inbox" title={t('mark.nothing_in')} />{FU && <FU.FilesFoot key={st.key} st={st} name={shownName(st, cur)} />}</>
       : !gotNow ? <div class="loading" aria-busy="true" />
       : <>{FU && <FU.GroupBand key="band" st={st} />}{st.files.filter(f => f.kind === 'link').concat(st.files.filter(f => f.kind === 'media')).map(f => <div key={'file:' + f.path} class={'fwrap' + cl('file:' + f.path)}><header class="fhead"><span data-raw>{f.kind === 'link' ? f.name.replace(/\.(url|webloc)$/i, '').replace(/ \(added \d+\)$/, '') : f.name}</span><span class="mute">{t(f.kind === 'media' ? 'mark.v_recording' : 'mark.v_link_kind')}</span>{FU && <FU.AddTag st={st} f={f} />}{FU && <FU.CarryTag st={st} f={f} />}<span class="grow" />{FU && <FU.FileMenu st={st} path={f.path} name={f.name} />}</header><MediaFile key={f.path} st={st} f={f} /></div>)}
-        {gotNow.cards.map(c => c.kind === 'file' ? <div key={'file:' + c.f.path} class={'fwrap' + cl('file:' + c.f.path)}>{FU && <FU.CarryTag st={st} f={c.f} />}{FU && <FU.FileMenu st={st} path={c.f.path} name={c.f.name} />}{c.f.kind === 'docx' && c.f.data ? <WordPaper key={c.f.path} st={st} f={c.f} FU={FU} /> : <OtherFile key={c.f.path} f={c.f} />}</div>
+        {gotNow.cards.map(c => c.kind === 'file' ? <div key={'file:' + c.f.path} class={'fwrap' + cl('file:' + c.f.path)}>{FU && c.f.added && c.f.kind !== 'docx' && <FU.AddTag st={st} f={c.f} />}{FU && <FU.CarryTag st={st} f={c.f} />}{FU && <FU.FileMenu st={st} path={c.f.path} name={c.f.name} />}{c.f.kind === 'docx' && c.f.data ? <WordPaper key={c.f.path} st={st} f={c.f} FU={FU} /> : <OtherFile key={c.f.path} f={c.f} />}</div>
         : <section key={docKey(c.d)} class={'doc' + cl(docKey(c.d))}>
           <header class="fhead"><span data-raw>{c.d.name}</span>{FU && <FU.AddTag st={st} f={st.files.find(f => f.path === (c.d.file || c.d.pages[0][0])) || {}} />}{!c.on && <span class="pill">{t(c.auto ? 'mark.left_out_auto' : 'mark.left_out')}</span>}{FU && <FU.CarryTag st={st} f={st.files.find(f => f.path === (c.d.file || c.d.pages[0][0])) || {}} />}<span class="grow" />{FU && !c.on && <FU.BackIn st={st} d={c.d} />}{FU && <FU.FileMenu st={st} path={c.d.file || c.d.pages[0][0]} name={c.d.name} d={c.d} on={c.on} auto={c.auto} />}</header>
           {c.pages.map(pg => <Page key={pg.file.path + '|' + pg.idx} pg={pg} room={roomOf(docKey(c.d))} tall={tallOf(docKey(c.d))} zoom={zoom} FU={FU} />)}
@@ -387,8 +389,6 @@ function RubricAsk({ ask }) {
 
 export default function MarkScreen({ route, classes }) {
   const id = route.params.id, tab = TABS.includes(route.params.tab) ? route.params.tab : 'mark';
-  // an assignment's strong examples (src/app/screens.js #/a/<id>/examples) are in Library > Examples, shown for this assignment
-  useEffect(() => { if (route.params.tab === 'examples') location.replace(href('library', 'examples', 'a', id)); }, [route.params.tab, id]);
   const [w, setW] = useState(null), [err, setErr] = useState(null), [cur, setCur] = useState(0), [ask, setAsk] = useState(null);
   const [zoom, setZoom] = useState(() => keep('zoom') || 1), [, tick] = useState(0);
   // the list's filter (this visit to this assignment only), the list folded to a strip ([, gs.listOpen), the score panel folded away
@@ -439,7 +439,13 @@ export default function MarkScreen({ route, classes }) {
   const soloEnd = () => { prefs.del('gs.solo'); setSoloK(k => k + 1); };
   // Grades, Insights and Return load as a part of their own, with the export engine and its libraries, the first time one opens.
   const [out, setOut] = useState(null);
-  useEffect(() => { if (!w || tab === 'mark' || out) return; let live = true;
+  // the Examples tab (class/examples.jsx AsgExamples), between Insights and Return once the assignment has an example (exTabSay)
+  const [EX, setEX] = useState(null), [exN, setExN] = useState(0);
+  useEffect(() => { if (!w) return; let live = true; const tw = twinsOf(state().lib, w.batch.assignment);
+    const read = () => import('../../students/index.js').then(S => S.exampleRecords()).then(l => live && setExN(l.filter(r => !r.gone && !r.watch && (r.work === w.batch.id || (r.asg && tw.includes(r.asg)))).length), () => {});
+    read(); const off = onSaved(e => { if (e.kind === 'example') read(); }); return () => { live = false; off(); }; }, [w]);
+  useEffect(() => { if (tab === 'examples' && !EX) PARTS.examples().then(setEX, e => console.error(e)); }, [tab]);
+  useEffect(() => { if (!w || tab === 'mark' || tab === 'examples' || out) return; let live = true;
     Promise.all([PARTS.out(), PARTS.outEngine(), PARTS.marking()]).then(([p, E, m]) => { E.withMarking(m.M); seam.out = E; if (live) setOut({ Out: p.default, E }); }, e => console.error(e));
     return () => { live = false; }; }, [w, tab]);
   const openOn = i => { pick(i); go('mark', id, ''); };
@@ -490,8 +496,8 @@ export default function MarkScreen({ route, classes }) {
   // student: mark/bringin.jsx) and Partners and videos (mark/partners.jsx)
   const [setupDlg, setSetupDlg] = useState(null);
   // Share with your assistant (mark/share.jsx), from this menu and from Insights; the assistant's name is handed in with ctx
-  const openShare = () => PARTS.share().then(S => setSetupDlg({ k: 'sh', S }), e => console.error(e));
-  const bringMany = () => { const i = document.createElement('input'); i.type = 'file'; i.multiple = true; i.onchange = async () => { const B = await PARTS.bringin(); await B.bringFiles(await B.expand([...i.files]), o => setSetupDlg({ k: 'bring', B, ...o })); }; i.click(); };
+  const openShare = kind => PARTS.share().then(S => setSetupDlg({ k: 'sh', S, kind: typeof kind === 'string' ? kind : null }), e => console.error(e));
+  const bringMany = () => PARTS.bringin().then(B => setSetupDlg({ k: 'fof', B }), e => console.error(e));
   const setupItems = [{ label: t('mark.su_menu'), icon: 'settings', onSelect: openSetup }, { label: t('mark.bf_menu'), icon: 'upload', onSelect: bringMany },
     { label: t('mark.pv_menu'), icon: 'people', onSelect: () => PARTS.partners().then(P => setSetupDlg({ k: 'pv', P }), e => console.error(e)) },
     { label: t('mark.qm_menu'), icon: 'check', onSelect: () => quick() },
@@ -520,7 +526,7 @@ export default function MarkScreen({ route, classes }) {
       {!solo && <IconButton icon="x" label={t('mark.close')} onClick={close} />}
       <h1 class="mk-title">{cls && <span class="dot" />}{cls && <b data-raw>{cls.name}</b>}<span data-raw class="asg">{w ? w.batch.name : ''}</span></h1>
       {!solo && <Tabs label={t('mark.tabs')} value={tab} onChange={v => go('mark', id, v === 'mark' ? '' : v)}
-        tabs={TABS.map(k => ({ id: k, label: TAB_LINE[k]() }))} />}
+        tabs={TABS.filter(k => k !== 'examples' || exN || tab === k).map(k => ({ id: k, label: TAB_LINE[k](), count: k === 'examples' && exN ? exN : null }))} />}
       <span class="grow" />
       {w && <span class="mk-save mute" role="status" data-save={MK ? MK.M.saveLabel() : 'saved'}>{saveLine(MK ? MK.M.saveLabel() : 'saved')}</span>}
       {w && <span class="mk-prog mute">{t('mark.marked_of', { n: marked, of: n })}<Progress value={marked} max={Math.max(1, n)} label={t('mark.marked_of', { n: marked, of: n })} /></span>}
@@ -529,17 +535,20 @@ export default function MarkScreen({ route, classes }) {
         : <Button icon="settings" size="sm" disabled data-setupopen>{t('mark.setup')}</Button>)}
     </header>
     {su && <su.SetupDialog onClose={() => setSu(null)} />}
+    {setupDlg && setupDlg.k === 'fof' && <setupDlg.B.FilesOrFolder kind="bring" onClose={() => setSetupDlg(null)} onPick={list => setupDlg.B.bringFiles(list, o => setSetupDlg({ k: 'bring', B: setupDlg.B, ...o }))} />}
     {setupDlg && setupDlg.k === 'bring' && <setupDlg.B.BringFiles rows={setupDlg.rows} dups={setupDlg.dups} onClose={() => setSetupDlg(null)} />}
     {setupDlg && setupDlg.k === 'pv' && <setupDlg.P.Partners onClose={() => setSetupDlg(null)} />}
-    {setupDlg && setupDlg.k === 'sh' && <setupDlg.S.Share ctx={{ ...cvCtx, ai: assistant() }} onClose={() => setSetupDlg(null)} />}
+    {setupDlg && setupDlg.k === 'sh' && <setupDlg.S.Share ctx={{ ...cvCtx, ai: assistant() }} kind={setupDlg.kind === 'back' ? null : setupDlg.kind} back={setupDlg.kind === 'back'} onClose={() => setSetupDlg(null)} />}
     {setupDlg && setupDlg.k === 'cl' && <setupDlg.Cl.ClipStage onClose={() => setSetupDlg(null)} />}
     {setupDlg && setupDlg.k === 'qm' && <setupDlg.Q.QuickMark onClose={() => setSetupDlg(null)} onBoxes={() => quick(true)} onOpen={pick} />}
     {setupDlg && setupDlg.k === 'qr' && <setupDlg.R.QuizLook onClose={() => setSetupDlg(null)} onAgain={() => quizScan(true)} />}
     {setupDlg && setupDlg.k === 'qb' && <setupDlg.B.QuickBoxes onClose={() => setSetupDlg(null)} onSaved={on => (on ? quick() : setSetupDlg(null))} />}
     <RubricAsk ask={ask} />
+    {FU && rescans && <FU.Rescans onClose={() => setRescans(false)} onGo={tab === 'mark' ? pick : openOn} />}
     {err ? <EmptyState icon="inbox" title={t(err.name === 'NotKept' ? 'mark.not_kept' : 'mark.page_bad')} text={err.name === 'NotKept' ? t('mark.not_kept_text') : ''} />
       : !w ? (dl ? <p class="mk-dl mute" role="status" data-mkdl>{t('mark.from_drive', { n: dl.n, of: dl.of })}</p> : <div class="loading" aria-busy="true" aria-label={t('mark.opening')} />)
-      : tab !== 'mark' && !solo ? (out && MK ? <div class="mk-outwrap"><out.Out tab={tab} sub={route.params.sub} E={out.E} cur={cur} onOpen={openOn} onShare={openShare} /></div> : <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />)
+      : tab === 'examples' && !solo ? (EX ? <div class="mk-outwrap"><EX.AsgExamples batch={w.batch} twins={twinsOf(state().lib, w.batch.assignment)} label={quizLabel} /></div> : <div class="loading" aria-busy="true" />)
+      : tab !== 'mark' && !solo ? (out && MK ? <div class="mk-outwrap"><out.Out tab={tab} sub={route.params.sub} ai={assistant().name} E={out.E} cur={cur} onOpen={openOn} onShare={openShare} onSheet={() => go('mark', id, 'grades')} rescans={FU ? FU.rescanList() : []} onRescans={() => setRescans(true)} /></div> : <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />)
       : <><div class="mk-body">
         {!solo && <StudentList batch={w.batch} cur={cur} onPick={pick} onReport={rep ? () => setRepList(true) : null} lf={lf} setLf={setLf} fold={fold} setFold={setFold} fm={fm} onHide={MK ? () => hideNames() : null} onShuffle={() => hideNames(true)} />}
         <div class="mk-mid">
@@ -557,7 +566,6 @@ export default function MarkScreen({ route, classes }) {
       {CV && cvDlg && cvDlg.k === 'check' && <CV.CheckCovers ctx={cvCtx} start={cvDlg.start} onDone={() => { setCvDlg(cvDlg.back ? { k: cvDlg.back } : null); cvCtx.reopen(); }} />}
       {rep && <rep.OpenedBar key={w.batch.id} onList={() => setRepList(true)} />}
       {FU && carried && <FU.CarryBox onClose={() => setCarried(false)} />}
-      {FU && rescans && <FU.Rescans onClose={() => setRescans(false)} onGo={pick} />}
       {rep && repList && <rep.OpenedList onClose={() => setRepList(false)} onGo={pick} />}</>}
   </div>;
 }

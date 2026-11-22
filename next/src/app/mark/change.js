@@ -15,6 +15,7 @@ import { set as setState } from '../../engines/gcore.js';
 import { PARTS } from '../router.js';
 import { libs } from './paper.js';
 import { prefs } from '../../students/prefs.js';
+import { heicSay } from './heic.js';
 
 const prefsGet = k => !!prefs.get(k, false);
 
@@ -34,6 +35,7 @@ export async function addFiles(st, list) {
   const pdfjs = await libs(), X = (await PARTS.outEngine()).X, W = await PARTS.write(), bb = b(), made = [];
   // a photo becomes a PDF page (makeFile, pictureToPdf), which needs pdf-lib
   if (!state().PDFLib && list.some(e => /\.(png|jpe?g|gif|webp|bmp|heic|heif|tiff?|avif)$/i.test(e.path))) use({ PDFLib: await PARTS.pdflib() });
+  heicSay(list.map(e => e.path));
   for (const e of list) {
     const bytes = new Uint8Array(await e.file.arrayBuffer());
     const name = e.file.name.replace(/[\\/]+/g, '-'), base = st.key + '/' + name;
@@ -50,7 +52,8 @@ export async function addFiles(st, list) {
     try { await W.keepAdded(bb.id, { bid: bb.id, key: st.key, path: f.path, name: f.name, data: bytes, added: f.added, ...(f.from ? { from: f.from } : {}) }, bb.id + '|' + st.key + '|' + f.path); }
     catch (er) { console.error(er); made.notKept = (made.notKept || []).concat(f.name); }
   }
-  tell();
+  // the paper opens again so the added files show at once (they showed only after another student was opened)
+  tell(); if (made.length) show(-1);
   return made;
 }
 
@@ -133,8 +136,9 @@ export function tagOf(st, f) {
   const was = p ? ((st.gone || []).find(g => g.path === p) || { name: p.slice(p.lastIndexOf('/') + 1) }) : null;
   return { replaced: was ? F.fileShown(st, was.name) : null, word: !!was && F.madeFromWord(f), from: f.from || null, t: f.added };
 }
-export const undo = () => M && M.undo();
-export const redo = () => M && M.redo();
+// Undo and Redo wait for a Quick mark step still being put on the papers (quickDo), so they take back the step she sees.
+export const undo = () => quickLine.then(() => M && M.undo());
+export const redo = () => quickLine.then(() => M && M.redo());
 // Typed notes (mark/typed.jsx): a student's grade changed by the notes, saved and shown; a setting of the assignment's setup changed as
 // one undo step, after() run each way (the setup kept and the bar drawn again).
 // Clips to show the class (mark/clips.jsx): fn changes batch.clips, as one undo step.
@@ -208,8 +212,9 @@ export async function toPdf(list, each = () => {}) {
   if (pdfBusy || !b()) return null;
   const bb = b(), steps = [], O = await PARTS.outEngine(); let long = 0, bad = 0;
   await O.load();
-  // a page that can't be written as words is drawn as a picture instead, as the current app does
-  if (!state().html2canvas) try { const h = await PARTS.h2c(); use({ html2canvas: h.default || h }); } catch (e) { console.error(e); }
+  // a page that can't be written as words is drawn as a picture instead, as the current app does (and mammoth reads a Word file
+  // the app's own reader can't open)
+  try { await O.wordTools(); } catch (e) { console.error(e); }
   pdfBusy = true;
   try {
     await M.saveNowDone();   // what she typed a moment ago is in the file first
@@ -465,12 +470,14 @@ export function scanAct(pg, a) {
   tell(); show(-1);
 }
 export const rescans = () => F.scanRescans();
-// The split hands over what goes with the download once it opens: { id, wide (the whole scan's lighting), cls (the class she picked) }.
+// The split hands over what goes with the download once it opens: { id, wide (the whole scan's lighting), cls (the class she picked) },
+// or StartNotes its videos and partners (pv: { groups, own }, D-022).
 let fromSplit = null;
 export const afterSplit = p => { fromSplit = p; };
 export function takeSplit() {
   const bb = b(); if (!bb || !fromSplit || fromSplit.id !== bb.id) return false;
-  const { wide, cls, lit } = fromSplit; fromSplit = null;
+  const { wide, cls, lit, pv } = fromSplit; fromSplit = null;
+  if (pv) partnersApply(pv.groups, pv.own).catch(e => console.error(e));
   if (wide) { bb.light = { ...(bb.light || {}), '*': { ...wide } }; bb.lightOpt = { ...D.lightOpts(), on: true }; }
   F.scanHintsAll();
   if (cls != null && cls !== '') bb.classId = cls;
@@ -502,9 +509,11 @@ export function trSet(f, tr) {
   step(() => put(was), () => put(all.map(() => tr)), tr ? 'transcript' : 'transcript taken off');
   put(all.map(() => tr));
 }
-// A recording's transcript made in this browser (transcribeFile): bytes, the recording itself.
+// A recording's transcript made in this browser (transcribeFile): bytes, the recording itself. The screen is kept awake while it is
+// made, so a long one doesn't stop when the laptop sleeps (src/app/media.js wakeLock; H-074).
 export async function trMake(f, bytes, say, stop) {
-  const w = await V.transcribe(bytes, say, stop);
+  let lock = null; try { lock = await navigator.wakeLock.request('screen'); } catch {}
+  let w; try { w = await V.transcribe(bytes, say, stop); } finally { try { if (lock) lock.release(); } catch {} }
   if (stop && stop.on) return false;
   trSet(f, { w });
   return true;
@@ -587,9 +596,9 @@ export async function partnersApply(groups, own) {
   for (const g of groups) {
     const all = g.k.map(stOf).filter(Boolean); if (!all.length) continue;
     let st = all[0];
-    if (!g.url && !g.file && !(V.notesFileOf(st) || G.groupPaper(st))) st = all.find(s => V.notesFileOf(s) || G.groupPaper(s)) || st;
+    if (!g.url && !g.file && !g.drive && !(V.notesFileOf(st) || G.groupPaper(st))) st = all.find(s => V.notesFileOf(s) || G.groupPaper(s)) || st;
     const partners = all.filter(s => s !== st && !G.groupMates(st).includes(s));
-    if (g.url || g.file) await videoAdd(st, { url: g.url, file: g.file, name: 'Presentation video', kind: '' });
+    if (g.url || g.file || g.drive) await videoAdd(st, { url: g.url, file: g.file, drive: g.drive || null, name: 'Presentation video', kind: '' });
     const links = st.files.filter(f => f.kind === 'link');
     const anchor = fileOfGroup(st) || V.notesFileOf(st) || G.groupPaper(st) || links[0] || st.files.find(f => f.kind === 'media');
     if (!anchor) continue;
@@ -788,11 +797,18 @@ const quickKeep = sts => {
   return () => { if (q) bb.quiz = J(q); else delete bb.quiz; use({ setup: J(su) }); for (const [st, g, fs] of gs) { st.grade = J(g); for (const [f, m] of fs) { if (m) f.marks = J(m); else delete f.marks; } } };
 };
 // fn changes the papers of sts (async). after: what the screen redraws once the step is done or taken back.
-export async function quickDo(sts, fn, after) {
-  const back = quickKeep(sts); await fn(); const again = quickKeep(sts);
-  const done = () => { K.thumbCache.clear(); tell(); if (after) after(); };
-  step(() => { back(); done(); }, () => { again(); done(); }, 'marks');
-  done();
+// One step at a time: a mark given while the last one is still being put on the paper waits for it. Run side by side, the first
+// step's "after" took in the second mark and was kept last, so Undo took both marks off.
+let quickLine = Promise.resolve();
+export function quickDo(sts, fn, after) {
+  const run = quickLine.then(async () => {
+    const back = quickKeep(sts); await fn(); const again = quickKeep(sts);
+    const done = () => { K.thumbCache.clear(); tell(); if (after) after(); };
+    step(() => { back(); done(); }, () => { again(); done(); }, 'marks');
+    done();
+  });
+  quickLine = run.catch(() => {});
+  return run;
 }
 // Q: the quiz as the boxes editor left it. Z: the lifted quiz engine (engines/gquiz.js). S: engines/gsetup.js, for an MYP class.
 // Returns what changed about the score: 'points' (it is out of the quiz's points now), 'rubric' (and rubric scores stopped counting).

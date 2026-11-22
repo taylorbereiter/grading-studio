@@ -55,5 +55,28 @@
  "video.cl_prev": "上一个片段",
  "video.cl_next": "下一个片段",
  "video.cl_of": "{n} / {of}",
- "video.cl_full": "全屏"
+ "video.cl_full": "全屏",
+ "video.drv_dir_change": "更换文件夹",
+ "video.drv_only": "只能打开你选的视频，云端硬盘里的其他内容都不会被打开。",
+ "video.pv_drive": "云端硬盘…",
+ "video.pv_many": "从云端硬盘选择…",
+ "video.pv_miss_drv": {
+  "one": "这个文件没有对上任何名字：{names}。请在正确的那一行使用“云端硬盘…”。",
+  "other": "这些文件没有对上任何名字：{names}。请在正确的那一行使用“云端硬盘…”。"
+ },
+ "video.vd_partners": "伙伴",
+ "video.vd_partners_say": "勾选视频中的其他每个人。他们会拿到视频和笔记页，整组共用一套标记和一个成绩。",
+ "video.vd_add_with": {
+  "one": "添加给{name}和 1 位伙伴",
+  "other": "添加给{name}和 {n} 位伙伴"
+ },
+ "video.sn_pv_h": "视频和伙伴",
+ "video.sn_pv_say": "可以不填，之后也能再加。为每段视频粘贴链接或选择文件，或把视频文件拖到这里，每个文件会交给文件名中提到的学生。伙伴共用一张笔记页、一套标记和一个成绩。",
+ "video.cap_prev": "上一行",
+ "video.cap_next": "下一行",
+ "video.tr_again_q": "要重新制作文字稿吗？现有的会被替换。",
+ "video.tr_again_ok": "重新制作",
+ "video.vk_back": "视频已放回",
+ "video.no_picture": "这段视频在这个浏览器只会播放声音。iPhone 拍的视频可能要在你的电脑上才能打开画面：请下载它，或请学生改交 .mp4。",
+ "video.tn_no_time": "视频，或现场演讲用的计时器，会提供时间"
 }

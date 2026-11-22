@@ -706,5 +706,10 @@
  },
  "paper.bb_none": "아직 코드를 찾지 못했어요. 각 블록은 S-7QK4 같은 코드로 시작해야 해요.",
  "paper.bb_feedback_file": "피드백",
- "paper.bb_zip_name": "{ai}에서 받음 - {name}"
+ "paper.bb_zip_name": "{ai}에서 받음 - {name}",
+ "paper.qm_ex": "예시",
+ "paper.qm_ex_tip": "이 답안을 이름을 가려 우수 예시로 보관 (E)",
+ "paper.qm_ex_on": "우수 예시로 보관됨. 클릭하면 뺍니다 (E)",
+ "paper.qb_goals_edit": "목표 편집…",
+ "paper.qb_goals_tag": "문항에 학습 목표 달기…"
 }

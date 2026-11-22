@@ -69,5 +69,64 @@
   "one": "未提出の課題を生徒 1 人に知らせる",
   "other": "未提出の課題を生徒 {n} 人に知らせる"
  },
- "home.plan_tomorrow": "明日の {cls} の授業を計画"
+ "home.plan_tomorrow": "明日の {cls} の授業を計画",
+ "home.look_h": "確認が必要",
+ "home.look_partly": {
+  "one": "{n} 件の採点が途中です",
+  "other": "{n} 件の採点が途中です"
+ },
+ "home.look_notkept": "このブラウザーに保存されていない提出物",
+ "home.look_notkept_s": "{name}：ダウンロードしたファイルをもう一度ドロップすると開けます",
+ "home.look_backup_none": "作業のバックアップがありません",
+ "home.look_backup_old": {
+  "one": "持ち帰り用ファイルは {n} 日前のものです",
+  "other": "持ち帰り用ファイルは {n} 日前のものです"
+ },
+ "home.look_backup_s": "設定でフォルダーを選ぶか、持ち帰り用ファイルを作ってください",
+ "home.look_more": "ほか {n} 件",
+ "home.earlier_h": "以前の課題",
+ "home.earlier_all": "{n} 件すべて表示",
+ "home.earlier_newest": "新しいものだけ表示",
+ "home.old_stale": "古いコピー：作業は新しいコピーで続いています",
+ "home.old_returned": "{date} に返却",
+ "home.old_worked": "最終作業 {date}",
+ "home.old_scored": "{of} 件中 {done} 件採点済み",
+ "home.old_notkept": "提出物が保存されていません。ダウンロードしたファイルをもう一度ドロップしてください",
+ "home.row_more": "{name} のその他",
+ "home.forget": "削除",
+ "home.a_download": "ダウンロード",
+ "home.taught": "授業済み",
+ "home.taught_to": "{of} 枚中 {n} 枚目まで授業済み",
+ "home.row_go": "{cls}：{what}",
+ "home.td_none": "今日のリストには何もありません。",
+ "home.td_add": "ToDo を追加…",
+ "home.td_more": {
+  "one": "リストにあと {n} 件",
+  "other": "リストにあと {n} 件"
+ },
+ "home.td_all": "すべて見る",
+ "home.td_step_tick": "ToDo にチェック",
+ "home.td_step_add": "ToDo を追加",
+ "home.nx_h": "クラスに次に必要なこと",
+ "home.nx_weak": "{name} では {row} がいちばん弱い項目でした。",
+ "home.nx_weak_cls": "{cls}：{name} では {row} がいちばん弱い項目でした。",
+ "home.nx_flat": "{name} ではどの項目も同じ結果でした。",
+ "home.nx_flat_cls": "{cls}：{name} ではどの項目も同じ結果でした。",
+ "home.nx_who": {
+  "one": "{row} で {half} 以下だった生徒は {n} 人です。",
+  "other": "{row} で {half} 以下だった生徒は {n} 人です。"
+ },
+ "home.nx_nobody": "{row} で {half} 以下だった生徒はいません。",
+ "home.nx_see": "誰かを見る",
+ "home.nx_open": "分析を開く",
+ "home.nx_last": "直近の提出物",
+ "home.nx_bar": "{name} {top} 中 {avg}",
+ "home.att_take": "出欠をとる",
+ "home.att_done": "出欠確認済み · {say}",
+ "home.att_all": "全員出席",
+ "home.att_l": "遅刻 {n}",
+ "home.att_a": "欠席 {n}",
+ "home.att_e": "公欠 {n}",
+ "home.foot": "採点、点数、単元、名簿はこのブラウザに保存されるので、タブを閉じても戻ってきて続きから再開できます。",
+ "home.try_sample": "サンプルのクラスで試す"
 }

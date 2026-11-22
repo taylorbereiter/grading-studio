@@ -6,10 +6,21 @@
 // through mark/marking.js, which saves through students/write.js.
 import * as X from '../../engines/gexport.js';
 import { use, state, gradeOf, fmtNum, noScore } from '../../engines/gcore.js';
-import { layoutOf, docIn, docAuto } from '../../engines/gdraw.js';
+import { layoutOf, docIn, docAuto, fileByPath, shownName, anonOn, viewable } from '../../engines/gdraw.js';
 import { store } from '../../engines/gstore.js';
 import { PARTS } from '../router.js';
 import { libs as pdfReady } from './paper.js';
+import { tryOfFile } from '../../engines/gopen.js';
+// The grades read off a student's papers, sorted into the one that counts and the ones to confirm (src/app/replace.js refound), as
+// the current app does after reading the papers and after a file changes. The lifted code calls it through gcore's hook.
+export function refound(st) {
+  const fs = st.files.filter(f => !tryOfFile(st, f));   // a grade written on an earlier try's paper belongs to that try
+  const all = fs.filter(f => f.kind !== 'docx' && X.fileIn(st, f)).flatMap(f => (f.scan && f.scan.found) || []).concat(fs.flatMap(f => X.wordFound(f, st)));
+  const r = X.splitReads(st, all), rd = st.grade.reads || {}, ok = r.ok.filter(g => !r.mine.includes(g)).filter((g, n, a) => rd[X.readKey(g)] !== 1 || a.findIndex(o => X.readKey(o) === X.readKey(g)) === n);
+  st.foundCount = ok.length; st.doubts = r.ask; st.foundAll = ok;
+  st.found = ok.length === 1 && !X.rivalReads(st).length ? { ...ok[0], found: true } : null;
+}
+use({ refound });
 // The marking code (mark/marking.js), handed in by the marking screen once its tools have loaded (saving and undo live there).
 let M = null;
 export const withMarking = m => { M = m; };
@@ -26,7 +37,24 @@ export function load() {
 
 // A grade written on a paper counts, so the papers are read first, as the current app reads them before Grades, Insights and Return.
 // Word rubrics already highlighted give their scores first (mark/word.js scoresAll), as the current app runs wordScoresAll here.
-export async function readPapers(onStep) { await load(); M.commit(); if (hasWord()) await (await PARTS.word()).scoresAll(M); await X.scanAll(onStep); }
+export async function readPapers(onStep) { await load(); M.commit(); if (hasWord()) { await wordTools(); await (await PARTS.word()).scoresAll(M); } await X.scanAll(onStep); }
+// Word papers made into pages (gexport.js wordPdf, wordPdfStage) need html2canvas, and mammoth for one the app's own Word reader can't
+// open; the current app always has both at hand. Here they come only when this download has Word papers, and mammoth only for one that
+// needs it. Before, a Word paper boxed by hand was read as one that failed (H-030), and that Word file wouldn't convert (H-029).
+export async function wordTools() {
+  const b = state().batch; if (!b) return;
+  const words = b.students.flatMap(st => st.files.concat(st.gone || [])).filter(f => f.kind === 'docx' && f.data);
+  if (!words.length) return;
+  await load();
+  if (!state().html2canvas) { const h = await PARTS.h2c(); use({ html2canvas: h.default || h }); }
+  if (!state().mammoth && words.some(f => !wordOpens(f.data))) { const m = await PARTS.mammoth(); use({ mammoth: m.default || m }); }
+}
+const wordOpens = d => {
+  try {
+    const x = state().fflate.unzipSync(d, { filter: e => e.name === 'word/document.xml' })['word/document.xml']; if (!x) return false;
+    return !new DOMParser().parseFromString(new TextDecoder().decode(x), 'application/xml').getElementsByTagName('parsererror').length;
+  } catch { return false; }
+};
 const hasWord = () => state().batch.students.some(st => st.files.some(f => f.kind === 'docx'));
 
 /* ---------- Grades ---------- */
@@ -94,7 +122,39 @@ export function plan() {
   const early = [...new Set(X.exportPlan(true, true).map(o => o.st))].filter(X.gotEarly), nOut = X.xEarly() ? early.length : 0;
   const nStu = new Set(list.map(o => o.st)).size, skipped = b.students.length - nStu - nOut;
   const nLeft = b.students.reduce((a, st) => a + layoutOf(st).filter(d => !docAuto(st, d) && !docIn(st, d)).length, 0);
-  return { files: list.length, students: nStu, skipped, left: nLeft, early, nOut, example: list[0] ? X.nameOut([{ ...list[0] }])[0].path.split('/').pop() : '' };
+  // files that get a mark key page: those with a proofreading mark on them (the current Return box's hint)
+  const nKey = list.filter(o => o.d && X.keyRows(o.d.pages.flatMap(([path, p]) => fileByPath(o.st, path).marks[p] || [])).length).length;
+  return { files: list.length, students: nStu, skipped, left: nLeft, early, nOut, nKey, example: list[0] ? X.nameOut([{ ...list[0] }])[0].path.split('/').pop() : '' };
+}
+// The things to look at before returning (src/grades.js exportCheck): scores not finished, no paper, a score that disagrees with the
+// paper, files with no marks, grades read off a paper to confirm. The same groups and order; each note is made into words by the
+// Return tab, so it can be put into the teacher's language.
+// A file nothing has been done to (src/grades.js unmarkedFile, with src/draw.js fileMarked): a paper with no marks, typed notes, scan
+// readings or handwriting that no page of the layout uses as it is; a Word file not edited, not handwritten, and with no score in it.
+function unmarked(st, f) {
+  if (f.virtual) return false;
+  if (viewable(f)) {
+    if (Object.values(f.marks).some(a => a.length) || (f.kami && Object.keys(f.kami).length > 0) || (f.scan && f.scan.found && f.scan.found.length) || f.hand) return false;
+    return !layoutOf(st).some(d => !docAuto(st, d) && !docIn(st, d) && d.pages.some(([path]) => path === f.path));
+  }
+  if (f.kind !== 'docx' || f.edited || f.hand) return false;
+  const w = X.wordScore(f);
+  return !(w && w.total != null) && !X.wordFound(f, st).length;
+}
+export function check() {
+  const c = { unfinished: [], noPaper: [], disagree: [], unmarked: [], doubts: [] };
+  state().batch.students.forEach((st, i) => {
+    if (noScore(st)) return;   // she's already said what's going on with this student
+    const g = gradeOf(st), name = shownName(st, i);
+    if (!g.done) c.unfinished.push({ i, name, part: g.partial ? X.partNote(st) : '' });
+    if (!st.files.length) c.noPaper.push({ i, name });
+    const d = X.disagreeNote(st); if (d) c.disagree.push({ i, name, note: d });
+    for (const f of st.files) if (unmarked(st, f)) c.unmarked.push({ i, name, fname: anonOn() ? '' : f.name, bad: !!f.bad, file: f.path });
+    if (g.total != null || g.pct != null) return;   // her own score, or one clear reading, already stands
+    if (X.manyReads(st)) { c.doubts.push({ i, name, many: X.readsCount(st) }); return; }
+    for (const r of st.doubts || []) c.doubts.push({ i, name, said: X.foundLabel(r) });
+  });
+  return c;
 }
 let busy = false;
 export const exporting = () => busy;
@@ -131,6 +191,7 @@ export async function exportAll({ keep = true, dpi = 150, sheet = true, dir = nu
       if (it.one) for (const x of X.oneLeftOver(it)) if (await putOut(x.path, () => x.bytes, it.st)) nOut++;
     }
     onStep('bake', items.length, items.length);
+    await X.unopenable(failed);   // files nothing could be drawn from never reach the plan; they are still named (src/exportreport.js)
     const zip = !dir && Object.keys(files).length ? new Blob([state().fflate.zipSync(files)], { type: 'application/zip' }) : null;
     if (nOut && (dir || zip)) M.setReturned(nOut);
     return { nOut, failed, zip, name: 'Marked - ' + b.name + '.zip', paths: Object.keys(files), files: Object.fromEntries(Object.entries(files).map(([k, v]) => [k, v[0]])) };
@@ -141,7 +202,7 @@ export async function exportOne(st) {
   if (busy) throw new Error('busy');
   busy = true;
   try {
-    await M.saveNowDone(); if (hasWord()) await (await PARTS.word()).scoresAll(M);
+    await M.saveNowDone(); if (hasWord()) { await wordTools(); await (await PARTS.word()).scoresAll(M); }
     const b = state().batch, o = opts(), mine = () => X.nameOut(X.exportPlan(false, true).filter(x => x.st === st));
     let items = mine();
     if (!items.length) { await readPapers(); items = mine(); }

@@ -40,28 +40,14 @@ export async function classesForHome() {
   const { readLibrary, readKept, sidebarClasses } = await import('./students/counts.js');
   return sidebarClasses(readLibrary(), await readKept());
 }
+// The sample's things to try (students/sample-try.js): its first class, and the downloads of its marked essay and its quiz. Ids only.
+export async function sampleForShell() { return (await import('./students/sample-try.js')).sampleTry(); }
 // Home: what the app worked out, the same as the current app's Today (src/today.js homeRender) for the same saved work. Today's
 // classes and lessons (planning), the sets of papers to mark and to hand back (assignment and class names, counts), and the
 // lessons still to plan in the next four days (src/todo.js "plan" lines, minus the ones the teacher hid or switched off).
 // Missing work: the classes with students who owe work this term and haven't been reminded (src/todo.js tdMissLoad, its "miss" lines),
-// through the gradebook's engine (students/book.js), less the lines she hid.
-export async function countsForHome(now = Date.now()) {
-  const C = await import('./students/counts.js'), T = await import('./planning/today.js');
-  const lib = C.readLibrary(), kept = await C.readKept(), plan = await T.readPlan();
-  const g = C.groups(lib, kept), where = m => { const w = C.whereOf(lib, kept, m.id); return w.cls ? String(w.cls.name || '') : ''; };
-  const sets = list => list.map(m => { const st = C.stateOf(lib, kept, m); return { id: m.id, name: String(m.name || ''), cls: where(m), of: st.of, done: st.done, left: st.left, fm: st.fm, open: C.canOpen(m), t: m.t || 0 }; });
-  let teach = null;
-  if (plan) {
-    const t = T.dayRows(plan, now), cur = T.nowRow(t.rows, now);
-    teach = { off: t.off, rows: t.rows.map(r => ({ classId: r.c.id, name: r.c.name, color: r.c.color, start: r.m.start, end: r.m.end, now: r === cur,
-      lesson: r.lessons[0] ? { id: r.lessons[0].id, title: r.lessons[0].title, n: r.lessons[0].n, ready: r.lessons[0].ready, done: r.lessons[0].done } : null, more: Math.max(0, r.lessons.length - 1) })) };
-  }
-  // the lines To do works out (students/todo.js autoLines), so Home, To do and the sidebar count the same
-  const auto = await (await import('./students/todo-auto.js')).autoLines(now, { lib, kept, plan }), cname = id => String((lib.classes.find(c => String(c.id) === id) || {}).name || '');
-  const toPlan = auto.filter(a => a.kind === 'plan').map(a => ({ in: a.in, key: a.key, classId: a.pid, className: a.pname, color: a.color, day: a.day, start: a.start, lesson: a.lesson }));
-  const mark = sets(g.mark), back = sets(g.back), missing = auto.filter(a => a.kind === 'miss').map(a => ({ classId: a.classId, name: cname(a.classId), n: a.n }));
-  return { teach, mark, back, toPlan, missing, counts: { classesToday: teach ? teach.rows.length : 0, mark: mark.length, back: back.length, toPlan: toPlan.length, missing: missing.length } };
-}
+// through the gradebook's engine (students/book.js), less the lines she hid. Earlier work and what needs a look, by assignment name.
+export async function countsForHome(now = Date.now()) { return (await import('./students/home-counts.js')).countsForHome(now); }
 // The sidebar's To do count, the way the current app counts it (src/todo.js todoCount): every line not done that is overdue or for
 // today, her own lines and the ones the app noticed (papers to mark and to hand back, today's classes still to plan), less the ones
 // she hid or moved to a later day, and the missing-work reminders (one for each class with students to remind).

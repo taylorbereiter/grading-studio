@@ -3,14 +3,14 @@
 // every roster name in the notes as [name]. The key, which code is which student, stays in this browser (gs.wlCodes).
 import { h, Fragment } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import { Dialog, Button, Checkbox, Icon, toast } from '../../ui/index.js';
+import { Dialog, Button, Checkbox, Icon, Segmented, toast } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
 import { PARTS } from '../router.js';
 import { library, watchCodes } from '../../students/index.js';
 import { saveWatchCodes } from '../../students/write.js';
 import { copyText } from '../../services/clipboard.js';
 import { assistant } from '../../services/assistant.js';
-import { useExamples, exLabel, exTags, picUrl, Show } from './examples.jsx';
+import { useExamples, exLabel, exTags, picUrl, Show, CoverDialog } from './examples.jsx';
 import './lines.js';
 
 const wlKey = (c, n) => c + '\n' + n;
@@ -43,17 +43,25 @@ const notesText = (c, name, all) => name + (c ? ', ' + c.name : '') + '\n' + all
 
 // On a student's page: their strong work and concerns, newest first, with Copy notes and Send.
 export function WatchStudent({ c, n }) {
-  const all = useExamples(), [show, setShow] = useState(null), [send, setSend] = useState(false);
+  const all = useExamples(), [show, setShow] = useState(null), [send, setSend] = useState(false), [f, setF] = useState('');
   if (!all) return null;
-  const mine = wlOf(all, c.id, n); if (!mine.length) return null;
-  const rev = mine.slice().reverse(), w = mine.filter(r => r.watch).length;
+  const mine = wlOf(all, c.id, n);
+  // D-060: nothing yet, and how something gets here (wlCardFill)
+  if (!mine.length) return <section class="sp-sec" aria-labelledby="h-wl" data-wl-stu><div class="sp-h"><h3 id="h-wl">{t('class.wl_title')}</h3></div><p class="mute small" data-wl-none>{t('class.wl_none_say')}</p></section>;
+  const w = mine.filter(r => r.watch).length, rev = mine.filter(r => (f === 'watch' ? r.watch : f === 'good' ? !r.watch : true)).slice().reverse();
+  // D-062: the concerns' tags seen most, up to six
+  const tags = {}; for (const r of mine) if (r.watch) for (const x of exTags(r)) tags[x] = (tags[x] || 0) + 1;
+  const top = Object.entries(tags).sort((a, b) => b[1] - a[1]).slice(0, 6);
   return <section class="sp-sec" aria-labelledby="h-wl" data-wl-stu><div class="sp-h"><h3 id="h-wl">{t('class.wl_title')}</h3>
     <span class="acts"><Button size="sm" variant="quiet" icon="copy" onClick={() => copyText(notesText(c, n, mine)).then(ok => toast(ok ? t('class.wl_copied', { n: mine.length }) : t('class.copy_failed')))} data-wl-copy>{t('class.wl_copy')}</Button>
       <Button size="sm" variant="quiet" icon="assist" onClick={() => setSend(true)} data-wl-send1>{t('class.wl_send')}</Button></span></div>
     <p class="mute small">{t('class.wl_stu_say', { g: mine.length - w, w })}</p>
+    <Segmented size="sm" label={t('class.wl_title')} value={f} onChange={setF} options={[{ value: '', label: t('class.wl_f_all') }, { value: 'good', label: t('class.wl_f_good', { n: mine.length - w }) }, { value: 'watch', label: t('class.wl_f_watch', { n: w }) }]} />
+    {top.length > 0 && <p class="wltrend small" data-wl-seen>{t('class.wl_seen')} {top.map(([x, k]) => <span class="tag" data-raw>{x}{k > 1 ? ' ×' + k : ''}</span>)}</p>}
+    {!rev.length && <p class="mute small">{t('class.wl_none_kind')}</p>}
     <ul class="wltime">{rev.map((r, i) => <li class={r.watch ? 'w' : 'g'}><button type="button" class="exthumb sm" onClick={() => setShow(i)} aria-label={t('class.ex_show_one', { name: exLabel(r) })}><WPic id={r.id} /></button>
       <div><b><Icon name={r.watch ? 'flag' : 'spark'} size="xs" />{t(r.watch ? 'class.wl_concern' : 'class.wl_strength')}</b> <span class="mute">· {day(r.t)} · <span data-raw>{r.title || t('class.ex_asg')}</span></span>
-        {r.why && <p data-raw>{r.why}</p>}</div></li>)}</ul>
+        {r.why && <p data-raw>{r.why}</p>}{exTags(r).length > 0 && <p class="extags">{exTags(r).map(x => <span class="tag" data-raw>{x}</span>)}</p>}</div></li>)}</ul>
     {show != null && <Show list={rev} at={show} onClose={() => setShow(null)} />}
     {send && <WatchSend list={mine} one={{ c: c.id, n }} onClose={() => setSend(false)} />}
   </section>;
@@ -99,13 +107,16 @@ export function WatchSend({ list, one, onClose }) {
     } catch (e) { console.error(e); toast(t('class.ex_failed')); }
     setBusy(false);
   };
+  // Black out more (wlStrip data-wlmore): the cover box for one picture, then back here with the ask and ticks as they were
+  const [cover, setCover] = useState(null), [v, setV] = useState(0);
+  if (cover) return <CoverDialog r={cover} onClose={() => { setCover(null); setV(x => x + 1); }} />;
   return <Dialog open wide title={t('class.wl_send_t', { ai: name })} onClose={onClose}
     actions={<><span class="grow" /><Button icon="copy" onClick={() => copyText(ask).then(ok => toast(ok ? t('class.wl_ask_copied', { ai: name }) : t('class.copy_failed')))} data-wl-copyask>{t('class.wl_copy_ask')}</Button>
       {ai.link && <a class="btn" href={ai.link} target="_blank" rel="noopener">{t('class.wl_open_ai', { ai: name })}</a>}
       <Button variant="primary" icon="download" disabled={!picked.length || busy} onClick={pdf} data-wl-pdf>{t('class.wl_pdf')}</Button></>}>
     <p class="mute small">{t('class.wl_send_say')}</p>
     {n1 > 0 && n2 > 0 && <p class="wlpick"><Checkbox label={t('class.wl_concerns_n', { n: n1 })} checked={bad} onChange={setBad} /><Checkbox label={t('class.wl_strengths_n', { n: n2 })} checked={good} onChange={setGood} /></p>}
-    <div class="wlstrip">{picked.length ? picked.map(r => <figure><WPic id={r.id} /><figcaption><b>{code(r)}</b> · {t(r.watch ? 'class.wl_concern' : 'class.wl_strength')}</figcaption></figure>) : <p class="mute">{t('class.wl_nothing')}</p>}</div>
+    <div class="wlstrip">{picked.length ? picked.map(r => <figure><WPic key={r.id + '|' + v} id={r.id} /><figcaption><b>{code(r)}</b> · {t(r.watch ? 'class.wl_concern' : 'class.wl_strength')}<br /><button type="button" class="link" onClick={() => setCover(r)} data-wlmore={r.id}>{t('class.wl_more')}</button></figcaption></figure>) : <p class="mute">{t('class.wl_nothing')}</p>}</div>
     <label class="cp-fld"><span class="lab">{t('class.wl_what_ask')}</span><textarea class="input" rows="7" value={ask} onInput={e => setAsk(e.currentTarget.value)} data-wl-ask /></label>
     {codes.size > 0 && <details class="wlkey"><summary>{t('class.wl_key')}</summary><ul>{[...codes.entries()].map(([k, c]) => <li><b>{c}</b> · <span data-raw>{k.split('\n')[1]}</span></li>)}</ul></details>}
   </Dialog>;

@@ -17,6 +17,7 @@ import { t } from '../../i18n/t.js';
 import * as C from './change.js';
 import './lines.js';
 import './setup-lines.js';
+import './inout-lines.js';
 
 const nfc = s => String(s).normalize('NFC');
 // Picked files as [{ path, file }], keeping folder names (they often hold the student's name) and opening ZIPs (expandPicked).
@@ -34,6 +35,36 @@ export async function expand(files) {
     out.push({ path, file: f });
   }
   return out;
+}
+
+// The Mac app chooses folders through macOS itself; files come back with their folder path, like the web picker's (src/app/bringin.js
+// nativeFolder, D-005). Only where the Mac app puts window.gsNative.
+async function nativeFolder() {
+  const N = window.gsNative, p = await N.pickFolder(); if (!p) return null;
+  toast(t('inout.bf_opening', { name: p.name }));
+  const r = await N.readFolder(); if (!r) return null;
+  if (r.error) { toast(r.error === 'perm' ? t('inout.bf_mac_perm') : t('inout.bf_folder_no', { why: r.error }), { ms: 8000 }); return null; }
+  if (!r.files.length) { toast(t('inout.bf_folder_empty', { name: r.name }), { ms: 6000 }); return null; }
+  return r.files.map(f => { const file = new File([f.data], f.rel.split('/').pop(), { lastModified: f.mtime }); Object.defineProperty(file, 'webkitRelativePath', { value: r.name + '/' + f.rel }); return file; });
+}
+// Files (or a ZIP) or a whole folder, picked and opened into [{ path, file }] (src/app/bringin.js pickMany). Nothing picked: [] never comes.
+export function pickMany(folder) {
+  if (folder && window.gsNative) return nativeFolder().then(fs => (fs ? expand(fs) : new Promise(() => {})), e => { toast(t('inout.bf_folder_no', { why: e.message || e }), { ms: 8000 }); return new Promise(() => {}); });
+  return new Promise(res => {
+    const inp = document.createElement('input'); inp.type = 'file'; inp.multiple = true;
+    if (folder) inp.webkitdirectory = true;
+    inp.onchange = async () => res(await expand([...inp.files]));
+    inp.click();
+  });
+}
+// Files or folder? (src/app/bringin.js askFilesOrFolder, D-001, D-002): what the files are for, then the two ways to pick them.
+// kind 'bring': Bring in files on the marking screen; 'match': files to match to a roster.
+export function FilesOrFolder({ kind, onPick, onClose }) {
+  const pick = folder => { onClose(); pickMany(folder).then(list => (list.length ? onPick(list) : toast(t('setup.bf_nothing')))); };
+  return <Dialog open title={t(kind === 'match' ? 'inout.mr_title' : 'inout.bf_title')} onClose={onClose}
+    actions={<><Button onClick={onClose}>{t('setup.bf_cancel')}</Button><Button onClick={() => pick(false)} data-pf>{t('setup.w_files')}</Button><Button variant="primary" onClick={() => pick(true)} data-pd>{t('inout.bf_whole')}</Button></>}>
+    <div data-fof={kind}>{kind === 'match' ? <p>{t('inout.mr_text')}</p> : <><p>{t('inout.bf_text')}</p><p><b>{t('inout.bf_late_h')}</b> {t('inout.bf_late')}</p><p><b>{t('inout.bf_scan_h')}</b> {t('inout.bf_scan')}</p></>}</div>
+  </Dialog>;
 }
 
 // What she reads beside a row: Skipped, Choose, Chosen by you, Matched by name or Check (sortTag).
@@ -129,6 +160,8 @@ export function BringFiles({ rows: rows0, dups, onClose }) {
 
 // The class the matched files belong to, given to the download when it opens (as the split gives it: change.js takeSplit).
 export const classAfter = (id, cls) => C.afterSplit({ id, cls });
+// The videos and partners picked for an assignment with no papers, made once its pages open (StartNotes, D-022).
+export const partnersAfter = (id, pv) => C.afterSplit({ id, pv });
 
 // Files to match to a roster: outside files with no download, matched to a class's names and opened as a new download.
 // lib: the library; classId: the class to start with; onGo(entries, cls): opens them (each path "Name/file").

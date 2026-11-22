@@ -55,7 +55,7 @@ async function box(p, n, x0, y0, x1, y1) {
 const card = (st, q) => '[data-qm] .qmc[data-st="' + st + '"][data-q="' + q + '"]';
 
 
-test('Quick mark: boxes drawn and saved as one step (the score goes out of the quiz\'s points), answers marked by question and by student with clicks and keys, half points, a comment, Give the rest and Undo; the marks are on the papers and the current app opens the same', async () => {
+test('D-011 Quick mark: boxes drawn and saved as one step (the score goes out of the quiz\'s points), answers marked by question and by student with clicks and keys, half points, a comment, Give the rest and Undo; the marks are on the papers and the current app opens the same', async () => {
   const errors = [], ctx = await browser.createBrowserContext();
   const p = await page(ctx, errors);
   await p.goto(srv.url + 'blank'); await plant(p, withCard());
@@ -90,9 +90,21 @@ test('Quick mark: boxes drawn and saved as one step (the score goes out of the q
   await p.waitForFunction(() => document.querySelectorAll('[data-qb] [data-qbrow]').length === 3);
   await p.keyboard.press('Delete');
   await p.waitForFunction(() => document.querySelectorAll('[data-qb] [data-qbrow]').length === 2);
+  // D-011: no goals yet, so Tag questions with learning goals… opens her list; the first question then takes one
+  assert.ok(!(await p.$('[data-qb] [data-qgoal]')), 'no Goal before there are goals');
+  assert.match(await p.$eval('[data-qb] [data-qgoals]', e => e.textContent), /Tag questions with learning goals/);
+  await p.click('[data-qb] [data-qgoals]');
+  await p.waitForSelector('dialog[open] [data-goal-row="0"]');
+  await p.type('dialog[open] [data-goal-row="0"]', 'Reads a map');
+  await p.click('dialog[open] [data-goals-done]');
+  await p.waitForSelector('[data-qb] [data-qgoal]', { timeout: 15000 });
+  assert.match(await p.$eval('[data-qb] [data-qgoals]', e => e.textContent), /Edit goals/);
+  const gid = await p.evaluate(() => JSON.parse(localStorage.getItem('gs.lib')).goals[0].id);
+  await p.select('[data-qb] [data-qbrow="' + q1 + '"] + tr [data-qgoal]', gid);
   await p.click('[data-qbsave]');
   await p.waitForSelector('dialog[open][data-qm] .qmc img', { timeout: 60000 });
   const su1 = await su(p);
+  assert.equal(await p.evaluate(q1 => window.__mark.state().batch.quiz.qs.find(q => q.id === q1).goal, q1), gid, 'D-011: the question keeps its goal, where the current app keeps it');
   assert.equal(su1.mode, 'points'); assert.equal(+su1.outOf, 3);
   // by question: a click on the ✗ button, and a click on the other answer's picture marks it wrong too
   await p.click(card(0, q1) + ' [data-v="0"]');
@@ -273,7 +285,7 @@ test('Strong examples from the marking screen: E keeps a Quick mark answer and t
   await p.click('[data-snip]'); await p.waitForSelector('[data-snipthen="wl"]');
   await p.click('[data-snipthen="wl"]');
   await p.click('[data-snipall]');
-  await p.waitForSelector('[data-esshot] img', { timeout: 60000 });
+  await p.waitForSelector('[data-esshot] canvas', { timeout: 60000 });
   await p.type('input[data-eswhy]', 'Mixes up the steps');
   await p.click('[data-esshot-save]');
   for (let i = 0; i < 150 && (await exRecs(p)).length < 3; i++) await new Promise(r => setTimeout(r, 100));
@@ -298,6 +310,158 @@ test('Strong examples from the marking screen: E keeps a Quick mark answer and t
   await m.goto(srv.url); await appReady(m);
   await m.waitForFunction(() => window.__gs.exList().length === 2 && window.__gs.exWatch().length === 1, { timeout: 30000 });
   assert.deepEqual(await m.evaluate(() => window.__gs.exList().map(r => r.kind).sort()), ['paper', 'part']);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// D-053 to D-059 (src/examples.js exuBind, exuToggle, exuNames, exSaveShot): Use as an example counts the names covered, a drag on a
+// page covers anything else and a click takes it off (kept with the paper's covers, so Check the covers has it too), Enter in Why it's
+// strong saves; a screenshot has its own black boxes (drag, click to take off), Tags you have used as chips, and Enter saves.
+test('D-053 D-054 D-055 D-056 D-057 D-058 D-059: covers drawn and taken off on Use as an example and on a screenshot, names counted, tags you have used, Enter saves; the current app reads the covers and the examples', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, withCard()); await p.evaluate(exDbMake);
+  const z = path.join(dir, 'Quiz3.zip'); fs.writeFileSync(z, await twoZip());
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.click('[data-bring-for="i9"]');
+  await p.waitForSelector('.pop [role="menuitem"]');
+  const [chooser] = await Promise.all([p.waitForFileChooser(), p.click('.pop [role="menuitem"]')]);
+  await chooser.accept([z]);
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  const id = await p.evaluate(() => window.__mark.state().batch.id);
+  await p.click('[data-fmenu]'); await p.waitForSelector('.pop [role^="menuitem"]');
+  await menuPick(p, 'Use as an example');
+  await p.waitForSelector('[data-esuse] [data-espg="0"] canvas', { timeout: 60000 });
+  const named = () => p.$eval('[data-esnames]', e => (/(\d+) names? covered/.exec(e.textContent) || [])[1]).then(Number);
+  await p.waitForFunction(() => /names? covered\. Drag on a page to cover anything else/.test(document.querySelector('[data-esnames]').textContent));
+  const n0 = await named();
+  const at = async (sel, x, y) => { const r = await p.$eval(sel, e => { e.scrollIntoView({ block: 'start' }); const b = e.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; }); return [r.x + x * r.w, r.y + y * r.h]; };
+  const drag = async (sel, a, b) => { const [x0, y0] = await at(sel, ...a), [x1, y1] = await at(sel, ...b); await p.mouse.move(x0, y0); await p.mouse.down(); await p.mouse.move((x0 + x1) / 2, (y0 + y1) / 2, { steps: 4 }); await p.mouse.move(x1, y1, { steps: 4 }); await p.mouse.up(); };
+  const click = async (sel, x, y) => { const [cx, cy] = await at(sel, x, y); await p.mouse.click(cx, cy); };
+  const own = () => p.evaluate(() => Object.values((window.__mark.state().batch.share || {}).boxes || {}).reduce((n, l) => n + l.length, 0));
+  // D-053: a drag covers it; D-054: the count goes up
+  await drag('[data-espg="0"] canvas', [0.55, 0.25], [0.8, 0.33]);
+  await p.waitForFunction(() => Object.values((window.__mark.state().batch.share || {}).boxes || {}).some(l => l.length));
+  await p.waitForFunction(n => +(/(\d+) names? covered/.exec(document.querySelector('[data-esnames]').textContent) || [])[1] === n, {}, n0 + 1);
+  // D-056: a click on it takes it off
+  await click('[data-espg="0"] canvas', 0.67, 0.29);
+  await p.waitForFunction(n => +(/(\d+) names? covered/.exec(document.querySelector('[data-esnames]').textContent) || [])[1] === n, {}, n0);
+  assert.equal(await own(), 0);
+  await drag('[data-espg="0"] canvas', [0.55, 0.25], [0.8, 0.33]);
+  await p.waitForFunction(n => +(/(\d+) names? covered/.exec(document.querySelector('[data-esnames]').textContent) || [])[1] === n, {}, n0 + 1);
+  // D-055: Enter in Why it's strong saves
+  await p.type('input[data-eswhy]', 'Clear steps'); await p.keyboard.press('Enter');
+  for (let i = 0; i < 150 && (await exRecs(p)).length < 1; i++) await new Promise(r => setTimeout(r, 100));
+  assert.deepEqual((await exRecs(p)).map(r => [r.kind, r.why]), [['paper', 'Clear steps']]);
+  await p.waitForFunction(() => !document.querySelector('[data-esuse]'));
+  // a screenshot kept as a strong example: D-057 black boxes, D-059 Enter in Tags saves
+  const shot = async () => { await p.click('[data-snip]'); await p.waitForSelector('[data-snipthen="ex"]'); await p.click('[data-snipthen="ex"]'); await p.click('[data-snipall]'); await p.waitForSelector('[data-esshot] canvas', { timeout: 60000 }); };
+  // the picture is drawn (a white ground under it; an empty canvas is clear), so a drag lands where the picture will stay
+  const drawn = () => p.waitForFunction(() => document.querySelector('[data-esshot] canvas').getContext('2d').getImageData(0, 0, 1, 1).data[3] === 255);
+  await shot();
+  await drawn();
+  assert.match(await p.$eval('[data-esshotn]', e => e.textContent), /^Name covers on the paper are already painted in\. Drag over anything that shows a name to black it out/);
+  await drag('[data-esshotpv] canvas', [0.1, 0.1], [0.3, 0.2]);
+  await p.waitForFunction(() => /^1 area blacked out\./.test(document.querySelector('[data-esshotn]').textContent));
+  await drag('[data-esshotpv] canvas', [0.5, 0.5], [0.7, 0.6]);
+  await p.waitForFunction(() => /^2 areas blacked out\./.test(document.querySelector('[data-esshotn]').textContent));
+  await click('[data-esshotpv] canvas', 0.6, 0.55);
+  await p.waitForFunction(() => /^1 area blacked out\./.test(document.querySelector('[data-esshotn]').textContent));
+  assert.equal(await p.$('[data-esaddtag]'), null, 'no tags used yet');
+  await p.type('input[data-estags]', 'steps'); await p.keyboard.press('Enter');
+  for (let i = 0; i < 300 && (await exRecs(p)).length < 2; i++) await new Promise(r => setTimeout(r, 100));
+  const first = (await exRecs(p)).find(r => r.kind === 'shot');
+  assert.deepEqual([first.tags, first.watch], [['steps'], undefined]);
+  await p.waitForFunction(() => !document.querySelector('[data-esshot]'));
+  // D-058: the tag used is a chip that adds it; Enter in Why saves, even pressed before the picture has been read
+  await shot();
+  await p.waitForSelector('[data-esaddtag="steps"]');
+  await p.click('[data-esaddtag="steps"]');
+  assert.equal(await p.$eval('input[data-estags]', e => e.value), 'steps');
+  await p.type('input[data-eswhy]', 'Labels each step'); await p.keyboard.press('Enter');
+  // the covered picture is drawn and kept before the box closes, which takes longer on a busy machine
+  await p.waitForFunction(() => !document.querySelector('[data-esshot]'), { timeout: 30000 });
+  for (let i = 0; i < 300 && (await exRecs(p)).length < 3; i++) await new Promise(r => setTimeout(r, 100));
+  const second = (await exRecs(p)).find(r => r.kind === 'shot' && r.id !== first.id);
+  assert.deepEqual([second.tags, second.why, second.letter], [['steps'], 'Labels each step', '2']);
+  const share = await p.evaluate(() => JSON.parse(JSON.stringify(window.__mark.state().batch.share.boxes)));
+  await p.evaluate(() => window.__mark.saved());
+  await p.goto(srv.url + 'blank'); await p.close();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url); await appReady(m);
+  await m.waitForFunction(() => window.__gs.exList().length === 3, { timeout: 30000 });
+  assert.deepEqual(await m.evaluate(() => window.__gs.exList().map(r => r.kind + ':' + (r.tags || []).join()).sort()), ['paper:', 'shot:steps', 'shot:steps']);
+  await m.evaluate(id => window.__gs.reopenKept(id), id);
+  await m.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
+  assert.deepEqual(await m.evaluate(() => JSON.parse(JSON.stringify(window.__gs.state().batch.share.boxes))), share);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// D-008 D-009 D-010 (src/quiz.js, src/examples.js exStar, exGo): Example on a Quick mark answer keeps it and shows it kept, and the
+// toast's See examples closes Quick mark for the assignment's own Examples. D-018 D-019 D-020 (openExamples): the Examples tab,
+// between Insights and Return once there is one: answers by question with the questions that have none yet, and the same
+// assignment's examples in a linked class shown only when asked, each saying where it came from.
+test('D-008 D-009 D-010 D-018 D-019 D-020: Example on a Quick mark answer, See examples to the assignment\'s Examples tab, questions with none yet, linked classes shown and hidden; the current app reads the example', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  const seed = withCard(), lib = JSON.parse(seed.ls['gs.lib']);
+  lib.classes[0].units[0].items.find(i => i.id === 'i9').group = 'g9';
+  lib.classes[1].units.push({ id: 'u9', name: 'Unit 1: Stories', items: [{ id: 'i10', name: 'Speech', classId: 'c2', group: 'g9' }] });
+  seed.ls['gs.lib'] = JSON.stringify(lib);
+  await p.goto(srv.url + 'blank'); await plant(p, seed); await p.evaluate(exDbMake);
+  // an example from the same assignment in the linked class
+  await p.evaluate(() => new Promise((res, rej) => { const c = document.createElement('canvas'); c.width = 40; c.height = 30; c.getContext('2d').fillRect(0, 0, 40, 30); c.toBlob(b => { const r = indexedDB.open('grading-studio-examples'); r.onsuccess = () => { const tx = r.result.transaction(['ex', 'pix'], 'readwrite'); tx.objectStore('ex').put({ id: 'tw1', t: Date.now(), kind: 'paper', work: 'w-elsewhere', asg: 'i10', cls: 'c2', title: 'Speech', q: null, row: null, why: 'Clear voice', letter: 'A', pages: [{ w: 40, h: 30 }], marks: false, score: false, from: null, who: null }, 'tw1'); tx.objectStore('pix').put(b, 'tw1|0'); tx.oncomplete = () => { r.result.close(); res(); }; tx.onerror = () => rej(tx.error); }; }, 'image/jpeg'); }));
+  const z = path.join(dir, 'Quiz4.zip'); fs.writeFileSync(z, await twoZip());
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.click('[data-bring-for="i9"]');
+  await p.waitForSelector('.pop [role="menuitem"]');
+  const [chooser] = await Promise.all([p.waitForFileChooser(), p.click('.pop [role="menuitem"]')]);
+  await chooser.accept([z]);
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  const id = await p.evaluate(() => window.__mark.state().batch.id);
+  const tabs = () => p.$$eval('.mk-top [role="tab"]', a => a.map(x => x.textContent));
+  assert.ok((await tabs()).some(x => /^Examples/.test(x)), 'a linked class has an example: the tab shows');
+  // two question boxes
+  await setupDo(p, 'Quick mark');
+  await p.waitForSelector('dialog[open][data-qb] [data-qbpg="0"] canvas', { timeout: 60000 });
+  await box(p, 0, 0.1, 0.12, 0.6, 0.2);
+  await p.waitForFunction(() => document.querySelectorAll('[data-qb] [data-qbrow]').length === 1);
+  await box(p, 0, 0.1, 0.3, 0.6, 0.4);
+  await p.waitForFunction(() => document.querySelectorAll('[data-qb] [data-qbrow]').length === 2);
+  const q1 = await p.$eval('[data-qb] [data-qbrow]', e => e.dataset.qbrow);
+  await p.click('[data-qbsave]');
+  await p.waitForSelector('dialog[open][data-qm] .qmc img', { timeout: 60000 });
+  // D-009 D-010: the Example button on the answer, and it shows kept
+  assert.equal(await p.$eval(card(0, q1) + ' [data-ex]', b => [b.textContent, b.getAttribute('aria-pressed')].join()), 'Example,false');
+  await p.click(card(0, q1) + ' [data-ex]');
+  await p.waitForFunction(sel => document.querySelector(sel).getAttribute('aria-pressed') === 'true', { timeout: 30000 }, card(0, q1) + ' [data-ex]');
+  assert.equal((await exRecs(p)).filter(r => r.kind === 'answer').length, 1);
+  // D-008: See examples closes Quick mark and opens this assignment's Examples
+  await p.waitForFunction(() => [...document.querySelectorAll('.toast button')].some(b => b.textContent === 'See examples'));
+  await p.evaluate(() => [...document.querySelectorAll('.toast button')].find(b => b.textContent === 'See examples').click());
+  await p.waitForFunction(id => location.hash === '#/mark/' + id + '/examples' && !document.querySelector('[data-qm]'), { timeout: 30000 }, id);
+  await p.waitForSelector('[data-asgex] .excard.answer', { timeout: 30000 });
+  // D-020 D-018: answers by question, and Question 2 has none yet
+  const txt = await p.$eval('[data-asgex]', e => e.textContent);
+  assert.match(txt, /Answers, by question/);
+  assert.match(await p.$eval('[data-exnone]', e => e.textContent), /^Question 2 has no example yet\. Press Example on an answer in Quick mark\.$/);
+  assert.equal(await p.$$eval('[data-asgex] .excard[data-exid]', a => a.length), 1, 'the linked class\'s one waits to be asked for');
+  // D-019: shown, with where it came from, and hidden again
+  assert.equal(await p.$eval('[data-exlinked] button[data-exlk]', b => b.textContent), 'Show 1 example from Grade 10 Literature');
+  await p.click('[data-exlinked] button[data-exlk]');
+  await p.waitForSelector('[data-exid="tw1"] [data-exfrom]');
+  assert.equal(await p.$eval('[data-exid="tw1"] [data-exfrom]', e => e.textContent), 'From Grade 10 Literature');
+  await p.click('[data-exlinked] h3 [data-exlk]');
+  await p.waitForFunction(() => !document.querySelector('[data-exid="tw1"]'));
+  await p.evaluate(() => window.__mark.saved());
+  await p.goto(srv.url + 'blank'); await p.close();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url); await appReady(m);
+  await m.waitForFunction(() => window.__gs.exList().length === 2, { timeout: 30000 });
+  assert.deepEqual(await m.evaluate(() => window.__gs.exList().map(r => r.kind + ':' + r.asg).sort()), ['answer:i9', 'paper:i10']);
   assert.deepEqual(errors, []);
   await ctx.close();
 });

@@ -69,5 +69,64 @@
   "one": "학생 한 명에게 미제출 과제 알리기",
   "other": "학생 {n}명에게 미제출 과제 알리기"
  },
- "home.plan_tomorrow": "내일 {cls} 수업 계획하기"
+ "home.plan_tomorrow": "내일 {cls} 수업 계획하기",
+ "home.look_h": "확인 필요",
+ "home.look_partly": {
+  "one": "과제 {n}개를 일부만 채점했습니다",
+  "other": "과제 {n}개를 일부만 채점했습니다"
+ },
+ "home.look_notkept": "이 브라우저에 보관되지 않은 과제",
+ "home.look_notkept_s": "{name}: 다운로드한 파일을 다시 끌어다 놓으면 다시 열립니다",
+ "home.look_backup_none": "작업이 백업되지 않았습니다",
+ "home.look_backup_old": {
+  "one": "가져갈 파일이 {n}일 전 것입니다",
+  "other": "가져갈 파일이 {n}일 전 것입니다"
+ },
+ "home.look_backup_s": "설정에서 폴더를 고르거나 가져갈 파일을 만드세요",
+ "home.look_more": "외 {n}개",
+ "home.earlier_h": "이전 과제",
+ "home.earlier_all": "{n}개 모두 보기",
+ "home.earlier_newest": "최신 항목만 보기",
+ "home.old_stale": "이전 사본: 작업은 새 사본에서 이어졌습니다",
+ "home.old_returned": "{date}에 돌려줌",
+ "home.old_worked": "마지막 작업 {date}",
+ "home.old_scored": "{of}개 중 {done}개 채점",
+ "home.old_notkept": "과제가 보관되지 않았습니다. 다운로드한 파일을 다시 끌어다 놓으세요",
+ "home.row_more": "{name} 더 보기",
+ "home.forget": "잊기",
+ "home.a_download": "다운로드",
+ "home.taught": "수업 완료",
+ "home.taught_to": "{of}장 중 {n}번째 슬라이드까지 수업",
+ "home.row_go": "{cls}: {what}",
+ "home.td_none": "오늘 목록에 할 일이 없습니다.",
+ "home.td_add": "할 일 추가…",
+ "home.td_more": {
+  "one": "목록에 {n}개 더",
+  "other": "목록에 {n}개 더"
+ },
+ "home.td_all": "모두 보기",
+ "home.td_step_tick": "할 일 체크",
+ "home.td_step_add": "할 일 추가",
+ "home.nx_h": "반에 다음으로 필요한 것",
+ "home.nx_weak": "{name}에서 {row} 항목이 가장 약했습니다.",
+ "home.nx_weak_cls": "{cls}: {name}에서 {row} 항목이 가장 약했습니다.",
+ "home.nx_flat": "{name}에서 모든 항목의 결과가 같았습니다.",
+ "home.nx_flat_cls": "{cls}: {name}에서 모든 항목의 결과가 같았습니다.",
+ "home.nx_who": {
+  "one": "{row}에서 {half}점 이하인 학생이 {n}명입니다.",
+  "other": "{row}에서 {half}점 이하인 학생이 {n}명입니다."
+ },
+ "home.nx_nobody": "{row}에서 {half}점 이하인 학생은 없습니다.",
+ "home.nx_see": "누구인지 보기",
+ "home.nx_open": "분석 열기",
+ "home.nx_last": "최근 과제 묶음",
+ "home.nx_bar": "{name} {top} 중 {avg}",
+ "home.att_take": "출석 확인",
+ "home.att_done": "출석 확인 완료 · {say}",
+ "home.att_all": "전원 출석",
+ "home.att_l": "지각 {n}명",
+ "home.att_a": "결석 {n}명",
+ "home.att_e": "사유 결석 {n}명",
+ "home.foot": "표시, 점수, 단원, 명단은 이 브라우저에 보관되므로 탭을 닫았다가 돌아와서 하던 곳부터 이어서 할 수 있습니다.",
+ "home.try_sample": "예시 반으로 해 보기"
 }

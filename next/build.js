@@ -237,6 +237,9 @@ const GRADING = [
     // the Grades tab's rows (src/app/dialogs.js) and Returned (src/tabs.js)
     'exportPlan', 'nameOut', 'outStem', 'flattenDoc', 'oneLeftOver', 'xOne', 'xNames', 'xEdit', 'xAll', 'xEarly', 'gotEarly', 'canvasJpg', 'exportWhy', 'fbOn', 'keyOn', 'asgName', 'fileSafe', 'outWord',
     'scanAll', 'buildSheetPdf', 'parseGrade', 'foundLabel', 'manyReads', 'readsCount', 'disagreeNote',
+    // the files nothing could be drawn from (src/exportreport.js unopenable); the check before returning's unmarked files are in
+    // next/src/app/mark/out.js (src/grades.js unmarkedFile), so the drawing engine doesn't grow for them
+    'unopenable', 'wordFound', 'wordScore',
     'gradeRows', 'tableHead', 'tableRow', 'gradesSummary', 'cellCopy', 'totalText', 'statusText', 'rowShown', 'scoreText', 'cellOut', 'csvCell', 'tsvLine', 'bandOf', 'ibSetup',
     'meGrade', 'pctAvgText', 'setKey', 'keyRows', 'classStats', 'leftOutText', 'spreadBins', 'onThisScale', 'partNote', 'STATUS_LABEL', 'triesSay',
     'anchorDocs', 'anchorDocPdf', 'anchorFile', 'anchorsHere', 'ANCHORS', 'anchorOf', 'anchorLabel', 'setAnchor', 'anchorCoverOn',

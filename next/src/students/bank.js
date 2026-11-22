@@ -7,6 +7,7 @@ import { saveKv } from '../planning/write.js';
 import { rubrics as savedRec, rubricsGone as goneRec } from './index.js';
 import { saveSetting } from './write.js';
 import * as undo from '../services/undo.js';
+import { rebaseList, rebaseMap } from '../shared/rebase.js';
 
 const J = o => JSON.parse(JSON.stringify(o));
 const tidy = b => ({ rubrics: Array.isArray(b && b.rubrics) ? b.rubrics : [], scales: Array.isArray(b && b.scales) ? b.scales : [], gone: b && b.gone && typeof b.gone === 'object' ? b.gone : {} });
@@ -25,7 +26,17 @@ export async function readBank() {
   return { rubrics: own.concat(more).map(r => ({ ...r, criteria: r.criteria.map(c => (c && typeof c === 'object' ? String(c.name || '') : String(c))) })).sort((x, y) => natural(x.name, y.name)), scales: b.scales.filter(okScale), units };
 }
 
-async function snap() { return { bank: tidy(await bankRec.get().catch(() => null)), saved: savedRec.json(null), gone: goneRec.json(null) }; }
+// A read that fails is not an empty bank: the change stops there, and nothing is written over her rubrics and scales (audit H-010).
+async function snap() { return { bank: tidy(await bankRec.get()), saved: savedRec.json(null), gone: goneRec.json(null) }; }
+// undo and redo change what is stored then, so rubrics and scales saved in between (the Planner, a sync) stay (audit H-012)
+const byId = { key: x => (x && x.id) || JSON.stringify(x) };
+async function rebase(from, to) {
+  const now = await snap();
+  await put({
+    bank: { rubrics: rebaseList(now.bank.rubrics, from.bank.rubrics, to.bank.rubrics, byId), scales: rebaseList(now.bank.scales, from.bank.scales, to.bank.scales, byId), gone: rebaseMap(now.bank.gone, from.bank.gone, to.bank.gone) },
+    saved: rebaseList(now.saved, from.saved, to.saved, byId), gone: rebaseMap(now.gone, from.gone, to.gone),
+  });
+}
 async function put(s) { await saveKv('bank', s.bank); saveSetting('gs.rubrics', s.saved == null ? [] : s.saved); saveSetting('gs.rubricsGone', s.gone == null ? {} : s.gone); }
 // fn(b, list, gone): change the bank, grading's saved list and what was deleted. One undo step.
 export async function changeBank(label, fn) {
@@ -34,7 +45,7 @@ export async function changeBank(label, fn) {
   fn(after.bank, after.saved, after.gone);
   after.bank.rubrics.sort((x, y) => natural(x.name, y.name)); after.bank.scales.sort((x, y) => natural(x.name, y.name)); after.saved.sort((x, y) => natural(x.name, y.name));
   await put(after);
-  undo.record({ label, undo: () => put(before), redo: () => put(after) });
+  undo.record({ label, undo: () => rebase(after, before), redo: () => rebase(before, after) });
 }
 // A rubric saved from Rubric setup: in place of one with its id or its name.
 export const keepRubric = (label, r) => changeBank(label, (b, list) => {
