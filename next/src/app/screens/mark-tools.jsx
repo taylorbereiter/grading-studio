@@ -20,6 +20,8 @@ const TOOLS = [['select', 'cursor', 'v'], ['pen', 'pen', 'p'], ['hl', 'hl', 'h']
 const TOOL_LINE = { select: () => t('mark.t_select'), pen: () => t('mark.t_pen'), hl: () => t('mark.t_hl'), oval: () => t('mark.t_oval'), text: () => t('mark.t_text'), note: () => t('mark.t_note'), check: () => t('mark.t_check'), erase: () => t('mark.t_erase') };
 const COLOR_LINE = { red: () => t('mark.c_red'), blue: () => t('mark.c_blue'), green: () => t('mark.c_green'), purple: () => t('mark.c_purple'), black: () => t('mark.c_black'), yellow: () => t('mark.c_yellow'), pink: () => t('mark.c_pink') };
 const WIDTHS = [[1.2, () => t('mark.w_fine')], [2, () => t('mark.w_medium')], [3.5, () => t('mark.w_bold')]];
+// a freehand highlight's width (src/marking.js hlBar): the current app's S, M and L
+const HL_W = [[8, () => t('mark.hlw_s')], [14, () => t('mark.hlw_m')], [22, () => t('mark.hlw_l')]];
 // a set of choices inside the tools: one stop in the Tab order, up and down move among them
 function ToolSet({ class: c, label, children }) { const rv = useRove(true); return <span class={c} role="group" aria-label={label} {...rv}>{children}</span>; }
 function Tools() {
@@ -35,6 +37,7 @@ function Tools() {
     {bar !== 'select' && bar !== 'erase' && bar !== 'stamp' && <span class="sep" />}
     {bar === 'hl' ? sw(HL, s.hlColor, M.chooseHl, t('mark.hl_color')) : bar === 'check' ? sw(COLORS, s.checkInk, M.chooseCheck, t('mark.check_color')) : bar !== 'select' && bar !== 'erase' && bar !== 'stamp' ? sw(COLORS, s.inkColor, M.chooseInk, t('mark.ink')) : null}
     {bar === 'hl' && <ToolSet class="mk-hlm" label={t('mark.hl_how')}><button type="button" aria-pressed={M.hlFree() ? 'false' : 'true'} title={t('mark.hl_snap_tip')} data-hlm="auto" onClick={() => M.setHlFree(false)}>{t('mark.hl_snap')}</button><button type="button" aria-pressed={M.hlFree() ? 'true' : 'false'} title={t('mark.hl_free_tip')} data-hlm="free" onClick={() => M.setHlFree(true)}>{t('mark.hl_free')}</button></ToolSet>}
+    {bar === 'hl' && <ToolSet class="mk-w mk-hlw" label={t('mark.hl_width')}>{HL_W.map(([w, l]) => <button type="button" aria-pressed={M.hlWidth() === w ? 'true' : 'false'} title={l()} aria-label={l()} data-hlw={w} onClick={() => M.setHlWidth(w)}><i style={'--w:' + w / 3} /></button>)}</ToolSet>}
     {bar === 'pen' && <ToolSet class="mk-w" label={t('mark.width')}>{WIDTHS.map(([w, l]) => <button type="button" aria-pressed={s.penW === w ? 'true' : 'false'} title={l()} aria-label={l()} data-w={w} onClick={() => M.chooseWidth(w)}><i style={'--w:' + w} /></button>)}</ToolSet>}
     <span class="sep" />
     <IconButton icon="undo" label={t('mark.undo')} kbd="mod+z" disabled={!s.undoStack.length} onClick={M.undo} data-undo />
@@ -61,7 +64,7 @@ function Pic({ k, color, big }) {
 // highlight once, a text box, the pen once, then punctuation, proofreading marks and stickers in panels beside it, and the ink.
 // The names of the marks are the current app's (and the teacher's own, from the mark key); they are drawn on the paper too.
 function StampMenu() {
-  const m = M.menuAt(), [fly, setFly] = useState(null), box = useRef(null);
+  const m = M.menuAt(), [fly, setFly] = useState(null), box = useRef(null), flyBox = useRef(null), into = useRef(false);
   useEffect(() => { setFly(null); if (!m) return; const el = box.current; if (!el) return;
     const r = el.getBoundingClientRect(); el.style.left = Math.max(8, Math.min(m.cx, innerWidth - r.width - 8)) + 'px'; el.style.top = Math.max(8, Math.min(m.cy, innerHeight - r.height - 8)) + 'px';
     el.focus({ preventScroll: true });
@@ -80,7 +83,19 @@ function StampMenu() {
     const items = [...box.current.querySelectorAll('button')], i = items.indexOf(document.activeElement);
     if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length].focus(); }
     if (e.key === 'ArrowUp') { e.preventDefault(); items[(i < 0 ? items.length - 1 : i - 1 + items.length) % items.length].focus(); }
+    // Arrow Right on a row with a panel opens it and goes in (src/stamps.js showFly)
+    if (e.key === 'ArrowRight' && document.activeElement.dataset.sub) { e.preventDefault(); into.current = true; setFly(document.activeElement.dataset.sub); }
   };
+  // in a panel: the arrows walk its marks, Arrow Left (from the first) or Esc goes back to its row
+  const flyKey = e => {
+    const items = [...flyBox.current.querySelectorAll('button')], i = items.indexOf(document.activeElement);
+    const back = () => { const r = box.current && box.current.querySelector('[data-sub="' + fly + '"]'); setFly(null); if (r) r.focus({ preventScroll: true }); };
+    if (e.key === 'Escape' || (e.key === 'ArrowLeft' && i <= 0)) { e.preventDefault(); e.stopPropagation(); return back(); }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); items[(i + 1) % items.length].focus(); }
+    if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+  };
+  // (the flag is cleared only where it is used: a panel closed and opened again in quick turns still goes in)
+  useEffect(() => { if (fly && into.current && flyBox.current) { into.current = false; const b = flyBox.current.querySelector('button'); if (b) b.focus({ preventScroll: true }); } }, [fly]);
   return <>
     <div ref={box} class="mk-menu" role="menu" aria-label={t('mark.menu')} tabindex="-1" onKeyDown={key}>
       {on && <>{item('del', 'trash', t('mark.m_delete'), 'del')}{(on.t === 'note' || on.t === 'text') && item('edit', 'edit', on.t === 'note' ? t('mark.m_edit_comment') : t('mark.m_edit_text'), 'edit')}<div class="st-sep" /></>}
@@ -97,9 +112,10 @@ function StampMenu() {
       <div class="st-sep" />
       {sub('punct', null, t('mark.m_punct'))}{sub('proof', null, t('mark.m_proof'))}{sub('stick', 'stamp', t('mark.m_stickers'))}
       <div class="st-sep" />
+      <div class="st-inks st-hls" role="group" aria-label={t('mark.hl_color')}>{Object.entries(HL).map(([k, v]) => <button type="button" class="st-sw sq" style={'background:' + v} aria-pressed={k === s.hlColor ? 'true' : 'false'} aria-label={COLOR_LINE[k]()} title={COLOR_LINE[k]()} data-hl-pick={k} onClick={() => M.chooseHl(k)} />)}</div>
       <div class="st-inks" role="group" aria-label={t('mark.ink')}>{Object.entries(COLORS).map(([k, v]) => <button type="button" class="st-sw" style={'background:' + v} aria-pressed={k === s.inkColor ? 'true' : 'false'} aria-label={COLOR_LINE[k]()} data-ink-pick={k} onClick={() => M.chooseInk(k)} />)}</div>
     </div>
-    {fly && <div class="mk-fly" role="menu" aria-label={fly === 'punct' ? t('mark.m_punct') : fly === 'proof' ? t('mark.m_proof') : t('mark.m_stickers')} style={flyAt(box.current)}>
+    {fly && <div ref={flyBox} onKeyDown={flyKey} class="mk-fly" role="menu" aria-label={fly === 'punct' ? t('mark.m_punct') : fly === 'proof' ? t('mark.m_proof') : t('mark.m_stickers')} style={flyAt(box.current)}>
       {fly === 'punct' && <div class="st-puncs">{K.PUNCT.map(p => stamp(p[0], 'st-punc'))}</div>}
       {fly === 'proof' && <div class="st-proofs">{K.PROOF.map(p => stamp(p[0], 'st-proof'))}</div>}
       {fly === 'stick' && <><div class="st-sticks">{STICKERS.filter(x => !K.BRAINROT.has(x[0])).map(x => stamp(x[0], 'st-stick'))}</div>
@@ -116,9 +132,23 @@ export { Marking as Tools };
 let say = () => {};
 const snip = () => PARTS.snip().then(m => m.startSnip({ toast: say })).catch(e => console.error(e));
 const hlSwitch = () => { const free = !M.hlFree(); M.setHlFree(free); say(t(free ? 'mark.hl_free_on' : 'mark.hl_snap_on')); };
-export function start({ toast, openStudent, changed }) {
+export function start({ toast, openStudent, changed, zoom }) {
   say = toast; M.startMarking({ toast, openStudent });
   const up = e => { if (/^Arrow/.test(e.key)) M.nudgeDone(); }; addEventListener('keyup', up);
+  // Zoom: Ctrl (Cmd) and the scroll wheel or a trackpad pinch zoom at the pointer (src/app/panels.js), and Ctrl + − 0 (src/app/wiring.js)
+  const zoomAt = (z, at) => {
+    const P = document.querySelector('.mk-paper'); z = Math.min(3, Math.max(0.5, Math.round(z * 100) / 100)); if (!P || z === zoom.get()) return;
+    const r = P.getBoundingClientRect(), ay = at ? at.y - r.top : P.clientHeight / 2, ax = at ? at.x - r.left : P.clientWidth / 2;
+    const fy = (P.scrollTop + ay) / Math.max(1, P.scrollHeight), fx = (P.scrollLeft + ax) / Math.max(1, P.scrollWidth);
+    zoom.set(z);
+    // the spot under the pointer stays put once the pages are their new size
+    const keep = () => { P.scrollTop = fy * P.scrollHeight - ay; P.scrollLeft = fx * P.scrollWidth - ax; };
+    requestAnimationFrame(() => requestAnimationFrame(keep)); setTimeout(keep, 250);
+  };
+  const wheel = e => { if (!(e.ctrlKey || e.metaKey) || !e.target.closest || !e.target.closest('.mk-paper')) return; e.preventDefault();
+    zoomAt(zoom.get() * Math.exp(-Math.max(-40, Math.min(40, e.deltaY * (e.deltaMode ? 20 : 1))) * 0.005), { x: e.clientX, y: e.clientY }); };
+  addEventListener('wheel', wheel, { passive: false });
+  const onPaper = () => !!document.querySelector('.mk-paper');
   for (const pg of state().pages) if (pg.wrapEl && pg.canvas) M.bind(pg, pg.wrapEl);
   const offs = [
     M.onMarking(changed),
@@ -136,8 +166,11 @@ export function start({ toast, openStudent, changed }) {
     register({ id: 'mark-once-end', keys: 'escape', label: 'mark.once_esc', group: 'mark.tools', when: () => !!state().once, run: () => M.endOnce() }),
     // the screenshot: S on the paper, Alt S (on a Mac Alt S types ß)
     register({ id: 'mark-snip', keys: ['s', 'alt+s', 'alt+ß'], label: 'mark.k_snip', group: 'mark.tools', when: () => !document.querySelector('[data-sniplayer]'), run: snip }),
+    register({ id: 'mark-zoom-in', keys: ['mod+=', 'mod++'], label: 'mark.zoom_in', group: 'mark.tools', when: onPaper, run: () => zoomAt(Math.round((zoom.get() + 0.1) * 10) / 10) }),
+    register({ id: 'mark-zoom-out', keys: ['mod+-', 'mod+_'], label: 'mark.zoom_out', group: 'mark.tools', when: onPaper, run: () => zoomAt(Math.round((zoom.get() - 0.1) * 10) / 10) }),
+    register({ id: 'mark-zoom-100', keys: 'mod+0', label: 'mark.zoom_100', group: 'mark.tools', when: onPaper, run: () => zoomAt(1) }),
     register({ id: 'mark-del', keys: ['delete', 'backspace'], label: 'mark.delete_mark', group: 'mark.tools', when: () => !!state().selected, run: () => M.deleteSelected() }),
   ];
-  return () => { removeEventListener('keyup', up); offs.forEach(f => f()); };
+  return () => { removeEventListener('keyup', up); removeEventListener('wheel', wheel); offs.forEach(f => f()); };
 }
 const TOOL_KEY = { select: 'mark.t_select', pen: 'mark.t_pen', hl: 'mark.t_hl', oval: 'mark.t_oval', text: 'mark.t_text', note: 'mark.t_note', check: 'mark.t_check', erase: 'mark.t_erase' };

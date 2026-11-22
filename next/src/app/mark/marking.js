@@ -312,6 +312,10 @@ export function letGo() { if (!state().selected) return false; use({ selected: n
 // The highlighter snaps to typed lines (where a page has them) or goes freehand; H with the highlighter in hand switches.
 export const hlFree = () => K.hlMode === 'free';
 export function setHlFree(free) { K.setHlMode(free ? 'free' : 'auto'); tell(); }
+// How wide a freehand highlight is (src/marking.js hlBarClick): 8, 14 or 22, kept in gs.hlW; the current app's button steps round them.
+export const HL_WIDTHS = [8, 14, 22];
+export const hlWidth = () => prefs.get('gs.hlW', 14);
+export function setHlWidth(w) { const hit = { target: { closest: s => (s === '[data-hlw]' ? {} : null) } }; for (let n = 0; n < 3 && hlWidth() !== w; n++) K.hlBarClick(hit); tell(); }
 
 // The score, or one rubric row's score, put on the paper where she clicks next (src/app/calc.js startScorePlace, placeScore): a picture
 // of it follows the pointer, Esc or a click off the paper stops. It is the same stamp the current app places, and it keeps up with the score.

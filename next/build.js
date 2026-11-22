@@ -205,6 +205,11 @@ const GRADING = [
     // Lighting (src/app/lighting.js): the download's and each page's own, and Auto fix
     'lightAuto', 'lightFor', 'lightOpts', 'lightKey', 'pageOwnL', 'setPageOwnL', 'LIGHT0', 'lightOn',
   ], "import STICKER_SRC from './stickers.js';\n", ['STICKER_SRC']],
+  ['gkey', [
+    // the mark key's wording (src/stamps.js): proofreading and punctuation marks and what each means, for Settings > Marking, which so
+    // doesn't load the marking engine, and for the marking engine
+    'PROOF', 'PUNCT', 'markLabel0', 'MARK_KEY', 'MARK_MEAN',
+  ], '', [], ['gcore']],
   ['gopen', [
     // opening a kept download as the current app does (src/app/open.js intake, with fromKeep): its files, students and saved work
     'paperGet', 'srcRead', 'spellLikeSaved', 'groupRaw', 'houseFile', 'makeFile', 'batchIdOf', 'revsBase', 'restore', 'rosterSort', 'loadAdded', 'loadEdits',
@@ -225,12 +230,10 @@ const GRADING = [
     'scoreTouched', 'setStatus', 'touchGrade', 'nextUnscored', 'stampName', 'isSticker', 'isProof', 'PROOF', 'PUNCT', 'BRAINROT', 'wordUnder', 'newCheckSize', 'stickerAspect', 'RECENT_STAMPS',
     // the screen's own keys and stamps (src/app/wiring.js keydown, src/app/calc.js placeScore, src/app/panels.js): a picked mark resized,
     // the highlighter's snap, the score and a row's score put on the paper
-    'canResize', 'setHlMode', 'hlMode', 'critStampOf', 'scoreStampText', 'stampOwner', 'newStampSize', 'fmNow',
-    // the mark key's wording, for Settings > Marking (src/stamps.js openMarkKey)
-    'markLabel0', 'MARK_MEAN', 'MARK_KEY',
+    'canResize', 'setHlMode', 'hlMode', 'hlBarClick', 'critStampOf', 'scoreStampText', 'stampOwner', 'newStampSize', 'fmNow',
     // one undo step for several students' grades (src/anchors.js setAnchor: a level moved from one paper to another)
     'groupStep', 'gradeStep',
-  ], "// a focus session on these papers with shortest first on picks the next paper (src/gradeplan.js gpShortNext): the new app has the plan\nconst gpReady = true;\n// the session as it runs (src/focus.js fcRun): a planning key the students side reads but never writes (shared/keys.js)\nconst fcRun = () => { try { const r = JSON.parse(localStorage.getItem('gsp.focusRun') || 'null'); return r && r.st ? r : null; } catch { return null; } };\n", ['gpReady', 'fcRun'], ['gcore', 'gdraw']],
+  ], "// a focus session on these papers with shortest first on picks the next paper (src/gradeplan.js gpShortNext): the new app has the plan\nconst gpReady = true;\n// the session as it runs (src/focus.js fcRun): a planning key the students side reads but never writes (shared/keys.js)\nconst fcRun = () => { try { const r = JSON.parse(localStorage.getItem('gsp.focusRun') || 'null'); return r && r.st ? r : null; } catch { return null; } };\n", ['gpReady', 'fcRun'], ['gcore', 'gdraw', 'gkey']],
   ['gexport', [
     // what goes back to students (src/app/export.js, src/feedback.js, src/exportreport.js, src/anchors.js): which files, their names,
     // each paper with its marks baked in, the feedback page; the grades read off the papers and the grade sheet (src/app/gradesheet.js);

@@ -16,7 +16,7 @@ import * as undoList from '../../services/undo.js';
 import { GRADE_WAYS, gradeWay, meGrade, ME_OLD, useLib } from '../../engines/gways.js';
 import { readLibrary, J, change, useLibraryPlain } from './settings-me.js';
 import { rowScaleOf, rowsTop, rowHalf, rowsSay, ROW_TOP, COLORS, PTS_AMBER } from '../../engines/gcore.js';
-import { PROOF, PUNCT, markLabel0, MARK_MEAN, MARK_KEY } from '../../engines/gmark.js';
+import { PROOF, PUNCT, markLabel0, MARK_MEAN, MARK_KEY } from '../../engines/gkey.js';
 import { drawStamp } from '../../engines/gdraw.js';
 import '../mark/setup-lines.js';
 

@@ -9,7 +9,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'preact/hooks'
 import { Tabs, Button, IconButton, Icon, EmptyState, Dialog, Progress, Avatar, TextInput, Menu, Mic } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { go, href, PARTS } from '../router.js';
-import { register } from '../../services/shortcuts.js';
+import { register, pieces } from '../../services/shortcuts.js';
 import { addCommand } from '../../services/commands.js';
 import { assistant } from '../../services/assistant.js';
 import { openPages, renderPage, fitScale } from '../mark/paper.js';
@@ -291,6 +291,8 @@ const free = () => { const a = document.activeElement; return !a || a === docume
 const AN = { high: 'mark.an_high', mid: 'mark.an_mid', low: 'mark.an_low' };
 const STATUS = [['missing', () => t('mark.missing')], ['excused', () => t('mark.excused')], ['late', () => t('mark.late')]];
 function ScorePanel({ batch, cur, onNext, onPrev, FU, fm, first, last, solo, onCalc }) {
+  // pointing at a score shows what it means, in place of the words for the score given (src/rubrics.js levelPreview)
+  const [peek, setPeek] = useState(null);
   const st = batch.students[cur]; if (!st) return null;
   const g = gradeOf(st), max = maxPoints(), name = shownName(st, cur), su = state().setup, M = MK && MK.M, off = !M;
   const file = st.files[0], row = M ? M.rowInHand() : -1, gr = st.grade;
@@ -299,6 +301,7 @@ function ScorePanel({ batch, cur, onNext, onPrev, FU, fm, first, last, solo, onC
   // the points box: up and down go to the last or next student, not half a point; Enter leaves the box
   const ptsKey = e => { if (e.key === 'Enter') e.currentTarget.blur(); if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); e.currentTarget.blur(); (e.key === 'ArrowDown' ? onNext : onPrev)(); } };
   const lvl = (i, v) => (v == null ? '' : String((su.levels && su.levels[i] && su.levels[i][v]) || ''));
+
   return <aside class="mk-side" aria-label={t('mark.score')}><div class="mk-sbody">
     <div class="who"><Avatar name={name} /><div><h2 class="t4" data-raw>{name}</h2>
       <p class="mute">{t('mark.n_of', { n: cur + 1, of: batch.students.length })}{file ? <>, <span data-raw>{file.name}</span></> : ''}</p></div></div>
@@ -308,14 +311,15 @@ function ScorePanel({ batch, cur, onNext, onPrev, FU, fm, first, last, solo, onC
         {!gr.fb && !last && <Button variant="primary" disabled={off} onClick={() => { M.setFb(true); onNext(); }} kbd="Shift F" data-fbnext>{t('mark.fb_next')}</Button>}</div></>
     : <>{FU && M && <FU.IbAsk />}<h3 class="mk-h vh">{t('mark.score')}</h3>
     {su.mode === 'rubric' ? <div class="mk-crits">{su.criteria.map((c, i) => { const v = gr.rubric[i], steps = rowSteps(su, i), top = rowTop(su, i), k = steps.indexOf(v);
-      const pct = k < 0 ? 0 : steps.length > 1 ? (k / (steps.length - 1)) * 100 : 100, say = lvl(i, v);
+      const pct = k < 0 ? 0 : steps.length > 1 ? (k / (steps.length - 1)) * 100 : 100, pk = peek && peek.i === i && lvl(i, peek.v), say = pk || lvl(i, v);
       return <div class={'mk-crit' + (i === row ? ' on' : '') + (v == null ? ' unset' : '')} data-row={i} style={{ '--f': pct / 100 }}>
         <div class="cn"><button type="button" class="nm" tabindex="-1" onClick={() => M && M.pickRow(i)} data-raw>{c}</button>{v != null && M && <IconButton icon="stamp" size="sm" label={t('mark.stamp_row', { c })} tabindex="-1" onClick={() => stamp(i)} data-critstamp={i} />}<em>{v == null ? <small>{'– / ' + top}</small> : <>{fmtNum(v)}<small>{' / ' + top}</small></>}</em></div>
         <div class="strack"><input type="range" class={'srange' + (v == null ? ' unset' : '')} min="0" max={steps.length - 1} step="1" value={Math.max(0, k)} disabled={off}
           aria-label={t('mark.row_score', { c })} aria-valuetext={v == null ? t('mark.not_scored') : t('mark.v_of', { v: fmtNum(v), of: top }) + (say ? ', ' + say : '')}
-          onInput={e => M.setRow(i, steps[+e.currentTarget.value], { toggle: false })} />
-        <div class="sticks" role="group" aria-label={t('mark.row_score', { c })}>{steps.map((w, j) => <button type="button" class={w % 1 ? 'half' : ''} style={{ '--at': steps.length > 1 ? j / (steps.length - 1) : 0 }} data-v={w} tabindex="-1" aria-pressed={v === w ? 'true' : 'false'} disabled={off} onClick={() => M.setRow(i, w)}>{fmtNum(w)}</button>)}</div></div>
-        {say && <p class="lvl mute" title={say} data-raw>{say}</p>}
+          onInput={e => M.setRow(i, steps[+e.currentTarget.value], { toggle: false })}
+          onKeyDown={e => { if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); e.stopPropagation(); if (v != null) M.setRow(i, v); } }} />
+        <div class="sticks" role="group" aria-label={t('mark.row_score', { c })}>{steps.map((w, j) => <button type="button" class={w % 1 ? 'half' : ''} style={{ '--at': steps.length > 1 ? j / (steps.length - 1) : 0 }} data-v={w} tabindex="-1" aria-pressed={v === w ? 'true' : 'false'} disabled={off} onClick={() => M.setRow(i, w)} onMouseEnter={() => setPeek({ i, v: w })} onMouseLeave={() => setPeek(null)}>{fmtNum(w)}</button>)}</div></div>
+        {say && <p class={'lvl mute' + (pk ? ' peek' : '')} title={say} data-raw data-lvl={i}>{say}</p>}
       </div>; })}</div>
       : <div class="mk-pts"><input type="text" inputmode="decimal" aria-label={t('mark.points')} value={gr.pk != null && gr.pk !== '' ? gr.pk + '%' : gr.points} disabled={off}
           onInput={e => M.setPoints(e.currentTarget.value, e.currentTarget)} onBlur={() => M && M.leftPoints()} onKeyDown={ptsKey} /><span class="mute">{t('mark.out_of_pts', { n: su.outOf })}</span></div>}
@@ -329,7 +333,8 @@ function ScorePanel({ batch, cur, onNext, onPrev, FU, fm, first, last, solo, onC
     {FU && M && <FU.PastWork st={st} />}
     {TN && M && <TN.NotesPart st={st} />}</div>
     {!solo && <div class="foot"><IconButton icon="chl" variant="plain" label={t('mark.prev')} onClick={onPrev} disabled={first} data-prev />
-      {fm ? <IconButton icon="chr" variant="plain" label={t('mark.next')} onClick={onNext} disabled={last} data-next-plain /> : <Button variant="primary" kbd="Enter" onClick={next} data-next>{t('mark.next_score')}</Button>}</div>}
+      {fm ? <><IconButton icon="chr" variant="plain" label={t('mark.next')} onClick={onNext} disabled={last} data-next-plain />{M && batch.students.some(x => x !== st && !noScore(x) && !x.grade.fb) && <Button variant="quiet" size="sm" kbd="N" onClick={next} data-nextfb>{t('mark.next_fb')}</Button>}</>
+        : <><Button variant="primary" kbd="Enter" onClick={next} data-next>{t('mark.next_score')}</Button><IconButton icon="chr" variant="plain" label={t('mark.next')} onClick={onNext} disabled={last} data-next-plain /></>}</div>}
   </aside>;
 }
 
@@ -390,7 +395,8 @@ export default function MarkScreen({ route, classes }) {
   // an assignment's strong examples (src/app/screens.js #/a/<id>/examples) are in Library > Examples, shown for this assignment
   useEffect(() => { if (route.params.tab === 'examples') location.replace(href('library', 'examples', 'a', id)); }, [route.params.tab, id]);
   const [w, setW] = useState(null), [err, setErr] = useState(null), [cur, setCur] = useState(0), [ask, setAsk] = useState(null);
-  const [zoom, setZoom] = useState(() => keep('zoom') || 1), [, tick] = useState(0);
+  const [zoom, setZoom] = useState(() => keep('zoom') || 1), [, tick] = useState(0), zr = useRef(zoom); zr.current = zoom;
+  const zoomTo = z => { z = Math.min(3, Math.max(0.5, Math.round(z * 100) / 100)); zr.current = z; setZoom(z); keep('zoom', z); };
   // the list's filter (this visit to this assignment only), the list folded to a strip ([, gs.listOpen), the score panel folded away
   // (], gs.panels.R), and Only this student (gs.solo)
   const [Calc, setCalc] = useState(null);
@@ -407,7 +413,7 @@ export default function MarkScreen({ route, classes }) {
   const setFold = v => { foldR.current = v; setFoldS(v); prefs.set('gs.listOpen', !v); };
   const setPanel = v => { noRR.current = v; setNoR(v); prefs.set('gs.panels', { ...(prefs.get('gs.panels', {}) || {}), R: v }); };
   useEffect(() => { if (!w) return; let off = null, live = true;
-    PARTS.marking().then(m => { if (!live) return; MK = m; off = m.start({ toast: text => toast(text), openStudent: i => pickRef.current(i), changed: () => tick(n => n + 1) }); tick(n => n + 1); });
+    PARTS.marking().then(m => { if (!live) return; MK = m; off = m.start({ toast: text => toast(text), openStudent: i => pickRef.current(i), changed: () => tick(n => n + 1), zoom: { get: () => zr.current, set: zoomTo } }); tick(n => n + 1); });
     return () => { live = false; if (off) off(); }; }, [w]);
   // again: the download opened once more from storage (another window saved it), on the student she was on (wantKey)
   const [again, setAgain] = useState(0), wantKey = useRef(null), [dl, setDl] = useState(null);
@@ -544,11 +550,11 @@ export default function MarkScreen({ route, classes }) {
         {!solo && <StudentList batch={w.batch} cur={cur} onPick={pick} onReport={rep ? () => setRepList(true) : null} lf={lf} setLf={setLf} fold={fold} setFold={setFold} fm={fm} onHide={MK ? () => hideNames() : null} onShuffle={() => hideNames(true)} />}
         <div class="mk-mid">
           {MK && <MK.Tools />}
-          <Paper batch={w.batch} cur={cur} zoom={zoom} ver={ver} FU={FU} ctl={spCtl} onSp={setSp} onZoom={z => { z = Math.min(3, Math.max(0.5, Math.round(z * 100) / 100)); setZoom(z); keep('zoom', z); }} />
+          <Paper batch={w.batch} cur={cur} zoom={zoom} ver={ver} FU={FU} ctl={spCtl} onSp={setSp} onZoom={zoomTo} />
           {FU && light && <FU.LightPanel onClose={() => setLight(false)} />}
-          <Rove class="mk-zoom" role="toolbar" aria-label={t('mark.view_tools')}>{sp.n > 0 && <IconButton icon="slides" label={t('mark.sp_open')} kbd="B" aria-pressed={sp.shown ? 'true' : 'false'} onClick={() => spCtl.current && spCtl.current.toggle()} data-spbtn />}{noR && <IconButton icon="chl" label={t('mark.panel_show')} kbd="]" onClick={() => setPanel(false)} data-panelshow />}{FU && FU.rescanCount() > 0 && <IconButton icon="flag" label={t('mark.rs_title_n', { n: FU.rescanCount() })} title={t('mark.rs_title_n', { n: FU.rescanCount() })} onClick={() => setRescans(true)} data-rescans />}{FU && <IconButton icon="sun" label={t('mark.l_title')} aria-pressed={light ? 'true' : 'false'} onClick={() => setLight(v => !v)} data-light />}<IconButton icon="minus" label={t('mark.zoom_out')} onClick={() => { const z = Math.max(0.5, Math.round((zoom - 0.1) * 10) / 10); setZoom(z); keep('zoom', z); }} />
-            <span>{t('mark.zoom', { n: Math.round(zoom * 100) })}</span>
-            <IconButton icon="plus" label={t('mark.zoom_in')} onClick={() => { const z = Math.min(3, Math.round((zoom + 0.1) * 10) / 10); setZoom(z); keep('zoom', z); }} /></Rove>
+          <Rove class="mk-zoom" role="toolbar" aria-label={t('mark.view_tools')}>{sp.n > 0 && <IconButton icon="slides" label={t('mark.sp_open')} kbd="B" aria-pressed={sp.shown ? 'true' : 'false'} onClick={() => spCtl.current && spCtl.current.toggle()} data-spbtn />}{noR && <IconButton icon="chl" label={t('mark.panel_show')} kbd="]" onClick={() => setPanel(false)} data-panelshow />}{FU && FU.rescanCount() > 0 && <IconButton icon="flag" label={t('mark.rs_title_n', { n: FU.rescanCount() })} title={t('mark.rs_title_n', { n: FU.rescanCount() })} onClick={() => setRescans(true)} data-rescans />}{FU && <IconButton icon="sun" label={t('mark.l_title')} aria-pressed={light ? 'true' : 'false'} onClick={() => setLight(v => !v)} data-light />}<IconButton icon="minus" label={t('mark.zoom_out')} onClick={() => zoomTo(Math.round((zoom - 0.1) * 10) / 10)} />
+            <button type="button" class="mk-z0" title={t('mark.zoom_reset', { key: pieces('mod+0').join(' ') })} onClick={() => zoomTo(1)} data-zoom0>{t('mark.zoom', { n: Math.round(zoom * 100) })}</button>
+            <IconButton icon="plus" label={t('mark.zoom_in')} onClick={() => zoomTo(Math.round((zoom + 0.1) * 10) / 10)} /></Rove>
         </div>
         {!noR && <ScorePanel batch={w.batch} cur={cur} FU={FU} fm={fm} solo={!!solo} first={at <= 0} last={at < 0 || at >= order.length - 1} onCalc={openCalc} onNext={() => step(1)} onPrev={() => step(-1)} />}
       </div>
