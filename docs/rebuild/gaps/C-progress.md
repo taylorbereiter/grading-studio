@@ -18,16 +18,16 @@ same test opens the result in the current app. Commits are on the local branch `
 | C-089 | closed: Also for the partners with the same video, ticked; a group's shared paper changes for everyone; one Undo puts all back | drive-files.test.js "C-032 C-086 C-087 C-088 C-089" | 01c383ba |
 | A-098 | closed: files dropped on a name go to that student, on the paper to the student on screen, several on the paper to Bring in files | mark-files.test.js "C-035 C-028 C-051 B-048 A-098 A-101" | 01c383ba |
 | A-101 | closed: a file dragged over the folded list opens its names | mark-files.test.js "C-035 C-028 C-051 B-048 A-098 A-101" | 01c383ba |
-| C-013 | closed: Insights has Summary / Percents / Consistency (Percents hidden for an IB setup, as in the current app) | mark-out.test.js "C-013 … A-017: Insights > Percents" | (PR 8) |
-| C-014 | closed: a dot for each paper on the percent line; pressing it opens that paper | mark-out.test.js "C-013 … A-017: Insights > Percents" | (PR 8) |
-| C-015 | closed: Who counts menu (late, left out, partial, each with its count), kept for the class in gs.pctView, read by the current app | mark-out.test.js "C-013 … A-017: Insights > Percents" | (PR 8) |
-| C-016 | closed: Middle of the class: Average / Middle score | mark-out.test.js "C-013 … A-017: Insights > Percents" | (PR 8) |
-| C-017 | closed (restored): Show the average 83% / 83.3% / 83.33% in Percents, the one gs.avgDp setting | mark-out.test.js "C-013 … A-017: Insights > Percents" | (PR 8) |
-| C-018 | closed: Target, papers below it flagged in the strip, the tile and the table; the current app's target read back | mark-out.test.js "C-013 … A-017: Insights > Percents" | (PR 8) |
-| C-019 | closed: Bands Tens / Fives / My own with the cut boxes; a box left empty drops that band | mark-out.test.js "C-013 … A-017: Insights > Percents" | (PR 8) |
-| C-020 | closed: What if adds points to everyone as a preview only; no score changes | mark-out.test.js "C-013 … A-017: Insights > Percents" | (PR 8) |
-| C-021 | closed: Papers by percent sorts by each heading, in the current app's order | mark-out.test.js "C-013 … A-017: Insights > Percents" | (PR 8) |
-| C-022 | closed: Copy this table | mark-out.test.js "C-013 … A-017: Insights > Percents" | (PR 8) |
-| C-023 | closed: score bars and row bars carry a tip for pointing and the keyboard (value, what, who) | mark-out.test.js "C-013 … A-017: Insights > Percents" | (PR 8) |
-| C-901 | closed: See this as a table under Score spread | mark-out.test.js "C-013 … A-017: Insights > Percents" | (PR 8) |
-| A-017 | closed: How each row was scored, each row counted by level | mark-out.test.js "C-013 … A-017: Insights > Percents" | (PR 8) |
+| C-013 | closed: Insights has Summary / Percents / Consistency (Percents hidden for an IB setup, as in the current app) | mark-out.test.js "C-013 … A-017: Insights > Percents" | 52a44e21 |
+| C-014 | closed: a dot for each paper on the percent line; pressing it opens that paper | mark-out.test.js "C-013 … A-017: Insights > Percents" | 52a44e21 |
+| C-015 | closed: Who counts menu (late, left out, partial, each with its count), kept for the class in gs.pctView, read by the current app | mark-out.test.js "C-013 … A-017: Insights > Percents" | 52a44e21 |
+| C-016 | closed: Middle of the class: Average / Middle score | mark-out.test.js "C-013 … A-017: Insights > Percents" | 52a44e21 |
+| C-017 | closed (restored): Show the average 83% / 83.3% / 83.33% in Percents, the one gs.avgDp setting | mark-out.test.js "C-013 … A-017: Insights > Percents" | 52a44e21 |
+| C-018 | closed: Target, papers below it flagged in the strip, the tile and the table; the current app's target read back | mark-out.test.js "C-013 … A-017: Insights > Percents" | 52a44e21 |
+| C-019 | closed: Bands Tens / Fives / My own with the cut boxes; a box left empty drops that band | mark-out.test.js "C-013 … A-017: Insights > Percents" | 52a44e21 |
+| C-020 | closed: What if adds points to everyone as a preview only; no score changes | mark-out.test.js "C-013 … A-017: Insights > Percents" | 52a44e21 |
+| C-021 | closed: Papers by percent sorts by each heading, in the current app's order | mark-out.test.js "C-013 … A-017: Insights > Percents" | 52a44e21 |
+| C-022 | closed: Copy this table | mark-out.test.js "C-013 … A-017: Insights > Percents" | 52a44e21 |
+| C-023 | closed: score bars and row bars carry a tip for pointing and the keyboard (value, what, who) | mark-out.test.js "C-013 … A-017: Insights > Percents" | 52a44e21 |
+| C-901 | closed: See this as a table under Score spread | mark-out.test.js "C-013 … A-017: Insights > Percents" | 52a44e21 |
+| A-017 | closed: How each row was scored, each row counted by level | mark-out.test.js "C-013 … A-017: Insights > Percents" | 52a44e21 |
