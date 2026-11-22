@@ -166,6 +166,31 @@ test('To do: a line edited at the side, moving quickly from box to box loses not
   await p.ctx.close();
 });
 
+// A browser that, like Firefox and Safari, says nothing when the box she is typing in is taken away: no change, blur or focusout while
+// a node is being removed (this Chrome sends them, so the test takes them away to check the box saves without them).
+const NO_BLUR_ON_REMOVE = () => {
+  let rm = 0;
+  for (const [o, k] of [[Node.prototype, 'removeChild'], [Element.prototype, 'remove'], [Node.prototype, 'replaceChild'], [Element.prototype, 'replaceWith']]) {
+    const f = o[k]; o[k] = function (...a) { rm++; try { return f.apply(this, a); } finally { rm--; } };
+  }
+  for (const t of ['change', 'blur', 'focusout']) window.addEventListener(t, e => { if (rm) e.stopImmediatePropagation(); }, true);
+};
+test('To do: the words typed and the page left by the keyboard while still in the box are saved', async () => {
+  const p = await fresh();
+  await p.evaluateOnNewDocument(NO_BLUR_ON_REMOVE);
+  await p.goto(srv.url + 'next/#/todo'); await todoUp(p);
+  await p.click('[data-td-row="tdC"] .tdmain');
+  await p.waitForSelector('[data-td-pane="tdC"]');
+  await p.click('[data-td-x]'); await p.evaluate(() => document.querySelector('[data-td-x]').select()); await p.keyboard.type('Call the lab technician');
+  await p.click('[data-td-note]'); await p.keyboard.type('Before Friday');
+  // a shortcut or Find going to Home: the note box goes while it still has the focus
+  await p.evaluate(() => { location.hash = '#/home'; });
+  await p.waitForFunction(() => !document.querySelector('[data-td-pane]'));
+  await p.waitForFunction(() => { const l = JSON.parse(localStorage.getItem('gs.lib')).todo.items.find(x => x.id === 'tdC'); return l && l.x === 'Call the lab technician' && l.note === 'Before Friday'; }, { timeout: 5000 });
+  assert.deepEqual(p.errors, []);
+  await p.ctx.close();
+});
+
 test('To do: the week, a line typed into a day and one dragged to another, the kinds switched off, and N from anywhere', async () => {
   const p = await fresh();
   await p.goto(srv.url + 'next/#/todo/week'); await p.waitForSelector('[data-td-week]');

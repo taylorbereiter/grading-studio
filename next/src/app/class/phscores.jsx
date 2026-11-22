@@ -72,7 +72,7 @@ function One({ c, col, onBack }) {
           : paper ? <><span class="phpaper" title={t('class.ph_on_paper')}>{val || (st ? t(st === 'missing' ? 'class.missing' : 'class.excused') : '–')}</span>
             <IconButton size="sm" icon="eye" label={t('class.ph_see', { name: n })} onClick={() => import('./phsee.jsx').then(m => setSee({ P: m.PhSee, n, score: val }), e => console.error(e))} data-phsee={n} /></>
           : <><HeldInput class="input phin" type="text" inputMode="decimal" enterKeyHint="next" autoComplete="off" value={st === 'missing' || st === 'excused' ? '' : val} placeholder={st === 'missing' ? t('class.missing') : st === 'excused' ? t('class.excused') : '–'}
-              aria-label={t('class.cell_label', { name: n })} onBlur={e => typed(n, e.currentTarget.value)} onKeyDown={keyDown} data-ph-in />
+              aria-label={t('class.cell_label', { name: n })} onChange={e => typed(n, e.currentTarget.value)} onKeyDown={keyDown} data-ph-in />
             <Menu label={t('class.ph_more_for', { name: n })} items={[{ label: t('class.missing'), onSelect: () => put(col, n, { v: null, st: 'missing' }) }, { label: t('class.excused'), onSelect: () => put(col, n, { v: null, st: 'excused' }) }, { label: t('class.ph_clear'), onSelect: () => put(col, n, null, t('class.u_cleared')) }]}
               trigger={m => <IconButton {...m} size="sm" icon="dots" label={t('class.ph_more_for', { name: n })} data-ph-more />} /></>}
       </div>; })}</div>

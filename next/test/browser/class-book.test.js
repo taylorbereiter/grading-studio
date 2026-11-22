@@ -599,6 +599,39 @@ test('Phone Scores: an assignment opened at phone width, a score typed and one m
   await ctx.close();
 });
 
+// A browser that, like Firefox and Safari, says nothing when the box she is typing in is taken away: no change, blur or focusout while
+// a node is being removed (this Chrome sends them, so the test takes them away to check the box saves without them).
+const NO_BLUR_ON_REMOVE = () => {
+  let rm = 0;
+  for (const [o, k] of [[Node.prototype, 'removeChild'], [Element.prototype, 'remove'], [Node.prototype, 'replaceChild'], [Element.prototype, 'replaceWith']]) {
+    const f = o[k]; o[k] = function (...a) { rm++; try { return f.apply(this, a); } finally { rm--; } };
+  }
+  for (const t of ['change', 'blur', 'focusout']) window.addEventListener(t, e => { if (rm) e.stopImmediatePropagation(); }, true);
+};
+test('Phone Scores: a score typed and the screen left by the keyboard while still in the box is saved, once', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const p = await page(ctx, errors);
+  await p.evaluateOnNewDocument(NO_BLUR_ON_REMOVE);
+  await p.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+  await p.goto(srv.url + 'blank'); await plant(p, bookSeed());
+  await p.goto(srv.url + 'next/#/class/c1/grades');
+  await p.waitForSelector('[data-phone-scores] [data-ph-col="i9"]', { timeout: 60000 });
+  const N = (await libOf(p)).classes[0].names;
+  await p.click('[data-ph-col="i9"]');
+  await p.waitForSelector('[data-ph-one="i9"]');
+  const box = await p.$('[data-ph-stu="' + N[1] + '"] [data-ph-in]');
+  await box.click(); await p.$eval('[data-ph-stu="' + N[1] + '"] [data-ph-in]', e => e.select()); await p.keyboard.type('7.5');
+  // a shortcut or Find going elsewhere: the box goes while it still has the focus
+  await p.evaluate(() => { location.hash = '#/class/c1/people'; });
+  await p.waitForFunction(() => !document.querySelector('[data-ph-in]'));
+  await p.waitForFunction(n => { const it = JSON.parse(localStorage.getItem('gs.lib')).classes[0].units.flatMap(u => u.items).find(i => i.id === 'i9'); return it.typed && it.typed.s[n] && it.typed.s[n].v === 7.5; }, { timeout: 5000 }, N[1]);
+  // one save: one Undo puts the score back as it was
+  await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
+  await p.waitForFunction(n => { const it = JSON.parse(localStorage.getItem('gs.lib')).classes[0].units.flatMap(u => u.items).find(i => i.id === 'i9'); return !(it.typed && it.typed.s[n] && it.typed.s[n].v === 7.5); }, { timeout: 5000 }, N[1]);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
 // Attendance (src/attend.js): a day made in main's way is read here; a day taken here (a press, the keys, a note, Everyone is here)
 // is read the same by the current app's attOf and attNote.
 test('Attendance: a day taken with presses, the keys and a note, Everyone is here, Look back; read both ways with the current app', async () => {

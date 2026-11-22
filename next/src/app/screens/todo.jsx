@@ -4,7 +4,7 @@
 // the current app opens the same list. Which view is shown is this browser's choice (gs.tdBy, as the current app keeps it).
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
-import { Button, IconButton, Icon, Switch, Mic, Dialog, TextInput, toast } from '../../ui/index.js';
+import { Button, IconButton, Icon, Switch, Mic, Dialog, TextInput, HeldInput, toast } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
 import { href, go, PARTS } from '../router.js';
 import * as undoList from '../../services/undo.js';
@@ -237,11 +237,11 @@ function Pane({ ctx, r, close }) {
   // Someone new… (src/todo.js, schPersonForm): the School page's own form, then on this to-do
   const add = pid => put(r.id, { ppl: [...(it.ppl || []), pid] }), newOne = () => PARTS.schoolform().then(setNp, e => console.error(e));
   const pc = c && ctx.plan && ctx.plan.classes.find(p => E.tdKey(p.name) === E.tdKey(c.name));
-  // the words and the note are kept as typed until she leaves the box (one save, never a stale copy over newer typing): onBlur, as preact/compat makes onChange every key
+  // the words and the note are held as typed and saved once, when she leaves the box or it is taken away (ui HeldInput)
   return <section class="tdpane" data-td-pane={r.id}><IconButton icon="x" label={t('todo.close')} onClick={close} class="tdclose" />
-    <textarea class="tdtitle input" rows="2" maxLength={300} aria-label={t('todo.what')} defaultValue={it.x} data-td-x
+    <HeldInput tag="textarea" class="tdtitle input" rows="2" maxLength={300} aria-label={t('todo.what')} value={it.x} data-td-x
       onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }}
-      onBlur={e => { const x = e.currentTarget.value.replace(/\s+/g, ' ').trim(); if (x && x !== it.x) put(r.id, { x }); else if (!x) e.currentTarget.value = it.x; }} />
+      onChange={e => { const x = e.currentTarget.value.replace(/\s+/g, ' ').trim(); if (x && x !== it.x) put(r.id, { x }); }} />
     {when}{catF}
     <div class="tdf"><label class="tdlab" for="td-cls">{t('todo.class')}</label><div class="tdv"><select id="td-cls" class="input sm" value={it.c || ''} data-td-cls
       onChange={e => put(r.id, { c: e.currentTarget.value, who: '', a: '', ...(it.rep === 'meet' ? { rep: 'week' } : {}) })}>
@@ -262,8 +262,8 @@ function Pane({ ctx, r, close }) {
     <div class="tdf"><span class="tdlab">{t('todo.repeats')}</span><div class="tdv">
       {[['', 'todo.r_no'], ['day', 'todo.r_day'], ['week', 'todo.r_week'], ...(pc || it.rep === 'meet' ? [['meet', 'todo.r_meet']] : [])].map(([k, l]) =>
         <button type="button" class="chip" aria-pressed={String((it.rep || '') === k)} onClick={() => put(r.id, { rep: k, ...(k && !it.d ? { d: today } : {}) })} data-td-rep={k}>{t(l)}</button>)}</div></div>
-    <div class="tdf top"><label class="tdlab" for="td-note">{t('todo.note')}</label><div class="tdv"><textarea id="td-note" class="input" rows="3" maxLength={2000} placeholder={t('todo.note_ph')} defaultValue={it.note || ''} data-td-note
-      onBlur={e => { const x = e.currentTarget.value.trim(); if (x !== (it.note || '')) put(r.id, { note: x }); }} /></div></div>
+    <div class="tdf top"><label class="tdlab" for="td-note">{t('todo.note')}</label><div class="tdv"><HeldInput tag="textarea" id="td-note" class="input" rows="3" maxLength={2000} placeholder={t('todo.note_ph')} value={it.note || ''} data-td-note
+      onChange={e => { const x = e.currentTarget.value.trim(); if (x !== (it.note || '')) put(r.id, { note: x }); }} /></div></div>
     <div class="tdacts"><Button variant="primary" onClick={() => tick(r)} data-td-fin>{it.done ? t('todo.undone_tip') : t('todo.done')}</Button>
       {!it.done && <Button onClick={() => setDay(E.tdAdd(today, 1))} data-td-tomorrow>{t('todo.move_tomorrow')}</Button>}
       {!it.done && <Button icon="timer" onClick={() => startFocus('td:' + r.id)} data-td-focus>{t('todo.focus_on')}</Button>}
@@ -295,14 +295,14 @@ function Cats() {
   const add = async e => { e.preventDefault(); const n = name.trim(); if (!n) return; setName(''); await save(t('todo.u_cats'), E => E.todoCatAdd(n)); };
   return <details class="tdsec" data-td-cats><summary class="tdcap">{t('todo.cats')}</summary>
     {cats.map((c, i) => <div class="tdcatrow" data-td-catrow={c.id} key={c.id}>
-      <input class="input sm" maxLength={40} defaultValue={catName(c)} aria-label={t('todo.cat_name')} data-td-catn
-        onBlur={e => { const x = e.currentTarget.value.replace(/\s+/g, ' ').trim(); if (!x) { e.currentTarget.value = catName(c); return; } if (x !== catName(c)) save(t('todo.u_cats'), E => E.tdCatPut(c.id, { name: c.base && !c.own && CAT_LINE[c.id] && x === t(CAT_LINE[c.id]) ? '' : x })); }} />
+      <HeldInput class="input sm" maxLength={40} value={catName(c)} aria-label={t('todo.cat_name')} data-td-catn
+        onChange={e => { const x = e.currentTarget.value.replace(/\s+/g, ' ').trim(); if (!x) return; if (x !== catName(c)) save(t('todo.u_cats'), E => E.tdCatPut(c.id, { name: c.base && !c.own && CAT_LINE[c.id] && x === t(CAT_LINE[c.id]) ? '' : x })); }} />
       <IconButton icon="chu" size="sm" label={t('todo.cat_up')} disabled={!i} onClick={() => save(t('todo.u_cats'), E => E.todoCatMove(c.id, -1))} />
       <IconButton icon="chd" size="sm" label={t('todo.cat_down')} disabled={i === cats.length - 1} onClick={() => save(t('todo.u_cats'), E => E.todoCatMove(c.id, 1))} />
       <IconButton icon="x" size="sm" label={t('todo.cat_delete', { name: catName(c) })} onClick={() => del(c)} data-td-catdel />
-      <input class="input sm tdcatw" maxLength={300} defaultValue={c.w} aria-label={t('todo.cat_words', { name: catName(c) })} data-td-catw
+      <HeldInput class="input sm tdcatw" maxLength={300} value={c.w || ''} aria-label={t('todo.cat_words', { name: catName(c) })} data-td-catw
         placeholder={c.id === 'role' && !c.own ? t('todo.cat_role_ph') : t('todo.cat_words_ph', { eg: EG[c.id] || 'yearbook, club' })}
-        onBlur={e => { const x = e.currentTarget.value.replace(/\s+/g, ' ').trim(); if (x !== c.w) save(t('todo.u_cats'), E => E.tdCatPut(c.id, { w: x })); }} />
+        onChange={e => { const x = e.currentTarget.value.replace(/\s+/g, ' ').trim(); if (x !== c.w) save(t('todo.u_cats'), E => E.tdCatPut(c.id, { w: x })); }} />
     </div>)}
     <form class="tdcatadd" onSubmit={add}><input class="input sm" value={name} onInput={e => setName(e.currentTarget.value)} maxLength={40} placeholder={t('todo.cat_add_ph')} aria-label={t('todo.cat_add_ph')} data-td-catadd />
       <Button type="submit" size="sm" disabled={!name.trim()}>{t('todo.cat_add')}</Button></form>

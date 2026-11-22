@@ -123,6 +123,10 @@ test('the time tracker sums her grading and planning time, time added by hand co
   await p.click('[data-tk-add]'); await p.waitForSelector('[data-tk-form]');
   await p.$eval('[data-tk-min]', e => { e.value = ''; });
   await p.click('[data-tk-min]'); await p.keyboard.type('45');
+  // what she typed stays when the form is drawn again (Planning, then Grading): the box took its 30 back on every redraw
+  await p.evaluate(() => [...document.querySelectorAll('[data-tk-form] [role="radio"]')][1].click());
+  await p.evaluate(() => [...document.querySelectorAll('[data-tk-form] [role="radio"]')][0].click());
+  assert.equal(await p.$eval('[data-tk-min]', e => e.value), '45');
   await p.click('[data-tk-addok]');
   await p.waitForFunction(() => (JSON.parse(localStorage.getItem('gs.focus')).add || []).length === 1, { timeout: 10000, polling: 100 });
   const add = (await ls(p, 'gs.focus')).add[0];
