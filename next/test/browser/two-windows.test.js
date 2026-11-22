@@ -137,10 +137,14 @@ test('the library beside the current app: a class renamed in the new app and a t
   await pr.evaluate(() => window.__next.write.saveLibrary(l => { l.classes[0].name = 'Renamed in the new app'; }));
   await old.bringToFront();
   await old.waitForSelector('#tdIn'); await old.click('#tdIn'); await old.keyboard.type('Added in the current app'); await old.keyboard.press('Enter');
-  await old.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).todo, { timeout: 20000 });
-  const lib = await pr.evaluate(() => JSON.parse(localStorage.getItem('gs.lib')));
+  // Read where it was written: another window's copy of localStorage catches up a moment later (Chrome hands each window's writes to
+  // the others between processes), so reading it in the new app's window straight away could see the library from before the to-do.
+  await old.waitForFunction(() => { const t = JSON.parse(localStorage.getItem('gs.lib')).todo; return t && (t.items || []).some(it => it.x === 'Added in the current app'); }, { timeout: 20000 });
+  const lib = await old.evaluate(() => JSON.parse(localStorage.getItem('gs.lib')));
   assert.equal(lib.classes[0].name, 'Renamed in the new app');
   assert.ok(lib.todo.items.some(it => it.x === 'Added in the current app'));
+  // and the new app's window, once the write has reached it, reads the same library: nothing it saves next starts from an older one
+  await pr.waitForFunction(want => JSON.stringify(JSON.parse(localStorage.getItem('gs.lib'))) === want, { timeout: 20000 }, JSON.stringify(lib));
   assert.deepEqual(errors, []);
   await ctx.close();
 });
