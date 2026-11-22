@@ -356,8 +356,11 @@ test('D-053 D-054 D-055 D-056 D-057 D-058 D-059: covers drawn and taken off on U
   assert.deepEqual((await exRecs(p)).map(r => [r.kind, r.why]), [['paper', 'Clear steps']]);
   await p.waitForFunction(() => !document.querySelector('[data-esuse]'));
   // a screenshot kept as a strong example: D-057 black boxes, D-059 Enter in Tags saves
-  const shot = async () => { await p.click('[data-snip]'); await p.waitForSelector('[data-snipthen="ex"]'); await p.click('[data-snipthen="ex"]'); await p.click('[data-snipall]'); await p.waitForSelector('[data-esshot] canvas', { timeout: 60000 }); await p.waitForFunction(() => document.querySelector('[data-esshot] canvas').width > 0); };
+  const shot = async () => { await p.click('[data-snip]'); await p.waitForSelector('[data-snipthen="ex"]'); await p.click('[data-snipthen="ex"]'); await p.click('[data-snipall]'); await p.waitForSelector('[data-esshot] canvas', { timeout: 60000 }); };
+  // the picture is drawn (a white ground under it; an empty canvas is clear), so a drag lands where the picture will stay
+  const drawn = () => p.waitForFunction(() => document.querySelector('[data-esshot] canvas').getContext('2d').getImageData(0, 0, 1, 1).data[3] === 255);
   await shot();
+  await drawn();
   assert.match(await p.$eval('[data-esshotn]', e => e.textContent), /^Name covers on the paper are already painted in\. Drag over anything that shows a name to black it out/);
   await drag('[data-esshotpv] canvas', [0.1, 0.1], [0.3, 0.2]);
   await p.waitForFunction(() => /^1 area blacked out\./.test(document.querySelector('[data-esshotn]').textContent));
@@ -371,7 +374,7 @@ test('D-053 D-054 D-055 D-056 D-057 D-058 D-059: covers drawn and taken off on U
   const first = (await exRecs(p)).find(r => r.kind === 'shot');
   assert.deepEqual([first.tags, first.watch], [['steps'], undefined]);
   await p.waitForFunction(() => !document.querySelector('[data-esshot]'));
-  // D-058: the tag used is a chip that adds it; Enter in Why saves
+  // D-058: the tag used is a chip that adds it; Enter in Why saves, even pressed before the picture has been read
   await shot();
   await p.waitForSelector('[data-esaddtag="steps"]');
   await p.click('[data-esaddtag="steps"]');
