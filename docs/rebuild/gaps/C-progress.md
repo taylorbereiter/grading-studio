@@ -53,8 +53,9 @@ same test opens the result in the current app. Commits are on the local branch `
 | A-104 | closed: Ctrl/⌘ + zooms the paper in by 10% | mark-keyboard.test.js "gaps item 9 (C-064)" | 758b794d |
 | A-105 | closed: Ctrl/⌘ − zooms the paper out by 10% | mark-keyboard.test.js "gaps item 9 (C-064)" | 758b794d |
 | A-106 | closed: Ctrl/⌘ 0 goes back to 100% | mark-keyboard.test.js "gaps item 9 (C-064)" | 758b794d |
-| A-095 | closed: Rubric setup's own rubric has From Google Drive beside Bring in a rubric; the file picked comes in as one from the computer does | drive-files.test.js "A-095" (fake Drive) | (this commit) |
-| A-099 | closed: Transcripts for every recording is in the Setup menu (the current app's More > This assignment) and in Find, only when there are recordings | mark-readings.test.js "C-075 C-091 C-092 C-093" | (this commit) |
-| A-122 | closed: the same Transcripts box (every recording), see A-099 | mark-readings.test.js "C-075 C-091 C-092 C-093" | (this commit) |
-| A-100 | closed: Marks from other apps for every paper opens from Find whenever the assignment has PDF papers, as well as from the note above a paper that has some | mark-files.test.js "A-100 A-123" | (this commit) |
-| A-123 | closed: the same Marks from other apps box, see A-100 | mark-files.test.js "A-100 A-123" | (this commit) |
+| A-095 | closed: Rubric setup's own rubric has From Google Drive beside Bring in a rubric; the file picked comes in as one from the computer does | drive-files.test.js "A-095" (fake Drive) | 087e838a |
+| A-099 | closed: Transcripts for every recording is in the Setup menu (the current app's More > This assignment) and in Find, only when there are recordings | mark-readings.test.js "C-075 C-091 C-092 C-093" | 087e838a |
+| A-122 | closed: the same Transcripts box (every recording), see A-099 | mark-readings.test.js "C-075 C-091 C-092 C-093" | 087e838a |
+| A-100 | closed: Marks from other apps for every paper opens from Find whenever the assignment has PDF papers, as well as from the note above a paper that has some | mark-files.test.js "A-100 A-123" | 087e838a |
+| A-123 | closed: the same Marks from other apps box, see A-100 | mark-files.test.js "A-100 A-123" | 087e838a |
+| A-103 | closed: Setup > Bring in files has A scan to split… beside its two ways to pick; the pages split onto names are added here | mark-scan.test.js "A-103" | (this commit) |
