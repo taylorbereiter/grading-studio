@@ -34,5 +34,21 @@
  "top.sh_mk_left": {
   "one": "Quedan fuera: {n} alumno sin marcas, nota ni comentario todavía. El archivo dice cuántos.",
   "other": "Quedan fuera: {n} alumnos sin marcas, nota ni comentario todavía. El archivo dice cuántos."
+ },
+ "top.pm_more": "Más para este trabajo",
+ "top.pm_details": "Datos del alumno",
+ "top.pm_notes": "Escribir las notas a teclado",
+ "top.pm_export": "Exportar ahora el trabajo de {name}",
+ "top.pm_export_anon": "Exportar ahora este trabajo",
+ "top.pm_sent": "Exportado {when}. Vuelve a exportarlo si cambias algo.",
+ "top.pm_edit": "Editar la rúbrica",
+ "top.pm_edit_pts": "Editar",
+ "top.pm_keys": "Todas las teclas",
+ "top.pm_type": "Cambiar el tipo",
+ "top.pm_page": "Abrir su página en la clase",
+ "top.rd_menu": "Lecturas…",
+ "top.rd_menu_n": {
+  "one": "{n} se muestra con este trabajo",
+  "other": "{n} se muestran con este trabajo"
  }
 }

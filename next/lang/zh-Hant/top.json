@@ -34,5 +34,21 @@
  "top.sh_mk_left": {
   "one": "未納入：{n} 位學生還沒有標記、分數或評語。檔案裡會註明人數。",
   "other": "未納入：{n} 位學生還沒有標記、分數或評語。檔案裡會註明人數。"
+ },
+ "top.pm_more": "這份作業的更多選項",
+ "top.pm_details": "學生資料",
+ "top.pm_notes": "改為打字記筆記",
+ "top.pm_export": "立即匯出 {name} 的作業",
+ "top.pm_export_anon": "立即匯出這份作業",
+ "top.pm_sent": "已於{when}匯出。若有修改，請再匯出一次。",
+ "top.pm_edit": "編輯評分規準",
+ "top.pm_edit_pts": "編輯",
+ "top.pm_keys": "所有快速鍵",
+ "top.pm_type": "更改類型",
+ "top.pm_page": "開啟這位學生在班級中的頁面",
+ "top.rd_menu": "閱讀資料…",
+ "top.rd_menu_n": {
+  "one": "這份作業顯示 {n} 份",
+  "other": "這份作業顯示 {n} 份"
  }
 }

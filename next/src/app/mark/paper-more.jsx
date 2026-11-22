@@ -21,6 +21,7 @@ import { anchorName } from './score-more.jsx';
 import './lines.js';
 import './setup-lines.js';
 import './paper-lines.js';
+import './top-lines.js';
 
 const M = () => PARTS.marking().then(m => m.M);
 // Readings (mark/readings.jsx): loaded when the menu or the paper first needs them; RD once it is there
@@ -75,7 +76,7 @@ export function PaperMore({ st, cur, onSolo, onSetup }) {
     const offs = cmds.map(x => addCommand({ id: 'pm-' + x.id, label: x.label, group: th, icon: x.icon, run: () => { const y = now.current.find(z => z.id === x.id); if (y) y.onSelect(); } }));
     return () => offs.forEach(f => f()); }, [cmds.map(x => x.label).join('|')]);
   return <>
-    <Menu label={t('paper.pm_more')} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('paper.pm_more')} data-pmore />} items={items} />
+    <Menu label={t('top.pm_more')} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('top.pm_more')} data-pmore />} items={items} />
     {box && box.k === 'who' && <Details who={box.who} onClose={() => setBox(null)} />}
     {box && box.k === 'mkey' && <MarkKeySheet onClose={() => setBox(null)} />}
     {box && box.k === 'rd' && R && <R.ReadingsDialog st={st} cur={cur} onClose={() => setBox(null)} />}
@@ -88,20 +89,20 @@ function moreItems(st, cur, { onSolo, onSetup, open, R }) {
   const ex = st.files.some(f => !f.virtual && !f.rubric && (viewable(f) || f.kind === 'docx'));
   const anch = st.files.length && !noScore(st) && C.anchorsHere(), on = st.grade.anchor || '';
   return [
-    ...(who ? [{ id: 'who', label: t('paper.pm_details'), icon: 'user', onSelect: () => open({ k: 'who', who }) }] : []),
+    ...(who ? [{ id: 'who', label: t('top.pm_details'), icon: 'user', onSelect: () => open({ k: 'who', who }) }] : []),
     ...(onSolo ? [{ id: 'solo', label: t('mark.solo_start'), sub: t('mark.solo_tip'), icon: 'user', kbd: 'I', onSelect: onSolo }] : []),
-    { id: 'rd', label: t('paper.rd_menu'), sub: R && R.count(st) ? t('paper.rd_menu_n', { n: R.count(st) }) : undefined, icon: 'book', onSelect: () => readingsPart().then(() => open({ k: 'rd' }), e => console.error(e)) },
+    { id: 'rd', label: t('top.rd_menu'), sub: R && R.count(st) ? t('top.rd_menu_n', { n: R.count(st) }) : undefined, icon: 'book', onSelect: () => readingsPart().then(() => open({ k: 'rd' }), e => console.error(e)) },
     ...(ex ? [{ id: 'ex', label: t('setup.f_example'), icon: 'spark', onSelect: () => PARTS.exsave().then(m => m.useExample(st), e => console.error(e)) }] : []),
-    { id: 'tn', label: np ? t('paper.pm_notes') : t('setup.tn_title'), icon: 'note', onSelect: () => PARTS.typed().then(m => m.typeNotes(), e => console.error(e)) },
+    { id: 'tn', label: np ? t('top.pm_notes') : t('setup.tn_title'), icon: 'note', onSelect: () => PARTS.typed().then(m => m.typeNotes(), e => console.error(e)) },
     ...(vid ? [] : [{ id: 'tm', label: t('setup.tm_title'), icon: 'clock', onSelect: () => PARTS.typed().then(m => m.timerOpen(), e => console.error(e)) }]),
     ...(!fm && !noScore(st) && g.total != null && !ibSetup() ? [{ id: 'stamp', label: t('mark.stamp_tip'), icon: 'stamp', onSelect: () => M().then(m => { if (!state().pages.length) return toast(t('mark.stamp_open')); if (m.scoreStamp(null)) toast(t('mark.stamp_where')); }) }] : []),
-    ...(st.files.length ? [{ id: 'out', label: anonOn() ? t('paper.pm_export_anon') : t('paper.pm_export', { name }), icon: 'download', onSelect: () => exportNow(st, name) }] : []),
+    ...(st.files.length ? [{ id: 'out', label: anonOn() ? t('top.pm_export_anon') : t('top.pm_export', { name }), icon: 'download', onSelect: () => exportNow(st, name) }] : []),
     ...(anch ? [{ sep: true }, { heading: t('paper.an_label') }, ...C.ANCHOR_LV.map(lv => ({ id: 'an-' + lv, label: anchorName(lv), checked: on === lv,
       onSelect: () => { if (C.setAnchor(st, lv)) toast(t('paper.an_set', { lv: anchorName(lv) })); } }))] : []),
     { sep: true },
-    ...(onSetup && !fm ? [{ id: 'edit', label: rub ? t('paper.pm_edit') : t('mark.su_menu'), icon: 'edit', onSelect: onSetup }] : []),
+    ...(onSetup && !fm ? [{ id: 'edit', label: rub ? t('top.pm_edit') : t('mark.su_menu'), icon: 'edit', onSelect: onSetup }] : []),
     { id: 'mkey', label: t('setup.sg_mk_h'), icon: 'stamp', onSelect: () => open({ k: 'mkey' }) },
-    { id: 'keys', label: t('paper.pm_keys'), icon: 'keyboard', kbd: '?', onSelect: () => open({ k: 'keys' }) },
+    { id: 'keys', label: t('top.pm_keys'), icon: 'keyboard', kbd: '?', onSelect: () => open({ k: 'keys' }) },
   ];
 }
 
@@ -109,7 +110,7 @@ function moreItems(st, cur, { onSolo, onSetup, open, R }) {
 function Details({ who, onClose }) {
   const [P, setP] = useState(null);
   useEffect(() => { PARTS.people().then(setP, e => console.error(e)); }, []);
-  return P ? <P.DetailsSheet c={who.c} n={who.n} more={<a class="link" href={href('class', who.c.id, 'people', who.c.names.indexOf(who.n) + 1)} data-pmpage>{t('paper.pm_page')}</a>} onClose={onClose} /> : null;
+  return P ? <P.DetailsSheet c={who.c} n={who.n} more={<a class="link" href={href('class', who.c.id, 'people', who.c.names.indexOf(who.n) + 1)} data-pmpage>{t('top.pm_page')}</a>} onClose={onClose} /> : null;
 }
 // The mark key (src/stamps.js openMarkKey), the same card as Settings > Marking
 function MarkKeySheet({ onClose }) {
@@ -120,12 +121,12 @@ function MarkKeySheet({ onClose }) {
 
 // Under the student's name: when this paper last went out on its own (export.js oneOutHtml)
 export function Sent({ st }) {
-  return st.grade.sent ? <p class="mk-sent" data-pmsent>{t('paper.pm_sent', { when: when(st.grade.sent) })}</p> : null;
+  return st.grade.sent ? <p class="mk-sent" data-pmsent>{t('top.pm_sent', { when: when(st.grade.sent) })}</p> : null;
 }
 // The Score heading with Edit rubric beside it (panels.js editRubric)
 export function ScoreHead({ onSetup }) {
   const rub = state().setup.mode === 'rubric';
-  return <h3 class="mk-h mk-shead">{t('mark.score')}<button type="button" class="link" onClick={onSetup} data-editrubric>{rub ? t('paper.pm_edit') : t('paper.pm_edit_pts')}</button></h3>;
+  return <h3 class="mk-h mk-shead">{t('mark.score')}<button type="button" class="link" onClick={onSetup} data-editrubric>{rub ? t('top.pm_edit') : t('top.pm_edit_pts')}</button></h3>;
 }
 // On a formative panel: Change the type (panels.js fbType), the assignment's own box; a type with a score brings the score back
 export function ChangeType() {
@@ -137,6 +138,6 @@ export function ChangeType() {
     use({ lib: l });
     for (const c of [...l.classes, l.loose]) for (const u of c.units) { const it = (u.items || []).find(x => x.id === a.id); if (it) b.assignment = it; }
     M().then(m => m.changedNow()); };
-  return <><button type="button" class="link" onClick={() => PARTS.asg().then(m => setA(() => m.AssignmentDialog), e => console.error(e))} data-fbtype>{t('paper.pm_type')}</button>
+  return <><button type="button" class="link" onClick={() => PARTS.asg().then(m => setA(() => m.AssignmentDialog), e => console.error(e))} data-fbtype>{t('top.pm_type')}</button>
     {A && <A lib={library.json(null)} it={a} onClose={done} />}</>;
 }

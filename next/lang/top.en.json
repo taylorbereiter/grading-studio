@@ -34,5 +34,21 @@
  "top.sh_mk_left": {
   "one": "Left out: {n} student with no marks, score or comment yet. The file says how many.",
   "other": "Left out: {n} students with no marks, score or comment yet. The file says how many."
+ },
+ "top.pm_more": "More for this paper",
+ "top.pm_details": "Student details",
+ "top.pm_notes": "Type notes instead",
+ "top.pm_export": "Export {name}’s paper now",
+ "top.pm_export_anon": "Export this paper now",
+ "top.pm_sent": "Exported {when}. Export again after any change.",
+ "top.pm_edit": "Edit rubric",
+ "top.pm_edit_pts": "Edit",
+ "top.pm_keys": "All keys",
+ "top.pm_type": "Change the type",
+ "top.pm_page": "Open their page in the class",
+ "top.rd_menu": "Readings…",
+ "top.rd_menu_n": {
+  "one": "{n} shown with this paper",
+  "other": "{n} shown with this paper"
  }
 }

@@ -34,5 +34,21 @@
  "top.sh_mk_left": {
   "one": "Ficam de fora: {n} aluno ainda sem marcações, nota ou comentário. O arquivo diz quantos.",
   "other": "Ficam de fora: {n} alunos ainda sem marcações, nota ou comentário. O arquivo diz quantos."
+ },
+ "top.pm_more": "Mais para este trabalho",
+ "top.pm_details": "Dados do aluno",
+ "top.pm_notes": "Digitar as notas em vez disso",
+ "top.pm_export": "Exportar agora o trabalho de {name}",
+ "top.pm_export_anon": "Exportar este trabalho agora",
+ "top.pm_sent": "Exportado {when}. Exporte de novo depois de qualquer alteração.",
+ "top.pm_edit": "Editar a rubrica",
+ "top.pm_edit_pts": "Editar",
+ "top.pm_keys": "Todas as teclas",
+ "top.pm_type": "Mudar o tipo",
+ "top.pm_page": "Abrir a página do aluno na turma",
+ "top.rd_menu": "Leituras…",
+ "top.rd_menu_n": {
+  "one": "{n} aparece com este trabalho",
+  "other": "{n} aparecem com este trabalho"
  }
 }

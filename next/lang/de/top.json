@@ -34,5 +34,21 @@
  "top.sh_mk_left": {
   "one": "Nicht dabei: {n} Schüler ohne Markierungen, Punkte oder Kommentar bisher. Die Datei nennt die Anzahl.",
   "other": "Nicht dabei: {n} Schüler ohne Markierungen, Punkte oder Kommentar bisher. Die Datei nennt die Anzahl."
+ },
+ "top.pm_more": "Mehr zu dieser Arbeit",
+ "top.pm_details": "Angaben zum Schüler",
+ "top.pm_notes": "Notizen stattdessen tippen",
+ "top.pm_export": "Arbeit von {name} jetzt exportieren",
+ "top.pm_export_anon": "Diese Arbeit jetzt exportieren",
+ "top.pm_sent": "Exportiert {when}. Nach jeder Änderung erneut exportieren.",
+ "top.pm_edit": "Bewertungsraster bearbeiten",
+ "top.pm_edit_pts": "Bearbeiten",
+ "top.pm_keys": "Alle Tasten",
+ "top.pm_type": "Art ändern",
+ "top.pm_page": "Seine Seite in der Klasse öffnen",
+ "top.rd_menu": "Lesetexte…",
+ "top.rd_menu_n": {
+  "one": "{n} wird bei dieser Arbeit gezeigt",
+  "other": "{n} werden bei dieser Arbeit gezeigt"
  }
 }

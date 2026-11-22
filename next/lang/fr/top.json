@@ -34,5 +34,21 @@
  "top.sh_mk_left": {
   "one": "Laissé de côté : {n} élève sans annotation, note ni commentaire pour l’instant. Le fichier indique combien.",
   "other": "Laissés de côté : {n} élèves sans annotation, note ni commentaire pour l’instant. Le fichier indique combien."
+ },
+ "top.pm_more": "Plus pour ce devoir",
+ "top.pm_details": "Coordonnées de l'élève",
+ "top.pm_notes": "Taper les notes à la place",
+ "top.pm_export": "Exporter maintenant le devoir de {name}",
+ "top.pm_export_anon": "Exporter ce devoir maintenant",
+ "top.pm_sent": "Exporté {when}. Exportez à nouveau après toute modification.",
+ "top.pm_edit": "Modifier la grille",
+ "top.pm_edit_pts": "Modifier",
+ "top.pm_keys": "Tous les raccourcis",
+ "top.pm_type": "Changer le type",
+ "top.pm_page": "Ouvrir sa page dans la classe",
+ "top.rd_menu": "Lectures…",
+ "top.rd_menu_n": {
+  "one": "{n} affichée avec ce devoir",
+  "other": "{n} affichées avec ce devoir"
  }
 }

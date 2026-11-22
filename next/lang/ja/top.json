@@ -34,5 +34,21 @@
  "top.sh_mk_left": {
   "one": "対象外：まだ書き込み・点数・コメントのない生徒 {n} 人。人数はファイルに記載されます。",
   "other": "対象外：まだ書き込み・点数・コメントのない生徒 {n} 人。人数はファイルに記載されます。"
+ },
+ "top.pm_more": "この答案のその他の操作",
+ "top.pm_details": "生徒の情報",
+ "top.pm_notes": "代わりにメモを入力する",
+ "top.pm_export": "{name} の答案を今すぐ書き出す",
+ "top.pm_export_anon": "この答案を今すぐ書き出す",
+ "top.pm_sent": "{when}に書き出し済み。変更したらもう一度書き出してください。",
+ "top.pm_edit": "ルーブリックを編集",
+ "top.pm_edit_pts": "編集",
+ "top.pm_keys": "すべてのキー",
+ "top.pm_type": "種類を変える",
+ "top.pm_page": "クラスでこの生徒のページを開く",
+ "top.rd_menu": "資料…",
+ "top.rd_menu_n": {
+  "one": "この答案に {n} 件表示",
+  "other": "この答案に {n} 件表示"
  }
 }

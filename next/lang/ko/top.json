@@ -34,5 +34,21 @@
  "top.sh_mk_left": {
   "one": "제외: 아직 표시, 점수, 코멘트가 없는 학생 {n}명. 파일에 인원수가 적힙니다.",
   "other": "제외: 아직 표시, 점수, 코멘트가 없는 학생 {n}명. 파일에 인원수가 적힙니다."
+ },
+ "top.pm_more": "이 과제의 추가 작업",
+ "top.pm_details": "학생 정보",
+ "top.pm_notes": "대신 메모 입력하기",
+ "top.pm_export": "{name}의 과제 지금 내보내기",
+ "top.pm_export_anon": "이 과제 지금 내보내기",
+ "top.pm_sent": "{when}에 내보냄. 바꾼 뒤에는 다시 내보내세요.",
+ "top.pm_edit": "루브릭 편집",
+ "top.pm_edit_pts": "편집",
+ "top.pm_keys": "모든 단축키",
+ "top.pm_type": "유형 바꾸기",
+ "top.pm_page": "반에서 이 학생의 페이지 열기",
+ "top.rd_menu": "읽기 자료…",
+ "top.rd_menu_n": {
+  "one": "이 과제에 {n}개 표시",
+  "other": "이 과제에 {n}개 표시"
  }
 }
