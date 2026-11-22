@@ -50,5 +50,15 @@
  "top.rd_menu_n": {
   "one": "{n} se muestra con este trabajo",
   "other": "{n} se muestran con este trabajo"
- }
+ },
+ "top.st_not_on": "Nombre de carpeta · no está en la lista de {cls}",
+ "top.st_no_roster": "Nombre de carpeta · esta descarga no tiene lista",
+ "top.st_looks": "Parece {name}.",
+ "top.st_is": "Es",
+ "top.st_matched": "Ya emparejados",
+ "top.st_link": "Vincular",
+ "top.st_saves": "Al vincular, “{folder}” se guarda como otra forma de escribir su nombre, y las próximas descargas con este nombre irán a ese alumno solas.",
+ "top.st_add": "Añade alumnos a la lista de {cls} para vincular esta carpeta con uno.",
+ "top.st_none": "Esta descarga no tiene lista, así que esta carpeta no se puede vincular con un alumno.",
+ "top.st_linked": "“{folder}” ahora está vinculado con {name}"
 }

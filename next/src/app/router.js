@@ -144,6 +144,8 @@ export const PARTS = {
   split: () => import('./mark/split.jsx'),
   // Only this student's Other work (mark/solowork.jsx)
   solowork: () => import('./mark/solowork.jsx'),
+  // Student details for a folder not on the roster (mark/stranger.jsx)
+  stranger: () => import('./mark/stranger.jsx'),
   // video and audio papers, their transcripts, and notes pages (mark/media.jsx)
   media: () => import('./mark/media.jsx'),
   // typed notes and the Timer under the comment (mark/typed.jsx)

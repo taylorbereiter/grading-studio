@@ -50,5 +50,15 @@
  "top.rd_menu_n": {
   "one": "这份作业显示 {n} 份",
   "other": "这份作业显示 {n} 份"
- }
+ },
+ "top.st_not_on": "文件夹名称 · 不在 {cls} 的名单上",
+ "top.st_no_roster": "文件夹名称 · 这份下载没有选择名单",
+ "top.st_looks": "这看起来是 {name}。",
+ "top.st_is": "这是",
+ "top.st_matched": "已匹配",
+ "top.st_link": "关联",
+ "top.st_saves": "关联后,“{folder}”会存为这位学生的另一种写法,之后有这个名称的下载会自动归给他。",
+ "top.st_add": "先在 {cls} 的名单加入学生,才能把这个文件夹关联到其中一位。",
+ "top.st_none": "这份下载没有名单,所以无法把这个文件夹关联到学生。",
+ "top.st_linked": "“{folder}”已关联到 {name}"
 }

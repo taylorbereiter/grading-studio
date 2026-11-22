@@ -558,6 +558,43 @@ const openOn = async (p, key) => { const i = await p.evaluate(k => window.__mark
   await p.click('[data-st="' + i + '"]'); await p.waitForFunction(i => window.__mark.state().cur === i && document.querySelector('[data-pmore]'), { timeout: 30000 }, i); };
 const shut = async (p, sel) => { await p.waitForSelector(sel, { timeout: 30000 }); await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('dialog[open]')); };
 
+// B-046 B-063: Student details for a folder not on the roster links it to a roster student (src/people.js renderStranger, linkFolder),
+// and a roster student's card has Only this student (data-psolo)
+test('B-046 B-063: a folder not on the roster: This is… and Link keeps its name as that student\'s spelling; a roster student\'s details have Only this student', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
+  await m.goto(srv.url); await appReady(m);
+  await openZip(m, zipOf({ 'Aria Testwell/Essay.pdf': await makePaper({ title: 'Aria essay' }), 'Bram Sample/Essay.pdf': await makePaper({ title: 'Bram essay' }), 'E Placeholdr/Essay.pdf': await makePaper({ title: 'Esme essay' }) }), 'Stranger.zip');
+  const id = await m.evaluate(() => window.__gs.state().batch.id); await m.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  await p.waitForSelector('[data-pmore]', { timeout: 60000 });
+  if (await p.$('[data-repx]')) await p.click('[data-repx]');
+  await p.evaluate(() => { const b = window.__mark.state().batch; if (b.classId == null) b.classId = 'c1'; });
+  await openOn(p, 'E Placeholdr');
+  await menuPick(p, '[data-pmore]', 'Student details');
+  await p.waitForSelector('dialog[open] [data-pmstranger] [data-stpick]', { timeout: 30000 });
+  assert.match(await p.$eval('dialog[open] [data-pmstranger]', e => e.textContent), /Folder name · not on the Grade 9 English roster/);
+  const opts = await p.$$eval('dialog[open] [data-stpick] option', l => l.map(o => o.value));
+  assert.ok(opts.includes('Esme Placeholder') && opts.includes('Aria Testwell'), opts.join(', '));
+  await p.select('dialog[open] [data-stpick]', 'Esme Placeholder');
+  await p.click('dialog[open] [data-stlink]');
+  await p.waitForFunction(() => { const l = JSON.parse(localStorage.getItem('gs.lib')), i = l.classes[0].info || {}; return ((i['Esme Placeholder'] || {}).other || []).includes('E Placeholdr'); }, { timeout: 15000 });
+  await p.waitForFunction(() => !document.querySelector('dialog[open]') && [...document.querySelectorAll('.toast')].some(e => /“E Placeholdr” is now linked to Esme Placeholder/.test(e.textContent)), { timeout: 15000 });
+  assert.equal(await p.evaluate(() => { const s = window.__mark.state(); return s.batch.students[s.cur].key; }), 'E Placeholdr', 'the same student on screen');
+  // now on the roster: their card is the roster's, with Only this student
+  await p.waitForFunction(() => window.__mark.ready && document.querySelector('[data-pmore]'), { timeout: 20000 });
+  await menuPick(p, '[data-pmore]', 'Student details');
+  await p.waitForSelector('dialog[open] [data-pmwho] [data-pmsolo]', { timeout: 30000 });
+  assert.equal(await p.$eval('dialog[open] h2', e => e.textContent), 'Esme Placeholder');
+  await p.click('dialog[open] [data-pmsolo]');
+  await p.waitForSelector('.mk-solo', { timeout: 15000 });
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
 test('C-057 C-052 C-056 C-059 C-074 C-048 C-077 A-002 A-003: More for this paper beside the name has Student details, Only this student, Use as an example (a Word paper too), the Mark key and All keys over the paper, and its items and the gradebook are in Find', async () => {
   const errors = [], ctx = await browser.createBrowserContext();
   const { p } = await moreScreen(ctx, errors);

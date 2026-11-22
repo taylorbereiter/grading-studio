@@ -50,5 +50,15 @@
  "top.rd_menu_n": {
   "one": "這份作業顯示 {n} 份",
   "other": "這份作業顯示 {n} 份"
- }
+ },
+ "top.st_not_on": "資料夾名稱 · 不在 {cls} 的名單上",
+ "top.st_no_roster": "資料夾名稱 · 這份下載沒有選擇名單",
+ "top.st_looks": "這看起來是 {name}。",
+ "top.st_is": "這是",
+ "top.st_matched": "已配對",
+ "top.st_link": "連結",
+ "top.st_saves": "連結後,「{folder}」會存為這位學生的另一種寫法,之後有這個名稱的下載會自動歸給他。",
+ "top.st_add": "先在 {cls} 的名單加入學生,才能把這個資料夾連結到其中一位。",
+ "top.st_none": "這份下載沒有名單,所以無法把這個資料夾連結到學生。",
+ "top.st_linked": "「{folder}」已連結到 {name}"
 }

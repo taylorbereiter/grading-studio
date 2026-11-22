@@ -50,5 +50,15 @@
  "top.rd_menu_n": {
   "one": "{n} aparece com este trabalho",
   "other": "{n} aparecem com este trabalho"
- }
+ },
+ "top.st_not_on": "Nome da pasta · fora da lista de {cls}",
+ "top.st_no_roster": "Nome da pasta · este download não tem lista",
+ "top.st_looks": "Parece ser {name}.",
+ "top.st_is": "É",
+ "top.st_matched": "Já associados",
+ "top.st_link": "Vincular",
+ "top.st_saves": "Vincular salva “{folder}” como outra grafia desse aluno, e os próximos downloads com esse nome vão para ele sozinhos.",
+ "top.st_add": "Adicione alunos à lista de {cls} para vincular esta pasta a um deles.",
+ "top.st_none": "Este download não tem lista, então esta pasta não pode ser vinculada a um aluno.",
+ "top.st_linked": "“{folder}” agora está vinculado a {name}"
 }

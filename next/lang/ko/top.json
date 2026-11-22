@@ -50,5 +50,15 @@
  "top.rd_menu_n": {
   "one": "이 과제에 {n}개 표시",
   "other": "이 과제에 {n}개 표시"
- }
+ },
+ "top.st_not_on": "폴더 이름 · {cls} 명단에 없음",
+ "top.st_no_roster": "폴더 이름 · 이 다운로드에 명단이 없음",
+ "top.st_looks": "{name} 같아요.",
+ "top.st_is": "이 학생은",
+ "top.st_matched": "이미 연결됨",
+ "top.st_link": "연결",
+ "top.st_saves": "“{folder}”을(를) 이 학생의 다른 표기로 저장해, 앞으로 이 이름의 다운로드는 저절로 이 학생에게 가요.",
+ "top.st_add": "{cls} 명단에 학생을 넣으면 이 폴더를 연결할 수 있어요.",
+ "top.st_none": "이 다운로드에 명단이 없어 이 폴더를 학생에게 연결할 수 없어요.",
+ "top.st_linked": "“{folder}”을(를) {name}에게 연결했어요"
 }

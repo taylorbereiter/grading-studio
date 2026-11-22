@@ -77,7 +77,8 @@ export function PaperMore({ st, cur, onSolo, onSetup }) {
     return () => offs.forEach(f => f()); }, [cmds.map(x => x.label).join('|')]);
   return <>
     <Menu label={t('top.pm_more')} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('top.pm_more')} data-pmore />} items={items} />
-    {box && box.k === 'who' && <Details who={box.who} onClose={() => setBox(null)} />}
+    {box && box.k === 'who' && <Details who={box.who} onSolo={onSolo} onClose={() => setBox(null)} />}
+    {box && box.k === 'stranger' && <Stranger st={st} onClose={() => setBox(null)} />}
     {box && box.k === 'mkey' && <MarkKeySheet onClose={() => setBox(null)} />}
     {box && box.k === 'rd' && R && <R.ReadingsDialog st={st} cur={cur} onClose={() => setBox(null)} />}
     {box && box.k === 'keys' && <Sheet open title={t('keys.title')} onClose={() => setBox(null)}><div data-pmkeys><ShortcutList /></div></Sheet>}
@@ -89,7 +90,9 @@ function moreItems(st, cur, { onSolo, onSetup, open, R }) {
   const ex = st.files.some(f => !f.virtual && !f.rubric && (viewable(f) || f.kind === 'docx'));
   const anch = st.files.length && !noScore(st) && C.anchorsHere(), on = st.grade.anchor || '';
   return [
-    ...(who ? [{ id: 'who', label: t('top.pm_details'), icon: 'user', onSelect: () => open({ k: 'who', who }) }] : []),
+    ...(who ? [{ id: 'who', label: t('top.pm_details'), icon: 'user', onSelect: () => open({ k: 'who', who }) }]
+      // a folder not on the roster: its card links it to a roster student (B-046)
+      : !anonOn() && !st.gap ? [{ id: 'who', label: t('top.pm_details'), icon: 'user', onSelect: () => open({ k: 'stranger' }) }] : []),
     ...(onSolo ? [{ id: 'solo', label: t('mark.solo_start'), sub: t('mark.solo_tip'), icon: 'user', kbd: 'I', onSelect: onSolo }] : []),
     { id: 'rd', label: t('top.rd_menu'), sub: R && R.count(st) ? t('top.rd_menu_n', { n: R.count(st) }) : undefined, icon: 'book', onSelect: () => readingsPart().then(() => open({ k: 'rd' }), e => console.error(e)) },
     ...(ex ? [{ id: 'ex', label: t('setup.f_example'), icon: 'spark', onSelect: () => PARTS.exsave().then(m => m.useExample(st), e => console.error(e)) }] : []),
@@ -107,10 +110,18 @@ function moreItems(st, cur, { onSolo, onSetup, open, R }) {
 }
 
 // Student details (src/people.js personCard): the class People page's details for this student, over the paper, with their page a press away
-function Details({ who, onClose }) {
+// and Only this student, as the current app's card has (src/people.js data-psolo, B-063)
+function Details({ who, onSolo, onClose }) {
   const [P, setP] = useState(null);
   useEffect(() => { PARTS.people().then(setP, e => console.error(e)); }, []);
-  return P ? <P.DetailsSheet c={who.c} n={who.n} more={<a class="link" href={href('class', who.c.id, 'people', who.c.names.indexOf(who.n) + 1)} data-pmpage>{t('top.pm_page')}</a>} onClose={onClose} /> : null;
+  return P ? <P.DetailsSheet c={who.c} n={who.n} more={<p class="row gap"><a class="link" href={href('class', who.c.id, 'people', who.c.names.indexOf(who.n) + 1)} data-pmpage>{t('top.pm_page')}</a>
+    {onSolo && <Button size="sm" icon="user" onClick={() => { onClose(); onSolo(); }} data-pmsolo>{t('mark.solo_start')}</Button>}</p>} onClose={onClose} /> : null;
+}
+// Student details for a folder not on the roster (mark/stranger.jsx)
+function Stranger({ st, onClose }) {
+  const [S, setS] = useState(null);
+  useEffect(() => { PARTS.stranger().then(m => setS(() => m.StrangerSheet), e => console.error(e)); }, []);
+  return S ? <S st={st} onClose={onClose} /> : null;
 }
 // The mark key (src/stamps.js openMarkKey), the same card as Settings > Marking
 function MarkKeySheet({ onClose }) {

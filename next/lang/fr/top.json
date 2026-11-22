@@ -50,5 +50,15 @@
  "top.rd_menu_n": {
   "one": "{n} affichée avec ce devoir",
   "other": "{n} affichées avec ce devoir"
- }
+ },
+ "top.st_not_on": "Nom de dossier · absent de la liste de {cls}",
+ "top.st_no_roster": "Nom de dossier · aucune liste pour ce téléchargement",
+ "top.st_looks": "On dirait {name}.",
+ "top.st_is": "C’est",
+ "top.st_matched": "Déjà associés",
+ "top.st_link": "Associer",
+ "top.st_saves": "« {folder} » devient une autre orthographe de cet élève : les prochains téléchargements à ce nom iront à lui d’eux-mêmes.",
+ "top.st_add": "Ajoutez des élèves à la liste de {cls} pour associer ce dossier à l’un d’eux.",
+ "top.st_none": "Ce téléchargement n’a pas de liste : ce dossier ne peut pas être associé à un élève.",
+ "top.st_linked": "« {folder} » est maintenant associé à {name}"
 }

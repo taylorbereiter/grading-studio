@@ -50,5 +50,15 @@
  "top.rd_menu_n": {
   "one": "{n} shown with this paper",
   "other": "{n} shown with this paper"
- }
+ },
+ "top.st_not_on": "Folder name · not on the {cls} roster",
+ "top.st_no_roster": "Folder name · no roster picked for this download",
+ "top.st_looks": "This looks like {name}.",
+ "top.st_is": "This is",
+ "top.st_matched": "Already matched",
+ "top.st_link": "Link",
+ "top.st_saves": "Linking saves “{folder}” as another spelling of that student, so later downloads with this name go to them by themselves.",
+ "top.st_add": "Add students to the {cls} roster to link this folder to one of them.",
+ "top.st_none": "This download has no roster, so this folder can’t be linked to a student.",
+ "top.st_linked": "“{folder}” is now linked to {name}"
 }

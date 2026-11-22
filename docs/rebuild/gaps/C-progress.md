@@ -74,5 +74,7 @@ same test opens the result in the current app. Commits are on the local branch `
 | A-119 | kept different: the class's page in the school's system is in Setup (open it, or link it), not on the top bar, so the screen stays under 25 presses | mark-top.test.js "C-037 … C-062" | 56cba364 |
 | A-121 | closed: What opened is in Setup (as in the current app's This assignment menu), and in the list's menu and Find | mark-top.test.js "A-116 A-118 A-121 A-126" | 56cba364 |
 | A-126 | kept different: see A-118 | mark-top.test.js "A-116 A-118 A-121 A-126" | 56cba364 |
-| B-044 | closed: each goal picker in Rubric setup ends with New goal…, which opens her list with a new line ready and picks the goal made | mark-setup.test.js "B-044 B-045", "learning goals in Rubric setup…" | (this commit) |
-| B-045 | closed: with no goals yet, Rubric setup has one quiet link, Tag rows (or this score) with learning goals…; with some, Edit goals… | mark-setup.test.js "B-044 B-045" | (this commit) |
+| B-044 | closed: each goal picker in Rubric setup ends with New goal…, which opens her list with a new line ready and picks the goal made | mark-setup.test.js "B-044 B-045", "learning goals in Rubric setup…" | 26bd2389 |
+| B-045 | closed: with no goals yet, Rubric setup has one quiet link, Tag rows (or this score) with learning goals…; with some, Edit goals… | mark-setup.test.js "B-044 B-045" | 26bd2389 |
+| B-046 | closed: More for this paper has Student details for a folder not on the roster: the student it looks like, This is… (names not yet matched first) and Link, which saves the folder's name as that student's other spelling (one undo step in the library) and sorts by the roster again with the same paper open | mark-files.test.js "B-046 B-063" | (this commit) |
+| B-063 | closed: a roster student's Student details have Only this student | mark-files.test.js "B-046 B-063" | (this commit) |
