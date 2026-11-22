@@ -22769,7 +22769,7 @@
    "format": "esm"
   },
   "next/src/whole/index.js": {
-   "bytes": 6253,
+   "bytes": 6605,
    "imports": [
     {
      "path": "next/src/shared/saved.js",
@@ -56007,7 +56007,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-JXIFWIKS.js",
+     "path": "next/dist/chunk-EDUHD43O.js",
      "kind": "import-statement"
     },
     {
@@ -56950,7 +56950,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-JXIFWIKS.js",
+     "path": "next/dist/chunk-EDUHD43O.js",
      "kind": "import-statement"
     },
     {
@@ -57175,7 +57175,7 @@
    },
    "bytes": 15019
   },
-  "next/dist/chunk-JXIFWIKS.js": {
+  "next/dist/chunk-EDUHD43O.js": {
    "imports": [
     {
      "path": "next/dist/chunk-HYO7XX2G.js",
@@ -57288,13 +57288,13 @@
    ],
    "inputs": {
     "next/src/whole/index.js": {
-     "bytesInOutput": 3081
+     "bytesInOutput": 3197
     },
     "next/src/whole/due.js": {
      "bytesInOutput": 70
     }
    },
-   "bytes": 3526
+   "bytes": 3642
   },
   "next/dist/chunk-HYO7XX2G.js": {
    "imports": [
