@@ -18,6 +18,9 @@ after(async () => { await browser.close(); });
 const pause = ms => new Promise(r => setTimeout(r, ms));
 const ES = { 'gs.lang': '"es"' };
 const inSpanish = s => { const o = s || gradingSeed(); return { ...o, ls: { ...o.ls, ...ES } }; };
+// What the class needs next shows only papers finished in the last 30 days, and the made-up term's Poetry analysis was finished on
+// Oct 21: bring it to yesterday (as today.test.js does) so Today has the card on any day the tests run.
+const recentSeed = () => { const s = gradingSeed(); s.idb['grading-studio-keep'].stores.meta.find(m => m[0] === 'gs.b.n2')[1].t = Date.now() - 864e5; return s; };
 const text = (page, sel) => page.$eval(sel, e => e.innerText.replace(/\s+/g, ' ').trim());
 // A page in English has fetched no language, so the one asked about is fetched first (load does nothing when it is already there).
 const tr = (page, s) => page.evaluate(async s => { await window.__gsLang.load('es'); return window.__gsLang.tr(s, 'es'); }, s);
@@ -61,7 +64,7 @@ test('the app is in English until a language is picked, and Settings, Display sw
 
 test('in Spanish the sidebar and Today read in Spanish, with the date written the Spanish way and every typed name left alone', async () => {
   // A class called Help and a rubric row called Language: both are words the app itself uses, and both are hers.
-  const s = gradingSeed(), lib = JSON.parse(s.ls['gs.lib']); lib.classes[1].name = 'Help';
+  const s = recentSeed(), lib = JSON.parse(s.ls['gs.lib']); lib.classes[1].name = 'Help';
   const { page, close } = await openApp(browser, { seed: inSpanish({ ...s, ls: { ...s.ls, 'gs.lib': JSON.stringify(lib) } }) });
   await page.waitForFunction(() => /devolver/.test(document.querySelector('#homeSay').textContent));
   assert.deepEqual(await page.$$eval('#rail .rnav[data-nav]:not([hidden]) .rl:not(.rcnt), #rail #lessonsBtn .rl, #rail .rcap .rl, #rail .rfind .rl:not(kbd), #addClass .rl', els => els.map(e => e.textContent.trim())), ['Buscar', 'Hoy', 'Pendientes', 'Planificador', 'Centro', 'Clases', 'Añadir una clase', 'Ayuda', 'Ajustes']);
@@ -171,7 +174,7 @@ test('every word on the covered screens is in each language file (run in English
   }
   // a browser with classes and finished work: Today, Find anything, Help, the Language setting, and Today with papers to mark
   {
-    const { page, close } = await openApp(browser, { seed: gradingSeed() });
+    const { page, close } = await openApp(browser, { seed: recentSeed() });
     const own = ['Grade 9 English', 'Grade 10 Literature', 'Poetry analysis', 'Narrative essay', 'Download', /^(Aria|Bram|Cleo|Dov|Esme|Finn|Gus|Hana) /, /^Unit \d/];
     await page.waitForSelector('#needNext .tbn');
     await miss(page, 'Today', own);
@@ -866,7 +869,7 @@ test('group work’s band on the marking screen and a student’s strengths and 
     await close();
   }
   {
-    const { page, close } = await openApp(browser, { seed: gradingSeed() });
+    const { page, close } = await openApp(browser, { seed: recentSeed() });
     const own = ['Grade 9 English', 'Grade 10 Literature', 'Poetry analysis', 'Narrative essay', 'Download', /^(Aria|Bram|Cleo|Dov|Esme|Finn|Gus|Hana) /, /^Unit \d/];   // Today, behind the card
     await page.waitForSelector('#railClasses a'); await pause(500);
     await page.evaluate(() => window.__gs.personCard('c1', 'Bram Sample')); await page.waitForSelector('#pcWl h3'); await miss(page, 'strengths and concerns, none yet', own);

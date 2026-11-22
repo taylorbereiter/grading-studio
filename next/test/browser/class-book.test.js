@@ -929,6 +929,9 @@ test('A student\'s details and Settings > Classes: ID and email edited and opene
   // a student's details
   await p.goto(srv.url + 'next/#/class/c1/people/2');
   await p.waitForSelector('[data-details]', { timeout: 60000 });
+  // Strengths and concerns is a part that comes in a moment later, above the details, and pushes Edit down: a press aimed
+  // before it came lands on its heading instead. Pressed once the student's page has all its parts above the details.
+  await p.waitForSelector('[data-wl-stu]', { timeout: 60000 });
   assert.equal(await p.$('[data-att-open]'), null, 'attendance is off');
   await p.click('[data-det-edit]'); await p.waitForSelector('[data-det="email"]');
   // typed once the box is open and has the focus: a key pressed before that goes to the page behind
