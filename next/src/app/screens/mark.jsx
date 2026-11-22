@@ -434,7 +434,7 @@ export default function MarkScreen({ route, classes }) {
     PARTS.bring().then(O => O.openKept(id, { question: q => new Promise(done => setAsk({ q, done: v => { setAsk(null); done(v); } })), onStep: (n, of) => live && setDl({ n, of }) }))
       .then(r => { if (!live) return; setDl(null); if (!r) return history.back(); setW(r);
         const k = wantKey.current, at = k ? r.batch.students.findIndex(st => st.key === k) : -1; wantKey.current = null;
-        const n = at >= 0 ? at : Math.min(r.cur || 0, r.batch.students.length - 1); setCur(n); if (at >= 0) use({ cur: at }); }, e => { console.error(e); if (live) setErr(e); });
+        const n = at >= 0 ? at : Math.min(r.cur || 0, r.batch.students.length - 1); setCur(n); if (at >= 0) use({ cur: at }); }, e => { if (e.name !== 'NotKept') console.error(e); if (live) setErr(e); });   // papers not kept here: the page says so, nothing went wrong
     return () => { live = false; seam.ready = false; if (MK) MK.M.saveNowDone(); };
   }, [id, again]);
   // other windows: their saves come in when she comes back here, a download forgotten there closes here (mark/windows.js)
