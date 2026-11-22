@@ -100,9 +100,10 @@ test('C-037 C-038 B-052 B-053 B-054 A-124 C-073 A-001 A-004 C-062: n of N marked
   assert.ok(await p.$$eval('.mk-ins .tile', (l, a) => l.some(e => e.textContent.includes(a)), avg), 'Insights shows ' + avg);
   // A-004: Grade sheet and Consistency check from Find open their views
   assert.ok(await findOpen(p, 'Grade sheet')); await p.keyboard.press('Enter');
-  await p.waitForFunction(id => location.hash === '#/mark/' + encodeURIComponent(id) + '/grades' && document.querySelector('[data-sheetpdf]'), { timeout: 30000 }, id);
+  // at the Grade sheet's own address (grades/sheet), and Consistency at insights/consistency
+  await p.waitForFunction(id => location.hash === '#/mark/' + encodeURIComponent(id) + '/grades/sheet' && document.querySelector('[data-sheetpdf]'), { timeout: 30000 }, id);
   assert.ok(await findOpen(p, 'Consistency check')); await p.keyboard.press('Enter');
-  await p.waitForFunction(() => /\/insights$/.test(location.hash) && /Consistency/.test((document.querySelector('#mk-i-h') || {}).textContent || ''), { timeout: 30000 });
+  await p.waitForFunction(() => /\/insights\/consistency$/.test(location.hash) && /Consistency/.test((document.querySelector('#mk-i-h') || {}).textContent || ''), { timeout: 30000 });
   // A-001, C-062 and Examples are in Find too
   for (const s of ['Bring back from your assistant', 'Add late work', 'Examples']) assert.ok(await findHas(p, s), s);
   await opened(p, id); await asCard(p); await redraw(p);
@@ -208,7 +209,8 @@ test('H-061: a comment saved in another window shows in the comment box\'s saved
   const o = await ctx.newPage();
   await o.goto(srv.url + 'blank');
   await o.evaluate(() => { const b = JSON.parse(localStorage.getItem('gs.bank') || '[]'); localStorage.setItem('gs.bank', JSON.stringify(['Strong opening line.', ...b])); });
-  await p.waitForFunction(() => [...document.querySelectorAll('[data-cbank]')].some(e => e.title === 'Strong opening line.'), { timeout: 10000 });
+  // this window is behind the other one now, where requestAnimationFrame doesn't run: look on a timer, not on frames
+  await p.waitForFunction(() => [...document.querySelectorAll('[data-cbank]')].some(e => e.title === 'Strong opening line.'), { timeout: 10000, polling: 250 });
   await o.close();
   assert.deepEqual(errors, []);
   await ctx.close();
