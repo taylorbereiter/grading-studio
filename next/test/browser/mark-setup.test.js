@@ -295,7 +295,7 @@ test('learning goals in Rubric setup: a goal picked beside two rows is kept with
   const id = await p.evaluate(() => window.__mark.state().batch.id);
   await setupDo(p, 'Rubric setup');
   await p.waitForSelector('dialog[open] select[data-sugoal="0"]');
-  assert.deepEqual((await p.$$eval('dialog[open] select[data-sugoal="0"] option', os => os.map(o => o.textContent))).slice(1), ['Uses evidence', 'Clear structure'], 'her goals to pick from');
+  assert.deepEqual((await p.$$eval('dialog[open] select[data-sugoal="0"] option', os => os.map(o => o.textContent))).slice(1), ['Uses evidence', 'Clear structure', 'New goal…'], 'her goals to pick from, then New goal… (B-044)');
   await p.select('dialog[open] select[data-sugoal="0"]', 'g1');
   await p.select('dialog[open] select[data-sugoal="2"]', 'g2');
   await tap(p, 'dialog[open] [data-susave]');
@@ -307,6 +307,43 @@ test('learning goals in Rubric setup: a goal picked beside two rows is kept with
   await m.evaluate(id => window.__gs.reopenKept(id), id);
   await m.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
   assert.deepEqual(await m.evaluate(() => window.__gs.state().setup.goals), ['g1', null, 'g2']);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// B-044 B-045: with no goals yet, Rubric setup has one quiet link to tag rows; with some, Edit goals… and New goal… in each picker,
+// which picks the goal just made (src/goals.js goalPick, goalsSetupHtml)
+test('B-044 B-045: Tag rows with learning goals… makes the first goal; New goal… in a row\'s picker makes another and picks it, kept with the setup', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, withCard());
+  const z = path.join(dir, 'Goals b.zip'); fs.writeFileSync(z, await twoZip());
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.click('[data-bring-for="i9"]');
+  await p.waitForSelector('.pop [role="menuitem"]');
+  const [chooser] = await Promise.all([p.waitForFileChooser(), p.click('.pop [role="menuitem"]')]);
+  await chooser.accept([z]);
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  await setupDo(p, 'Rubric setup');
+  await p.waitForSelector('dialog[open] [data-sugoals]');
+  assert.equal(await p.$('dialog[open] select[data-sugoal="0"]'), null, 'no pickers before a first goal');
+  assert.match(await p.$eval('dialog[open] [data-sugoalline]', e => e.textContent), /^Tag rows with learning goals… Optional/);
+  await p.click('dialog[open] [data-sugoals]');
+  await p.waitForSelector('[data-goal-row="0"]');
+  await p.type('[data-goal-row="0"]', 'Uses evidence'); await p.click('[data-goals-done]');
+  await p.waitForSelector('dialog[open] select[data-sugoal="0"]', { timeout: 15000 });
+  assert.equal(await p.$eval('dialog[open] [data-sugoals]', e => e.textContent), 'Edit goals…');
+  const lib = await p.evaluate(() => JSON.parse(localStorage.getItem('gs.lib')));
+  assert.deepEqual(lib.goals.map(g => g.name), ['Uses evidence']);
+  // New goal… in row 2's picker: her list with a new line ready; the goal made is picked
+  await p.select('dialog[open] select[data-sugoal="1"]', '+');
+  await p.waitForSelector('[data-goal-row="1"]');
+  await p.type('[data-goal-row="1"]', 'Clear structure'); await p.click('[data-goals-done]');
+  await p.waitForFunction(() => { const s = document.querySelector('dialog[open] select[data-sugoal="1"]'); return s && s.selectedOptions[0] && s.selectedOptions[0].textContent === 'Clear structure'; }, { timeout: 15000 });
+  await tap(p, 'dialog[open] [data-susave]');
+  const ids = await p.evaluate(() => JSON.parse(localStorage.getItem('gs.lib')).goals.map(g => g.id));
+  await p.waitForFunction(g => JSON.stringify(window.__mark.state().setup.goals) === JSON.stringify([null, g, null]), { timeout: 15000 }, ids[1]);
   assert.deepEqual(errors, []);
   await ctx.close();
 });

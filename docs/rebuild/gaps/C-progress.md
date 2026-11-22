@@ -67,10 +67,12 @@ same test opens the result in the current app. Commits are on the local branch `
 | A-112 | closed: already done before this branch: the Timer's asked-for length, at least and at most (setup.talk), and Shorter / Within / Longer; now proved for at most too | mark-notes.test.js "typed notes…" | 3212a41c |
 | A-113 | closed: Only this student has Other work: every download of the class, oldest first, with their own score, read from saved work only (a failed read says so) | mark.test.js "A-113 A-114" | 3212a41c |
 | A-114 | closed: a row in Other work that has their paper opens it, still only them | mark.test.js "A-113 A-114" | 3212a41c |
-| A-115 | closed: a finger or a pencil on the paper folds the list that came out over it in full screen (a mouse press does not) | mark-top.test.js "A-125 A-094 A-102 A-115" | (this commit) |
-| A-116 | kept different: the class name stays as words in the top bar; going back to the class is the × (Close marking goes to the class page), Setup > Gradebook and Find | mark-top.test.js "A-116 A-118 A-121 A-126" | (this commit) |
-| A-117 | kept different: the Examples tab shows once the assignment has examples (with their count); before that Find's Examples opens Library > Examples, so the bar has no empty tab | mark-top.test.js "C-037 … C-062" (Examples in Find) | (this commit) |
-| A-118 | kept different: the top bar says this download's own state (Saving, Saved, Can't save); where her work is kept and Reconnect are Find's Where your work is saved, in Settings > Saving | mark-top.test.js "A-116 A-118 A-121 A-126" | (this commit) |
-| A-119 | kept different: the class's page in the school's system is in Setup (open it, or link it), not on the top bar, so the screen stays under 25 presses | mark-top.test.js "C-037 … C-062" | (this commit) |
-| A-121 | closed: What opened is in Setup (as in the current app's This assignment menu), and in the list's menu and Find | mark-top.test.js "A-116 A-118 A-121 A-126" | (this commit) |
-| A-126 | kept different: see A-118 | mark-top.test.js "A-116 A-118 A-121 A-126" | (this commit) |
+| A-115 | closed: a finger or a pencil on the paper folds the list that came out over it in full screen (a mouse press does not) | mark-top.test.js "A-125 A-094 A-102 A-115" | 56cba364 |
+| A-116 | kept different: the class name stays as words in the top bar; going back to the class is the × (Close marking goes to the class page), Setup > Gradebook and Find | mark-top.test.js "A-116 A-118 A-121 A-126" | 56cba364 |
+| A-117 | kept different: the Examples tab shows once the assignment has examples (with their count); before that Find's Examples opens Library > Examples, so the bar has no empty tab | mark-top.test.js "C-037 … C-062" (Examples in Find) | 56cba364 |
+| A-118 | kept different: the top bar says this download's own state (Saving, Saved, Can't save); where her work is kept and Reconnect are Find's Where your work is saved, in Settings > Saving | mark-top.test.js "A-116 A-118 A-121 A-126" | 56cba364 |
+| A-119 | kept different: the class's page in the school's system is in Setup (open it, or link it), not on the top bar, so the screen stays under 25 presses | mark-top.test.js "C-037 … C-062" | 56cba364 |
+| A-121 | closed: What opened is in Setup (as in the current app's This assignment menu), and in the list's menu and Find | mark-top.test.js "A-116 A-118 A-121 A-126" | 56cba364 |
+| A-126 | kept different: see A-118 | mark-top.test.js "A-116 A-118 A-121 A-126" | 56cba364 |
+| B-044 | closed: each goal picker in Rubric setup ends with New goal…, which opens her list with a new line ready and picks the goal made | mark-setup.test.js "B-044 B-045", "learning goals in Rubric setup…" | (this commit) |
+| B-045 | closed: with no goals yet, Rubric setup has one quiet link, Tag rows (or this score) with learning goals…; with some, Edit goals… | mark-setup.test.js "B-044 B-045" | (this commit) |
