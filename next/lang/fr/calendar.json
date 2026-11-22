@@ -134,5 +134,10 @@
  "cal.search_slide": "{title}, diapositive {n}",
  "cal.search_nb": "{title}, carnet",
  "cal.search_in": "Dans « {title} »",
- "cal.search_no_class": "Sur aucune classe"
+ "cal.search_no_class": "Sur aucune classe",
+ "cal.unit_unsaved": "Cette unité contient des modifications qui ne sont pas encore enregistrées.",
+ "cal.unit_discard": "Abandonner les modifications",
+ "cal.keep_editing": "Continuer à modifier",
+ "cal.unit_saved_away": "Vos modifications de {name} ont été enregistrées.",
+ "cal.untitled_unit": "Unité sans titre"
 }

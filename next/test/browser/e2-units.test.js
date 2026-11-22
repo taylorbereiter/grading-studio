@@ -135,3 +135,50 @@ test('E2-053 E2-054 E2-059 E2-052 E2-057: a unit’s screenshot replaced and rem
   assert.ok(us.find(x => x.id === 'U2').files.some(f => f.name === 'From Drive.txt'));
   assert.deepEqual(p.errors, []); await p.ctx.close(); fs.unlinkSync(tmp);   // the browser may read the picture from the file until it closes
 });
+
+test('E2-048: a unit sheet with changes asks before it closes by Esc, the backdrop, × or Cancel; leaving the page saves them; the current Planner reads them', async () => {
+  const p = await h.fresh();
+  await h.open(p, 'class/c1');
+  const openSheet = async () => { await p.waitForSelector('[data-focus="edit-unit"]'); await p.click('[data-focus="edit-unit"]'); await p.waitForSelector('dialog.sheet [data-focus="unit-name"]'); };
+  const typeName = async w => { await p.focus('dialog.sheet [data-focus="unit-name"] input, dialog.sheet input[data-focus="unit-name"]'); await p.keyboard.press('End'); await p.keyboard.type(w); };
+  const name = () => p.$eval('dialog.sheet [data-focus="unit-name"] input, dialog.sheet input[data-focus="unit-name"]', i => i.value);
+  const before0 = (await unitsNow(p, u => u.length)).find(u => u.id === 'U2');
+  await openSheet();
+  // nothing changed: Esc just closes
+  await p.keyboard.press('Escape');
+  await until(p, () => !document.querySelector('dialog.sheet[open]'));
+  await openSheet(); await typeName(' one');
+  // Esc asks; Keep editing keeps what was typed
+  await p.keyboard.press('Escape');
+  await p.waitForSelector('[data-unit-ask]');
+  assert.ok(await p.$('dialog.sheet[open]'), 'still open');
+  await p.click('[data-focus="unit-keep"]');
+  assert.equal(await name(), before0.title + ' one');
+  // the backdrop asks
+  await p.mouse.click(4, 4);
+  await p.waitForSelector('[data-unit-ask]');
+  await p.click('[data-focus="unit-keep"]');
+  // × asks; Discard is her choice and nothing is saved
+  await p.click('dialog.sheet header button');
+  await p.waitForSelector('[data-unit-ask]');
+  await p.click('[data-focus="unit-discard"]');
+  await until(p, () => !document.querySelector('dialog.sheet[open]'));
+  await new Promise(r => setTimeout(r, 300));
+  assert.equal((await h.kvInDb(p, 'units')).find(u => u.id === 'U2').title, before0.title, 'discarded only when she chose it');
+  // Cancel asks; Save from the question saves
+  await openSheet(); await typeName(' two');
+  await p.click('[data-unit-cancel]');
+  await p.waitForSelector('[data-unit-ask]');
+  await p.click('dialog.sheet [data-focus="save-unit"]');
+  await unitsNow(p, u => u.find(x => x.id === 'U2').title === before0.title + ' two');
+  // leaving the page under the sheet saves what was typed
+  await openSheet(); await typeName(' three');
+  await p.evaluate(() => { location.hash = '#/home'; });
+  const us = await unitsNow(p, u => u.find(x => x.id === 'U2').title === before0.title + ' two three');
+  assert.equal(us.find(x => x.id === 'U2').title, before0.title + ' two three');
+  await until(p, () => [...document.querySelectorAll('.toast')].some(x => /were saved/.test(x.textContent)));
+  await p.goto(h.srv.url + 'planner.html');
+  await p.waitForFunction(() => { const P = window.__planner; return P && P.L.units && P.L.units.length; }, { timeout: 20000 });
+  assert.equal(await p.evaluate(() => window.__planner.L.units.find(u => u.id === 'U2').title), before0.title + ' two three');
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
