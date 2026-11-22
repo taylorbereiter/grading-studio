@@ -354,3 +354,22 @@ test('A-093 Dark mode and Light mode from Find while marking, back to the look s
   await p.waitForFunction(w => (document.documentElement.dataset.look || '') === w, { timeout: 5000 }, was);
   assert.equal(await curOf(p), cur);
 }));
+
+// A-107 A-108: with the calculator open, numbers type into it after a click on the paper (mark.test.js has the sums); Escape closes
+// the calculator, and Lighting, when the keyboard is in them or on nothing at all (src/polish.js)
+test('A-107 A-108 Escape closes the calculator and Lighting from the paper as well as from inside them', () => withCtx(async p => {
+  await toBody(p); await p.keyboard.press('=');
+  await p.waitForSelector('[data-calc]');
+  await p.click('.mk-paper'); await toBody(p); await p.keyboard.press('7');
+  await p.waitForFunction(() => /7/.test(document.querySelector('[data-calc] input').value));
+  await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('[data-calc]'));
+  await p.waitForFunction(() => { const b = document.querySelector('[data-light]'); if (b) b.click(); return !!b; }, { timeout: 30000 });
+  await p.waitForSelector('.mk-light');
+  await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('.mk-light'));
+  await p.waitForFunction(() => { const b = document.querySelector('[data-light]'); if (b) b.click(); return !!b; }, { timeout: 30000 });
+  await p.waitForSelector('.mk-light');
+  await toBody(p); await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('.mk-light'));
+}));

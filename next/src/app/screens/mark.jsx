@@ -259,7 +259,7 @@ function Paper({ batch, cur, zoom, ver, FU, ctl, onSp, onZoom }) {
   };
   const spClose = () => { spSet({ on: null, noVid: spHasVideo(tabs) ? true : spConf().noVid }); setMine({ ...base, shown: false }); };
   const spPick = key => { const x = tabs.find(y => y.key === key); if (!x) return; spSet({ tab: x.kind }); setMine({ k: st.key, shown: true, key }); };
-  if (ctl) ctl.current = { toggle: () => (sel ? spClose() : spOpen()), open: spOpen };
+  if (ctl) ctl.current = { toggle: () => (sel ? spClose() : spOpen()), open: spOpen, has: k => tabs.some(x => x.key === k) };
   useEffect(() => { if (onSp) onSp({ n: tabs.length, shown: !!sel }); }, [tabs.length, !!sel]);
   const c = spConf(), W = size[0], H = size[1];
   let at = sel ? (c.at === 'left' || c.at === 'top' ? c.at : 'right') : '';
@@ -469,7 +469,7 @@ export default function MarkScreen({ route, classes }) {
   const [FU, setFU] = useState(null), [ver, setVer] = useState(0), [carried, setCarried] = useState(false), [light, setLight] = useState(false), [rescans, setRescans] = useState(false);
   useEffect(() => setCarried(!!(w && w.carried)), [w]);
   useEffect(() => { if (!w || !MK) return; let live = true;
-    PARTS.fileui().then(m => { if (!live) return; m.wire(MK.M, i => { if (i >= 0) pickRef.current(i); setVer(v => v + 1); }); setFU(m); m.takeSplit(); m.pdfAuto(); m.impAutoNow();
+    PARTS.fileui().then(m => { if (!live) return; m.wire(MK.M, i => { if (i >= 0) pickRef.current(i); setVer(v => v + 1); }, spCtl); setFU(m); m.takeSplit(); m.pdfAuto(); m.impAutoNow();
       PARTS.typed().then(x => { x.useKeep(MK.M.keepSetup); TN = x; if (live) tick(n => n + 1); }, e => console.error(e));
       // the papers are read in the background as they open, as the current app reads them (src/app/open.js scanAll): a grade written on
       // a paper, notes made in other apps, and marks from other apps that could be hers

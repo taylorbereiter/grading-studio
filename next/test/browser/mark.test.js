@@ -509,6 +509,32 @@ test('the screenshot: S opens it and Esc closes it, a page clicked for all of it
   await ctx.close();
 });
 
+// A-109: Show beside in a file's ⋯ (src/sidepane.js data-spshow): that file goes in the side pane, the other stays in the main column
+test('A-109: Show beside in a file\'s menu keeps that file in the side pane', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const made = await page(ctx, errors);
+  await made.goto(srv.url + 'blank'); await plant(made, gradingSeed());
+  await made.goto(srv.url); await appReady(made);
+  await openZip(made, zipOf(await standardFiles()));
+  await made.evaluate(() => window.__gs.saveNow()); await settle(made);
+  const id = await made.evaluate(() => window.__gs.state().batch.id);
+  await made.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  await p.waitForSelector('[data-repx]', { timeout: 15000 }).then(() => p.click('[data-repx]'), () => {});
+  const two = await p.evaluate(() => window.__mark.state().batch.students.findIndex(st => st.files.filter(f => /\.pdf$/.test(f.name)).length === 2));
+  await p.click('[data-st="' + two + '"]'); await p.waitForFunction(i => window.__mark.state().cur === i && window.__mark.ready, { timeout: 60000 }, two);
+  assert.equal(await p.$('.mk-sph'), null, 'the pane is closed');
+  const second = await p.$$eval('.mk-paper > section.doc [data-fmenu]', l => l[1].dataset.fmenu);
+  await p.waitForFunction(f => { if (document.querySelector('.pop [role^="menuitem"]')) return true; const b = window.__mark.ready && document.querySelector('[data-fmenu="' + f + '"]'); if (b) b.click(); return false; }, { timeout: 30000, polling: 500 }, second);
+  await p.waitForFunction(() => { const it = [...document.querySelectorAll('.pop [role^="menuitem"]')].find(e => e.textContent.includes('Show beside')); if (it) it.click(); return !!it; }, { timeout: 15000 });
+  await p.waitForSelector('.mk-sph', { timeout: 15000 });
+  await p.waitForFunction(f => { const s = document.querySelector('.mk-paper > section.doc.in-sp [data-fmenu]'); return s && s.dataset.fmenu === f && document.querySelector('.mk-paper > section.doc:not(.in-sp)'); }, { timeout: 15000 }, second);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
 test('the side pane: B opens it with the rubric in full, a file beside the other, its edge by the arrows, across the top, kept for the next student; B closes it', async () => {
   const ctx = await browser.createBrowserContext(), errors = [];
   const made = await page(ctx, errors);

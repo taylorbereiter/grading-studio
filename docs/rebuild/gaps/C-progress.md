@@ -59,3 +59,7 @@ same test opens the result in the current app. Commits are on the local branch `
 | A-100 | closed: Marks from other apps for every paper opens from Find whenever the assignment has PDF papers, as well as from the note above a paper that has some | mark-files.test.js "A-100 A-123" | 087e838a |
 | A-123 | closed: the same Marks from other apps box, see A-100 | mark-files.test.js "A-100 A-123" | 087e838a |
 | A-103 | closed: Setup > Bring in files has A scan to split… beside its two ways to pick; the pages split onto names are added here | mark-scan.test.js "A-103" | (this commit) |
+| A-107 | closed: with the calculator open, numbers and signs type into it after a click on the paper | mark.test.js (the calculator part), mark-keyboard.test.js "A-107 A-108" | (this commit) |
+| A-108 | closed: Escape closes the calculator from anywhere; Lighting now also closes with Escape when the keyboard is on nothing, no mark picked and no box open (src/polish.js) | mark-keyboard.test.js "A-107 A-108" | (this commit) |
+| A-109 | closed: Show beside heads a file's ⋯ when the file can go in the side pane, and puts it there | mark.test.js "A-109" | (this commit) |
+| A-110 | closed: already done before this branch: the side pane's edge takes the arrow keys (4% a press) | mark.test.js "the side pane…" | (this commit) |

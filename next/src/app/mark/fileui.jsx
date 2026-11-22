@@ -40,7 +40,9 @@ import { scanAsks } from '../../engines/gfiles.js';
 export const takeSplit = () => C.takeSplit();
 export const rescanCount = () => C.rescans().length;
 export const rescanList = () => C.rescans();
-export function wire(m, open) { C.wire(m, open); use({ lightPagesChanged: lightApply }); dropWire(); wordFind(open); impFind(); }
+// sp: the side pane's control (screens/mark.jsx Paper), for Show beside in a file's ⋯
+let spRef = null;
+export function wire(m, open, sp) { spRef = sp || null; C.wire(m, open); use({ lightPagesChanged: lightApply }); dropWire(); wordFind(open); impFind(); }
 // Find: Convert Word papers to PDF pages (src/shell.js findRows), while the assignment has Word papers: the one on screen, else the
 // first, is opened and its Convert to PDF pages asked, as the current app's openWordPdf (A-005)
 const wordsHere = () => { const bb = state().batch; return bb ? bb.students.flatMap(st => st.files.filter(C.canPdf).map(f => ({ st, f }))) : []; };
@@ -118,6 +120,9 @@ export function FileMenu({ st, path, name, d, on, auto }) {
   if (one && f.data && !f.virtual) items.push({ label: t('setup.gw_menu'), icon: 'people', onSelect: () => setAsk({ kind: 'grp' }) });
   if (mine && viewable(f)) items.push({ label: t('setup.f_example'), icon: 'spark', onSelect: () => PARTS.exsave().then(m => m.useExample(st)) });   // the whole paper or part of a page (stage 5)
   if (one) items.push({ label: t('setup.f_remove'), icon: 'trash', onSelect: remove });
+  // Show beside (src/sidepane.js data-spshow, A-109): this file in the side pane, when it can go there
+  const spk = d ? 'doc:' + (d.file || d.name) : 'file:' + path, sp = spRef && spRef.current;
+  if (sp && sp.has && sp.has(spk)) items.unshift({ label: t('mark.sp_show'), icon: 'slides', onSelect: () => spRef.current.open(spk) });
   if (!items.length) return null;
   const link = !!(ask && ask.a && ask.a.link);
   return <span class="mk-fmenu">
