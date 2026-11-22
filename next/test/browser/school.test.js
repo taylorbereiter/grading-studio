@@ -115,6 +115,11 @@ test('School: a link, a note and a file in groups, for a class, kept at the top,
   await retype(p, 'input[data-schpmail]', 'rowan@example.org');
   await p.click('[data-schpok]');
   await p.waitForSelector('[data-schp] [data-schmail]');
+  // D-023: the person's Email link opens in Gmail (the usual choice), as every Email button does, not the computer's mail app
+  await p.evaluate(() => { window.__mails = []; window.__gsMailTest = (h, u) => window.__mails.push([h, u]); });
+  await p.click('[data-schp] [data-schmail]');
+  await p.waitForFunction(() => window.__mails.length === 1);
+  assert.deepEqual(await p.evaluate(() => window.__mails[0]), ['mailto:rowan@example.org', 'https://mail.google.com/mail/?view=cm&fs=1&to=rowan%40example.org']);
   s = await school(p);
   assert.deepEqual(s.people.map(x => [x.role, x.name, x.email]), [['Principal', 'Rowan Placeholder', 'rowan@example.org']]);
   await p.click('[data-schroles]'); await open(p, 'textarea[data-schrolesin]');

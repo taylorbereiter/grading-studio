@@ -1146,7 +1146,6 @@
  "class.es_whole": "Trabalho inteiro",
  "class.es_part": "Parte de uma página",
  "class.es_part_say": "Arraste uma caixa em volta da parte que quer guardar. Os nomes são cobertos de preto de vez.",
- "class.es_names_say": "Guardado como imagens com os nomes cobertos de preto de vez. Para cobrir outra coisa, use Cobrir uma parte depois de salvar.",
  "class.es_marks": "Minhas marcações e comentários",
  "class.es_score": "A nota",
  "class.es_row": "Critério de rubrica",
@@ -1372,5 +1371,56 @@
  "class.rp_cuts": "Notas:",
  "class.rp_cut_hi": "a mais alta a partir de",
  "class.rp_cut_good": "boa a partir de",
- "class.rp_cut_mid": "média a partir de"
+ "class.rp_cut_mid": "média a partir de",
+ "class.ru_h": "Rubrica",
+ "class.ru_say": "Word, PDF ou uma imagem. As linhas são lidas de uma tabela quando possível.",
+ "class.ru_none": "Ainda não definido",
+ "class.ru_total": "Só o total, de {n}",
+ "class.ru_score": "Pontuar com estes critérios",
+ "class.ru_copy": "Dar a cada aluno uma cópia para marcar",
+ "class.ru_norows": "Não foi possível ler uma tabela de rubrica deste arquivo, então as linhas não foram preenchidas. Você pode digitá-las na configuração da rubrica.",
+ "class.ru_use": "Usar esta rubrica",
+ "class.ru_tick": "Marque primeiro o que fazer com ela",
+ "class.ru_set": "A rubrica está definida para “{name}”",
+ "class.ru_step": "uma rubrica trazida",
+ "class.ru_t": "Rubrica de “{name}”",
+ "class.es_n_covered": {
+  "one": "1 nome coberto.",
+  "other": "{n} nomes cobertos."
+ },
+ "class.es_cover_say": "Arraste sobre uma página para cobrir outra coisa, como um nome ou uma nota escritos à mão. Clique em uma cobertura para tirá-la.",
+ "class.es_shot_n": {
+  "one": "1 área coberta de preto.",
+  "other": "{n} áreas cobertas de preto."
+ },
+ "class.es_shot_paper": "As coberturas de nomes do trabalho já estão pintadas.",
+ "class.es_shot_say": "Arraste sobre o que mostra um nome para cobri-lo de preto. Clique em uma caixa preta para tirá-la.",
+ "class.es_tags_used": "Tags que você já usou",
+ "class.ax_say": "Bons trabalhos desta tarefa, sem nomes.",
+ "class.ax_none_say": "Aperte Exemplo em uma resposta na Correção rápida, escolha Usar como exemplo no menu ⋯ de um trabalho, ou faça uma captura (S) e salve como bom exemplo. A escolha é sempre sua.",
+ "class.ax_answers": "Respostas, por questão",
+ "class.ax_q_none": {
+  "one": "A questão {list} ainda não tem exemplo. Aperte Exemplo em uma resposta na Correção rápida.",
+  "other": "As questões {list} ainda não têm exemplo. Aperte Exemplo em uma resposta na Correção rápida."
+ },
+ "class.ax_rest": "Trabalhos inteiros e partes de páginas",
+ "class.ax_rest_shots": "Trabalhos inteiros, partes de páginas e capturas",
+ "class.ax_linked": "De turmas vinculadas",
+ "class.ax_show_lk": {
+  "one": "Mostrar 1 exemplo de {names}",
+  "other": "Mostrar {n} exemplos de {names}"
+ },
+ "class.ax_hide": "Ocultar",
+ "class.ax_lk_say": "A mesma tarefa em outra turma. Cada cartão diz de qual turma veio.",
+ "class.ax_from": "De",
+ "class.ex_copy": "Copiar imagem",
+ "class.ex_copied_first": "Copiada. Uma imagem colada em uma aula fica guardada com essa aula.",
+ "class.ex_copy_bad": "Copiar não funcionou aqui. Use Baixar.",
+ "class.wl_none_say": "Nada salvo do trabalho ainda. Uma captura salva como bom exemplo ou adicionada à lista de observação aparece aqui, com a data.",
+ "class.wl_f_all": "Tudo",
+ "class.wl_f_good": "Bons · {n}",
+ "class.wl_f_watch": "Observar · {n}",
+ "class.wl_seen": "Mais visto:",
+ "class.wl_none_kind": "Nenhum deste tipo ainda.",
+ "class.wl_more": "Cobrir mais"
 }

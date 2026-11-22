@@ -6,9 +6,10 @@ import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { Segmented, Select, Button, IconButton, Menu, Dialog, TextInput, EmptyState, Icon, CopyButton, toast } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
-import { PARTS } from '../router.js';
+import { PARTS, href } from '../router.js';
 import { usePart } from '../parts.js';
 import { exampleRecords, examplePictures, library } from '../../students/index.js';
+import { prefs } from '../../students/prefs.js';
 import { keepExample, dropExample } from '../../students/write.js';
 import { onSaved } from '../../shared/saved.js';
 import { openWork } from '../openwork.js';
@@ -97,7 +98,30 @@ export default function Examples({ view: start, work }) {
   </div>;
 }
 
-function Card({ r, act }) {
+// Whose work it is, as a link to the student's card when the class and the name are still here (src/watch.js wlHere).
+function WhoLink({ c, n }) {
+  const cl = ((library.json(null) || {}).classes || []).find(k => String(k.id) === String(c)), i = cl ? cl.names.indexOf(n) : -1;
+  return i >= 0 ? <a class="link" href={href('class', cl.id, 'people', i + 1)} data-exwhoc data-raw>{n}</a> : <span data-raw>{n}</span>;
+}
+// Copy picture (exCopy): the first picture as a PNG; the first time, what a picture pasted into a lesson does.
+const canCopy = () => !!(navigator.clipboard && navigator.clipboard.write && typeof ClipboardItem !== 'undefined');
+const pngOf = async r => { const b = await examplePictures.get(r.id + '|0'), im = await createImageBitmap(b), c = document.createElement('canvas'); c.width = im.width; c.height = im.height; c.getContext('2d').drawImage(im, 0, 0); return new Promise((res, rej) => c.toBlob(x => (x ? res(x) : rej(new Error('no picture'))), 'image/png')); };
+async function copyPic(r) {
+  try {
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngOf(r) })]);
+    if (prefs.get('gs.exCopied', false)) toast(t('class.mb_copied')); else { prefs.set('gs.exCopied', true); toast(t('class.ex_copied_first')); }
+  } catch (e) { console.error(e); toast(t('class.ex_copy_bad')); }
+}
+// Delete at once, with Undo bringing it back with its pictures.
+async function del(r) {
+  const W = !!r.watch;
+  try {
+    const pics = []; for (let n = 0; n < r.pages.length; n++) pics.push(await examplePictures.get(r.id + '|' + n));
+    await dropExample(r);
+    toast(t(W ? 'class.ex_deleted_w' : 'class.ex_deleted'), pics.every(b => b instanceof Blob) ? { undo: () => keepExample({ ...r }, pics).catch(failed) } : {});
+  } catch (e) { failed(e); }
+}
+function Card({ r, act, from }) {
   const W = !!r.watch, chip = r.kind === 'answer' && r.q && r.q.v != null ? t('class.ex_of', { v: r.q.v, of: r.q.pts }) : r.kind === 'paper' ? t('class.ex_pages', { n: r.pages.length }) : '';
   const items = [...(W ? [] : [{ label: t('class.ex_show'), icon: 'play', onSelect: () => act.show(r) }]),
     { label: t(r.why ? (W ? 'class.ex_note_change' : 'class.ex_why_change') : (W ? 'class.ex_note_add' : 'class.ex_why_add')), icon: 'edit', onSelect: () => act.edit(r, 'why') },
@@ -105,14 +129,50 @@ function Card({ r, act }) {
     { label: t('class.ex_cover'), icon: 'eraser', onSelect: () => act.cover(r) },
     ...(!W && (r.kind === 'paper' || r.kind === 'part') && r.from && r.work && r.work === openWork() ? [{ label: t('class.es_again'), icon: 'redo', onSelect: () => PARTS.exsave().then(m => { const st = m.redoTarget(r); if (st) m.useExample(st, r); else toast(t('class.es_not_open')); }) }] : []),
     { label: t('class.ex_download'), icon: 'download', onSelect: () => download(r) },
-    { label: t('class.ex_delete'), icon: 'trash', onSelect: () => dropExample(r).then(() => toast(t(W ? 'class.ex_deleted_w' : 'class.ex_deleted')), failed) }];
+    { label: t('class.ex_delete'), icon: 'trash', onSelect: () => del(r) }];
   return <div class={'excard ' + r.kind + (W ? ' exw' : '')} data-exid={r.id}>
     <button type="button" class="exthumb" onClick={() => act.show(r)} aria-label={t('class.ex_show_one', { name: exLabel(r) })} data-exopen><Pic id={r.id} alt={exLabel(r)} /></button>
     <div class="exct"><Icon name={W ? 'flag' : 'spark'} size="xs" /><b>{exLabel(r)}</b>{r.row ? <span class="tag" data-raw>{r.row}</span> : chip ? <span class="tag">{chip}</span> : null}
       <span class="grow" /><Menu label={t('class.ex_more')} trigger={m => <IconButton {...m} icon="dots" size="sm" label={t('class.ex_more')} data-exmenu />} items={items} /></div>
-    {r.why ? <p class="exwhy" data-raw>{r.why}</p> : null}
+    {from && <p class="exfrom mute small" data-exfrom><Icon name="link" size="xs" />{t('class.ax_from')} <b data-raw>{from}</b></p>}
+    {r.why ? <p class="exwhy" data-raw>{r.why}</p> : <p class="exwhy"><button type="button" class="link" onClick={() => act.edit(r, 'why')} data-exwhyadd>{t(W ? 'class.ex_note_add' : 'class.ex_why_add')}</button></p>}
     {exTags(r).length > 0 && <p class="extags">{exTags(r).map(x => <button type="button" class="chip" onClick={() => act.tag(x)} data-extag={x} data-raw>{x}</button>)}</p>}
-    {(r.who || r.from) && <p class="exwho mute small"><Icon name="eye" size="xs" />{t('class.ex_only_you')} <span data-raw>{r.who ? r.who.n : r.from.key}</span></p>}
+    {r.kind !== 'paper' && canCopy() && <div class="exacts"><Button size="sm" icon="copy" onClick={() => copyPic(r)} data-excopy>{t('class.ex_copy')}</Button></div>}
+    {(r.who || r.from) && <p class="exwho mute small"><Icon name="eye" size="xs" />{t('class.ex_only_you')} {r.who ? <WhoLink c={r.who.c} n={r.who.n} /> : <span data-raw>{r.from.key}</span>}</p>}
+  </div>;
+}
+
+// This assignment's Examples (src/examples.js openExamples; D-018, D-019, D-020): the Examples tab of an open assignment. Answers by
+// question in the quiz's order, with the questions that have none yet; then whole papers, parts of pages and screenshots; and the
+// same assignment's examples in linked classes, shown only when asked. twins: the ids of its copies in linked classes.
+const AX_ORDER = { paper: 0, part: 1, shot: 2 };
+export function AsgExamples({ batch, twins = [], label }) {
+  const all = useExamples(), [lk, setLk] = useState(false), [edit, setEdit] = useState(null), [show, setShow] = useState(null), [cover, setCover] = useState(null);
+  if (!all) return <div class="loading" aria-busy="true" />;
+  const live = all.filter(r => !r.gone && Array.isArray(r.pages) && !r.watch), classes = (library.json(null) || {}).classes || [];
+  const cname = id => { const c = id && classes.find(k => String(k.id) === String(id)); return c ? c.name : t('class.ex_class_gone'); };
+  const qs = (batch.quiz && batch.quiz.qs) || [], qAt = r => { const k = qs.findIndex(q => r.q && q.id === r.q.id); return k < 0 ? 999 : k; };
+  const sorted = l => [...l.filter(r => r.kind === 'answer').sort((a, b) => qAt(a) - qAt(b) || natural(a.q && a.q.lab, b.q && b.q.lab) || a.t - b.t), ...l.filter(r => r.kind !== 'answer').sort((a, b) => (AX_ORDER[a.kind] ?? 3) - (AX_ORDER[b.kind] ?? 3) || a.t - b.t)];
+  const mine = sorted(live.filter(r => r.work === batch.id)), tw = sorted(live.filter(r => r.work !== batch.id && r.asg && twins.includes(r.asg)));
+  const ans = mine.filter(r => r.kind === 'answer'), rest = mine.filter(r => r.kind !== 'answer');
+  const none = qs.map((q, i) => ({ q, i })).filter(x => !ans.some(r => r.q && r.q.id === x.q.id)).map(x => label(x.q, x.i));
+  const shown = mine.concat(lk ? tw : []);
+  const allTags = [...new Set(live.flatMap(exTags))].sort(natural);
+  const act = { show: r => setShow({ list: shown, at: Math.max(0, shown.findIndex(x => x.id === r.id)) }), edit: (r, k) => setEdit({ r, k }), cover: r => setCover(r), tag: () => {} };
+  return <div class="cp-ex asgex" data-asgex>
+    <div class="exbar exacts"><p class="mute small">{t('class.ax_say')}</p><span class="grow" />
+      {shown.length > 0 && <Button size="sm" icon="download" onClick={() => sheet(shown, batch.name)} data-exsheet>{t('class.ex_sheet')}</Button>}
+      {shown.length > 0 && <Button size="sm" variant="primary" icon="play" onClick={() => setShow({ list: shown, at: 0 })} data-exshow>{t('class.ex_show')}</Button>}</div>
+    {!mine.length && !tw.length && <EmptyState icon="spark" title={t('class.ex_none')} text={t('class.ax_none_say')} />}
+    {(ans.length > 0 || (none.length > 0 && mine.length + tw.length > 0)) && <section class="exgroup"><h3>{t('class.ax_answers')}</h3><div class="exgrid">{ans.map(r => <Card key={r.id} r={r} act={act} />)}
+      {none.length > 0 && <div class="excard exnone" data-exnone><p>{t('class.ax_q_none', { n: none.length, list: none.length > 1 ? t('class.as_and', { list: none.slice(0, -1).join(', '), last: none[none.length - 1] }) : none[0] })}</p></div>}</div></section>}
+    {rest.length > 0 && <section class="exgroup"><h3>{t(rest.some(r => r.kind === 'shot') ? 'class.ax_rest_shots' : 'class.ax_rest')}</h3><div class="exgrid">{rest.map(r => <Card key={r.id} r={r} act={act} />)}</div></section>}
+    {tw.length > 0 && <section class="exgroup" data-exlinked><h3><Icon name="link" size="xs" /> {t('class.ax_linked')} {lk && <button type="button" class="link" onClick={() => setLk(false)} data-exlk>{t('class.ax_hide')}</button>}</h3>
+      {!lk ? <Button onClick={() => setLk(true)} data-exlk>{t('class.ax_show_lk', { n: tw.length, names: [...new Set(tw.map(r => cname(r.cls)))].join(', ') })}</Button>
+        : <><p class="mute small">{t('class.ax_lk_say')}</p><div class="exgrid">{tw.map(r => <Card key={r.id} r={r} act={act} from={cname(r.cls)} />)}</div></>}</section>}
+    {edit && <EditDialog r={edit.r} k={edit.k} allTags={allTags} onClose={() => setEdit(null)} />}
+    {cover && <CoverDialog r={cover} onClose={() => setCover(null)} />}
+    {show && <Show list={show.list} at={show.at} onClose={() => setShow(null)} />}
   </div>;
 }
 
@@ -129,7 +189,7 @@ function EditDialog({ r, k, allTags, onClose }) {
 
 const jpg = c => new Promise(res => c.toBlob(b => res(b), 'image/jpeg', 0.86));
 // Black boxes on a saved example (exCoverEdit): drag to cover, click a box to take it off; saving paints them in for good.
-function CoverDialog({ r, onClose }) {
+export function CoverDialog({ r, onClose }) {
   const [ims, setIms] = useState(null), [boxes, setBoxes] = useState([]), [busy, setBusy] = useState(false), cv = useRef([]);
   useEffect(() => { (async () => { const out = []; for (let n = 0; n < r.pages.length; n++) { const b = await examplePictures.get(r.id + '|' + n); if (!(b instanceof Blob)) { toast(t('class.ex_pics_bad')); onClose(); return; } out.push(await createImageBitmap(b)); } setIms(out); setBoxes(out.map(() => [])); })().catch(e => { console.error(e); onClose(); }); }, []);
   const paint = (c, k, w) => { const im = ims[k], s = w / im.width; c.width = Math.round(im.width * s); c.height = Math.round(im.height * s); const x = c.getContext('2d'); x.drawImage(im, 0, 0, c.width, c.height); x.fillStyle = '#111'; for (const q of boxes[k]) x.fillRect(Math.floor(q.x * c.width), Math.floor(q.y * c.height), Math.ceil(q.w * c.width) + 1, Math.ceil(q.h * c.height) + 1); };
@@ -220,7 +280,7 @@ function Whose({ live, watch, cname }) {
     const none = rows.filter(x => !x.k).length;
     return <section class="exgroup"><h3 data-raw>{c.name}</h3><p class="mute small">{t('class.ex_who_none_n', { n: none, of: c.names.length })}</p>
       <table class="cp-tab exwhot"><thead><tr><th>{t('class.student')}</th><th class="num">{t('class.ex_strong')}</th><th class="num">{t('class.ex_watchlist')}</th></tr></thead>
-        <tbody>{rows.map(x => <tr><td data-raw>{x.n}</td><td class="num">{x.k || '–'}</td><td class="num">{x.w || '–'}</td></tr>)}</tbody></table></section>; })}</div>;
+        <tbody>{rows.map(x => <tr><td><a class="link" href={href('class', c.id, 'people', c.names.indexOf(x.n) + 1)} data-raw>{x.n}</a></td><td class="num">{x.k || '–'}</td><td class="num">{x.w || '–'}</td></tr>)}</tbody></table></section>; })}</div>;
 }
 
 // Send to an assistant (src/watch.js wlSend): the box is the watch list's part (watch.jsx), loaded when pressed.

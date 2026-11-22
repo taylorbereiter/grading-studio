@@ -15,6 +15,7 @@ import { setOpenWork } from '../openwork.js';
 import { saving } from '../../services/saving.js';
 import { savedStamp } from '../../shared/tabs.js';
 import '../engine-lines.js';   // the engines' own words in the language, before any paper is opened
+import { heicSay } from './heic.js';
 
 export class NotKept extends Error { constructor(id) { super('The papers for this one aren’t kept in this browser.'); this.name = 'NotKept'; this.id = id; } }
 
@@ -61,6 +62,7 @@ async function studentsOf(raw) {
   await E.spellLikeSaved(raw);
   // a photo of a paper becomes a PDF page (makeFile, pictureToPdf), which needs pdf-lib: loaded first when there is one
   if (!state().PDFLib && raw.some(r => /\.(png|jpe?g|gif|webp|bmp|heic|heif|tiff?|avif)$/i.test(r.path))) use({ PDFLib: await PARTS.pdflib() });
+  heicSay(raw.map(r => r.path));
   const map = E.groupRaw(raw), keys = [...map.keys()].sort(E.natural), students = [], keepList = [];
   for (const key of keys) {
     const files = [];

@@ -1128,7 +1128,6 @@
  "class.es_whole": "Copie entière",
  "class.es_part": "Partie d’une page",
  "class.es_part_say": "Tracez un cadre autour de la partie à garder. Les noms sont masqués en noir définitivement.",
- "class.es_names_say": "Gardé en images avec les noms masqués en noir définitivement. Pour cacher autre chose, utilisez Masquer une partie une fois l’exemple enregistré.",
  "class.es_marks": "Mes annotations et commentaires",
  "class.es_score": "La note",
  "class.es_row": "Critère de grille",
@@ -1352,5 +1351,56 @@
  "class.rp_cuts": "Notes :",
  "class.rp_cut_hi": "la plus haute à partir de",
  "class.rp_cut_good": "bonne à partir de",
- "class.rp_cut_mid": "moyenne à partir de"
+ "class.rp_cut_mid": "moyenne à partir de",
+ "class.ru_h": "Grille",
+ "class.ru_say": "Word, PDF ou une image. Les lignes sont lues dans un tableau quand c’est possible.",
+ "class.ru_none": "Pas encore défini",
+ "class.ru_total": "Juste le total, sur {n}",
+ "class.ru_score": "Noter avec ces critères",
+ "class.ru_copy": "Donner à chaque élève une copie à annoter",
+ "class.ru_norows": "Aucun tableau de grille n’a pu être lu dans ce fichier, ses lignes ne sont donc pas remplies. Vous pouvez les taper dans la configuration de la grille.",
+ "class.ru_use": "Utiliser cette grille",
+ "class.ru_tick": "Cochez d’abord ce qu’il faut en faire",
+ "class.ru_set": "La grille est définie pour « {name} »",
+ "class.ru_step": "une grille importée",
+ "class.ru_t": "Grille de « {name} »",
+ "class.es_n_covered": {
+  "one": "1 nom masqué.",
+  "other": "{n} noms masqués."
+ },
+ "class.es_cover_say": "Faites glisser sur une page pour masquer autre chose, comme un nom ou une note écrits à la main. Cliquez sur un cache pour l’enlever.",
+ "class.es_shot_n": {
+  "one": "1 zone masquée en noir.",
+  "other": "{n} zones masquées en noir."
+ },
+ "class.es_shot_paper": "Les caches des noms de la copie sont déjà peints.",
+ "class.es_shot_say": "Faites glisser sur ce qui montre un nom pour le masquer en noir. Cliquez sur un cadre noir pour l’enlever.",
+ "class.es_tags_used": "Mots-clés déjà utilisés",
+ "class.ax_say": "Du bon travail de ce devoir, sans aucun nom.",
+ "class.ax_none_say": "Appuyez sur Exemple sur une réponse dans Correction rapide, choisissez Utiliser comme exemple dans le menu ⋯ d’une copie, ou faites une capture (S) et gardez-la comme bon exemple. Le choix vous revient toujours.",
+ "class.ax_answers": "Réponses, par question",
+ "class.ax_q_none": {
+  "one": "La question {list} n’a pas encore d’exemple. Appuyez sur Exemple sur une réponse dans Correction rapide.",
+  "other": "Les questions {list} n’ont pas encore d’exemple. Appuyez sur Exemple sur une réponse dans Correction rapide."
+ },
+ "class.ax_rest": "Copies entières et parties de pages",
+ "class.ax_rest_shots": "Copies entières, parties de pages et captures",
+ "class.ax_linked": "Des classes liées",
+ "class.ax_show_lk": {
+  "one": "Afficher 1 exemple de {names}",
+  "other": "Afficher {n} exemples de {names}"
+ },
+ "class.ax_hide": "Masquer",
+ "class.ax_lk_say": "Le même devoir dans une autre classe. Chaque carte indique sa classe d’origine.",
+ "class.ax_from": "De",
+ "class.ex_copy": "Copier l’image",
+ "class.ex_copied_first": "Copiée. Une image collée dans une leçon est gardée avec cette leçon.",
+ "class.ex_copy_bad": "La copie n’a pas fonctionné ici. Utilisez Télécharger.",
+ "class.wl_none_say": "Rien n’a encore été gardé de son travail. Une capture gardée comme bon exemple ou ajoutée à la liste à surveiller s’affiche ici, avec la date.",
+ "class.wl_f_all": "Tout",
+ "class.wl_f_good": "Bons · {n}",
+ "class.wl_f_watch": "À surveiller · {n}",
+ "class.wl_seen": "Le plus vu :",
+ "class.wl_none_kind": "Rien de ce type pour l’instant.",
+ "class.wl_more": "Masquer plus"
 }

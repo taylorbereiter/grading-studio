@@ -3,6 +3,10 @@
 // happens next is what happens with a file from the computer. Google's own Docs, Slides, Sheets and Drawings come down as Office files
 // where the input takes them (a lesson's materials), else as a PDF.
 import { gToken, gfetch, gcid, G, whoAmI } from './google.js';
+import { drivePaperDir } from '../planning/index.js';
+import { savePref } from '../planning/write.js';
+import { t } from '../i18n/t.js';
+import '../app/saving/lines.js';
 
 const FOLDER = 'application/vnd.google-apps.folder';
 const W = 'application/vnd.openxmlformats-officedocument.', GA = 'application/vnd.google-apps.';
@@ -43,7 +47,9 @@ export async function pick(o = {}) {
   const token = await gToken(true, 'pick');
   if (!G.email) whoAmI().catch(() => {});
   await loadPicker();
-  const P = google.picker, L = o.labels || {};
+  // the chooser's tabs, named as the current app names them (src/gpick.js gpPick; D-004): the last folder first, then My Drive,
+  // Shared with me and Shared drives
+  const P = google.picker, L = { mine: t('saving.drv_mine'), shared: t('saving.drv_shared'), drives: t('saving.drv_drives'), last: t('saving.drv_last'), ...(o.labels || {}) };
   return new Promise(res => {
     const mk = (label, set) => {
       const v = new P.DocsView(P.ViewId.DOCS).setIncludeFolders(true).setMode(P.DocsViewMode.LIST);
@@ -80,11 +86,14 @@ export async function filesOf(picked, want, onStep) {
   for (const d of picked) { const u = urlOf(d, want), r = await gfetch(u.url, {}, true, 'pick'); out.push(new File([await r.blob()], u.name.replace(/[\\/]+/g, '-'), { type: u.type || r.headers.get('content-type') || '' })); onStep && onStep(++n, picked.length); }
   return out;
 }
-// Fills a file input with files picked in Drive, then tells it they changed. o: { office, title, labels, say(n, of), picked(list) }. False when nothing was picked.
+// Fills a file input with files picked in Drive, then tells it they changed. o: { office, title, labels, say(n, of), picked(list), papers }. False when nothing was picked.
 export async function fill(inp, o = {}) {
   const k = kinds(inp.accept, o.office || !!inp.dataset.office);
-  const picked = await pick({ multi: inp.multiple, mimes: k.mimes, title: o.title, labels: o.labels });
+  // papers open first in the folder she last took papers from (src/app/drive.js gs.gPaperDir: only where the chooser opens)
+  const dir = o.papers ? drivePaperDir.json(null) : null;
+  const picked = await pick({ multi: inp.multiple, mimes: k.mimes, title: o.title, labels: o.labels, ...(typeof dir === 'string' && dir ? { parent: dir } : {}) });
   if (!picked.length) return false;
+  if (o.papers && picked[0].parent) try { savePref('gs.gPaperDir', picked[0].parent); } catch (e) { console.error(e); }
   const files = await filesOf(picked, k.want, o.say);
   if (o.picked) o.picked(picked);
   const dt = new DataTransfer(); files.forEach(f => dt.items.add(f));

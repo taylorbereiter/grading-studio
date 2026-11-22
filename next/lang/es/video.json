@@ -54,5 +54,28 @@
  "video.cl_prev": "El fragmento anterior",
  "video.cl_next": "El fragmento siguiente",
  "video.cl_of": "{n} de {of}",
- "video.cl_full": "Pantalla completa"
+ "video.cl_full": "Pantalla completa",
+ "video.drv_dir_change": "Cambiar carpeta",
+ "video.drv_only": "Solo se pueden abrir los videos que elijas, nada más de tu Drive.",
+ "video.pv_drive": "Drive…",
+ "video.pv_many": "Elegir de Drive…",
+ "video.pv_miss_drv": {
+  "one": "Este archivo no coincidió con ningún nombre: {names}. Usa Drive… en la fila correcta.",
+  "other": "Estos archivos no coincidieron con ningún nombre: {names}. Usa Drive… en la fila correcta."
+ },
+ "video.vd_partners": "Compañeros",
+ "video.vd_partners_say": "Marca a todos los demás que salen en el video. Reciben el video y la hoja de notas, y un solo conjunto de marcas y una sola nota cubren al grupo.",
+ "video.vd_add_with": {
+  "one": "Añadir a {name} y 1 compañero",
+  "other": "Añadir a {name} y {n} compañeros"
+ },
+ "video.sn_pv_h": "Videos y compañeros",
+ "video.sn_pv_say": "Opcional, y también puedes añadirlos después. Pega un enlace o elige un archivo para cada video, o suelta aquí los archivos de video y cada uno irá al estudiante nombrado en su nombre de archivo. Los compañeros comparten una hoja de notas, un conjunto de marcas y una nota.",
+ "video.cap_prev": "La línea anterior",
+ "video.cap_next": "La línea siguiente",
+ "video.tr_again_q": "¿Hacer la transcripción de nuevo? La que tienes se reemplazará.",
+ "video.tr_again_ok": "Hacerla de nuevo",
+ "video.vk_back": "El video está de vuelta",
+ "video.no_picture": "En este navegador solo se reproduce el sonido de este video. Un video de iPhone puede necesitar abrirse en tu computadora para ver la imagen: descárgalo o pide al estudiante un .mp4.",
+ "video.tn_no_time": "Un video, o el Temporizador para una charla en directo, da los tiempos"
 }

@@ -42,7 +42,10 @@ export async function pickVidDir(labels) {
   return d || null;
 }
 // Videos she picks, opening in her videos folder (asking for the folder first, once).
+// Through vidPick so the first load doesn't grow (app/mark/vdir.jsx): { dir: true } is Change folder, { now: true } the folder kept
 export async function videos(o = {}) {
+  if (o.dir) return pickVidDir();
+  if (o.now) return driveVideoDir.json(null);
   let dir = driveVideoDir.json(null); if (!dir || !dir.id) { dir = await pickVidDir(o.labels); if (!dir) return []; }
   return pick({ parent: dir.id, parentName: dir.name, multi: !!o.multi, mimes: VIDEO, title: o.title, labels: o.labels });
 }

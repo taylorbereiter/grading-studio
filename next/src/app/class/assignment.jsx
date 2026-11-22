@@ -5,9 +5,11 @@
 //   gets its own card; the copies share a group id. One undo step.
 // - Edit assignment: the same, with one class; the card keeps its id, so its papers and scores stay with it, and a move to another
 //   class or unit is the one Move to makes. Linked copies take the new name, type and date when asked (src/linked.js lkAlsoDo).
-//   Delete is at once, with Undo. The rubric is set up on the marking screen (Setup), so it isn't here.
+//   Delete is at once, with Undo. Both have Rubric (D-901, B-001, B-008; class/rubricin.jsx, a part of its own): a rubric brought in
+//   from a file or Google Drive goes on the card on Save, and to the linked copies when they take the change.
+// - Bring in a rubric… from the card's Bring in menu (B-004): the same part on its own, used at once.
 // - No papers: presentations or videos (src/video.js openStartNotes): a notes page for every student on the roster, opened for
-//   marking like papers. Videos and partners are added on the marking screen.
+//   marking like papers, with Videos and partners (D-022) when there are videos.
 // - Forget these papers (src/app/kept.js forgetKept): the download leaves this browser and any synced copy; asked first.
 // - A unit's link to its unit plan (src/app/screens.js askAtlas), and a unit moved to another class.
 import { h, Fragment } from 'preact';
@@ -69,6 +71,8 @@ export function AssignmentDialog({ lib: lib0, it: it0, classId, unitId, onClose 
   const [cls, setCls] = useState(String(start.c.id)), [type, setType] = useState(f ? f.it.type || '' : ''), [due, setDue] = useState(f ? f.it.due || '' : '');
   const [unit, setUnit] = useState(f ? f.u.id : start.u ? start.u.name : ''), [also, setAlso] = useState(true), [sure, setSure] = useState(false);
   const twins = f ? B.lkTwins(f.it) : [];
+  const [R, setR] = useState(null), [rub, setRub] = useState(null);
+  useEffect(() => { PARTS.rubricin().then(setR, e => console.error(e)); }, []);
   const cats = B.bkCats();
   // New: unit names from every ticked class; Edit: the chosen class's units
   const one = f ? holderOf(lib, cls) || lib.loose : null;
@@ -92,6 +96,7 @@ export function AssignmentDialog({ lib: lib0, it: it0, classId, unitId, onClose 
         setKind(a); to.items.push(a);
       }));
       if (ok === false) return;
+      if (rub) await R.putRubric(first, rub, false);
       onClose(true);
       if (ids.length > 1) toast(t('class.as_added', { names: joinNames(ticked.map(c => nameOf(lib, c))) }));
       return;
@@ -107,7 +112,9 @@ export function AssignmentDialog({ lib: lib0, it: it0, classId, unitId, onClose 
       if (g.u !== to) { g.u.items.splice(g.u.items.indexOf(g.it), 1); to.items.push(g.it); }
       g.it.classId = c.id;
     });
-    if (ok !== false) onClose(true);
+    if (ok === false) return;
+    if (rub) await R.putRubric(f.it.id, rub, also && twins.length > 0);
+    onClose(true);
   };
   const del = async () => {
     const ok = await lc(t('class.as_delete'), l => { const g = itemIn(l, f.it.id); if (g) g.u.items.splice(g.u.items.indexOf(g.it), 1); });
@@ -136,6 +143,7 @@ export function AssignmentDialog({ lib: lib0, it: it0, classId, unitId, onClose 
         <Segmented size="sm" label={t('class.as_type')} value={type} onChange={v => setType(v === type ? '' : v)} options={cats.map(k => ({ value: k[0], label: typeLabel(k) })).concat({ value: '', label: t('class.type_none') })} /></div>
       <TextInput type="date" label={t('class.as_due')} value={due} onInput={setDue} data-asg-due />
       <DueWeek due={due} except={f ? f.it.id : null} />
+      {R && <R.RubricField su={f ? f.it.setup || null : null} onGot={setRub} />}
       {twins.length > 0 && <span data-asg-also><Checkbox label={t('class.lk_also_do', { names: joinNames(twins.map(x => nameOf(lib, x.c))) })} checked={also} onChange={setAlso} /></span>}
     </div>
   </Dialog>;
@@ -149,7 +157,9 @@ const folder = n => String(n).replace(/[\\/:*?"<>|\u0000-\u001F]+/g, '-').trim()
 export function StartNotes({ lib, it, bring, onClose }) {
   const f = itemIn(lib, it.id), c = f && f.c !== lib.loose ? f.c : null, names = c ? c.names.filter(n => String(n).trim()) : [];
   const [V, setV] = useState(null), [kind, setKind] = useState(npLast), [busy, setBusy] = useState(false);
-  useEffect(() => { if (names.length) import('../../engines/gmedia.js').then(setV, e => console.error(e)); }, []);
+  // Videos and partners (D-022): a part of its own, loaded with the box
+  const [P, setP] = useState(null), [pv, setPv] = useState(null);
+  useEffect(() => { if (names.length) { import('../../engines/gmedia.js').then(setV, e => console.error(e)); PARTS.partners().then(setP, e => console.error(e)); } }, []);
   if (!names.length) return <Dialog open title={t('class.sn_t', { name: it.name })} onClose={onClose} actions={<Button onClick={onClose}>{t('setup.u_cancel')}</Button>}><p>{t('class.sn_roster')}</p></Dialog>;
   const rows = V ? V.npRows(it.setup) : [], k = kind === 'rubric' && !rows.length ? 'lined' : kind;
   const go = async () => {
@@ -158,16 +168,16 @@ export function StartNotes({ lib, it, bring, onClose }) {
       const [PDFLib, G] = await Promise.all([PARTS.pdflib(), import('../../engines/gcore.js')]); G.use({ PDFLib });
       const bytes = await V.notesPdf(k, it.name, rows), file = V.npFileName(it.name) + ' notes.pdf';
       const list = names.map(n => ({ path: folder(n) + '/' + file, file: new File([bytes.slice()], file, { type: 'application/pdf' }) }));
-      onClose(); bring(list);
+      onClose(); bring(list, pv && pv.groups.length ? { groups: pv.groups, own: pv.own } : null);
     } catch (e) { console.error(e); toast(t('class.sn_fail', { why: (e && e.message) || String(e) })); onClose(); }
   };
   return <Dialog open title={t('class.sn_t', { name: it.name })} onClose={onClose}
-    actions={<><Button onClick={onClose}>{t('setup.u_cancel')}</Button><Button variant="primary" onClick={go} disabled={busy || !V} data-sngo>{t('class.sn_go')}</Button></>}>
+    actions={<><Button onClick={onClose}>{t('setup.u_cancel')}</Button><Button variant="primary" onClick={go} disabled={busy || !V || !!(pv && pv.bad)} data-sngo>{t('class.sn_go')}</Button></>}>
     <p data-raw>{t('class.sn_text', { n: names.length, cls: c.name })}</p>
     <div class="nptiles" role="radiogroup" aria-label={t('setup.v_np_kind')}>{KINDS.map(([id, label, tip]) => { const off = id === 'rubric' && !rows.length;
       return <button type="button" class="nptile" role="radio" aria-checked={k === id ? 'true' : 'false'} disabled={off} title={t(off ? 'setup.v_np_norows' : tip)} onClick={() => setKind(id)} data-np={id}>
         <span class={'npart ' + id} aria-hidden="true" /><b>{t(label)}</b></button>; })}</div>
-    <p class="mute small">{t('class.sn_later')}</p>
+    {P ? <P.StartPv names={names} keyOf={folder} onChange={setPv} /> : <p class="mute small">{t('class.sn_later')}</p>}
   </Dialog>;
 }
 
