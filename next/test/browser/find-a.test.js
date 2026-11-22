@@ -118,10 +118,13 @@ test('A-013: her assistant opens beside Grading Studio from Find', async () => {
 test('A-008: each class page is found by name (attendance, seating, charts, goals, report comments, missing work), and opens', async () => {
   const p = await fresh();
   await p.goto(srv.url + 'next/#/home'); await shellUp(p);
-  for (const [text, hash] of [['Grade 9 English: attendance', '#/class/c1/people/attendance'], ['Grade 9 English: seating plan', '#/class/c1/people/seating'],
-    ['Grade 9 English: charts', '#/class/c1/grades/charts'], ['Grade 9 English: goals', '#/class/c1/grades/goals'],
-    ['Grade 9 English: report comments', '#/class/c1/grades/reports'], ['Grade 9 English: missing work', '#/class/c1/todo/missing']]) {
-    await press(p, text); await p.waitForFunction(h => location.hash === h, { timeout: 10000 }, hash);
+  // Each page's own address opens its sheet or section, then gives way to the tab it is on (class/people.jsx, class/grades.jsx,
+  // class/todo.jsx), so the address is only passing: what is seen is the page opened, on its class's tab, before the next row is pressed.
+  for (const [text, page, tab] of [['Grade 9 English: attendance', 'dialog[open] [data-att="c1"]', 'people'], ['Grade 9 English: seating plan', 'dialog[open] [data-seating], dialog[open] [data-seat-start]', 'people'],
+    ['Grade 9 English: charts', 'dialog[open] [data-charts]', 'grades'], ['Grade 9 English: goals', 'dialog[open] [data-goals]', 'grades'],
+    ['Grade 9 English: report comments', 'dialog[open] [data-rp-text]', 'grades'], ['Grade 9 English: missing work', '[data-mis] #h-mis:focus', 'todo']]) {
+    await press(p, text);
+    await p.waitForFunction((sel, h) => location.hash === h && document.querySelector(sel), { timeout: 10000 }, page, '#/class/c1/' + tab);
   }
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
