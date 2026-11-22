@@ -71,7 +71,10 @@ test('a file added, replaced, removed and brought back in the new app is where t
   await has(p, 'files', KEY + '/Late page.pdf');
   // Replace… the essay with a corrected copy, after the check
   await p.waitForSelector('[data-fmenu="' + KEY + '/Essay.pdf"]', { timeout: 30000 });
-  const [c2] = await Promise.all([p.waitForFileChooser(), menuDo(p, KEY + '/Essay.pdf', 'Replace')]);
+  // (with Google Drive here, as on any web address, Replace… first asks where the new file comes from, as the current app does: C-032)
+  await menuDo(p, KEY + '/Essay.pdf', 'Replace');
+  await p.waitForSelector('dialog[open] [data-rpcomp]');
+  const [c2] = await Promise.all([p.waitForFileChooser(), p.click('dialog[open] [data-rpcomp]')]);
   await c2.accept([fixed]);
   await p.waitForSelector('.dlg [data-ok]'); await p.click('.dlg [data-ok]');
   await has(p, 'gone', KEY + '/Essay.pdf');
@@ -622,6 +625,82 @@ test('C-044 C-031 C-029: Edit rubric by the Score heading opens Rubric setup, Ty
   await p.click('dialog[open] [data-asg-ok]');
   await p.waitForFunction(() => window.__mark.state().batch.assignment.type === 'sum' && document.querySelector('.mk-crits, .mk-pts') && !document.querySelector('[data-fb]'), { timeout: 30000 });
   assert.equal(await p.$('[data-fbtype]'), null);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// C-035 C-028 C-051 B-048 A-098 A-101: nothing turned in shows what she can do with Add their file… first and the Add menu beside it; a
+// retake without its own paper has Add the retake paper…; a file dropped on a name goes to that student, the folded list opens as a
+// file is dragged over it, and several files dropped on the paper go to Bring in files. The current app finds the files.
+test('C-035 C-028 C-051 B-048 A-098 A-101: Add their file… for nothing turned in, Add the retake paper…, and files dropped on a name or the paper; the current app finds them', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
+  await m.goto(srv.url); await appReady(m);
+  await openZip(m, zip);
+  const id = await m.evaluate(() => window.__gs.state().batch.id); await m.close();
+  const late = path.join(dir, 'Their essay.pdf'); fs.writeFileSync(late, await makePaper({ title: 'Turned in at last' }));
+  const redo = path.join(dir, 'Retake essay.pdf'); fs.writeFileSync(redo, await makePaper({ title: 'The retake' }));
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  const who = await p.evaluate(() => { const b = window.__mark.state().batch, i = b.students.findIndex(s => !s.files.length); return { i, key: b.students[i].key }; });
+  await p.click('[data-st="' + who.i + '"]');
+  // C-035 the sentence, and C-028 Add their file… first with the Add menu beside it
+  await p.waitForSelector('[data-nofile]', { timeout: 60000 });
+  assert.match(await p.$eval('[data-nofile]', e => e.textContent), /drop the file on the page or on their name/);
+  assert.ok(await p.$('.mk-ffoot [data-addmenu]'), 'the Add menu is beside it');
+  const [c1] = await Promise.all([p.waitForFileChooser(), p.click('[data-nfadd]')]);
+  await c1.accept([late]);
+  await p.waitForFunction((k, f) => window.__mark.state().batch.students.find(s => s.key === k).files.some(x => x.path === f), { timeout: 30000 }, who.key, who.key + '/Their essay.pdf');
+  await p.waitForFunction(() => !document.querySelector('[data-nofile]'), { timeout: 30000 });
+
+  // C-051 B-048: a retake on Bram's paper: until it has a paper of its own, Add the retake paper…
+  const i = await p.evaluate(k => window.__mark.state().batch.students.findIndex(s => s.key === k), KEY);
+  await p.click('[data-st="' + i + '"]');
+  await p.waitForFunction(i => window.__mark.state().cur === i && window.__mark.ready, { timeout: 60000 }, i);
+  await p.waitForSelector('.mk-crit[data-row="0"] .sticks button:not([disabled])', { timeout: 60000 });
+  // a full score first (a retake keeps it and starts a new one)
+  const rows = await p.$$eval('.mk-crit', l => l.length);
+  for (let r = 0; r < rows; r++) { await p.click(`.mk-crit[data-row="${r}"] .sticks button:last-child`); await p.waitForFunction(r => { const s = window.__mark.state(); return s.batch.students[s.cur].grade.rubric[r] != null; }, {}, r); }
+  await p.waitForSelector('[data-smmenu]'); await p.click('[data-smmenu]');
+  await p.waitForFunction(() => { const it = [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => /^Start a retake/.test(e.textContent)); if (it) it.click(); return !!it; });
+  await p.waitForSelector('[data-tryadd]', { timeout: 30000 });
+  const [c2] = await Promise.all([p.waitForFileChooser(), p.click('[data-tryadd]')]);
+  await c2.accept([redo]);
+  await p.waitForFunction(k => window.__mark.state().batch.students.find(s => s.key === k).files.some(x => x.path === k + '/Retake essay.pdf'), { timeout: 30000 }, KEY);
+  await p.waitForFunction(() => window.__mark.ready && document.querySelector('[data-smtries]') && !document.querySelector('[data-tryadd]'), { timeout: 30000 });
+
+  // A-101 a file dragged over the folded list opens its names; A-098 dropped on a name, it goes to that student
+  const pdf = Buffer.from(await makePaper({ title: 'Dropped in' })).toString('base64');
+  const drop = (sel, type, names) => p.evaluate((sel, type, names, b64) => {
+    const dt = new DataTransfer(), bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    for (const n of names) dt.items.add(new File([bytes], n, { type: 'application/pdf' }));
+    const el = document.querySelector(sel); el.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer: dt }));
+  }, sel, type, names, pdf);
+  await p.click('.mk-paper'); await p.keyboard.press('[');
+  await p.waitForSelector('.mk-list.fold');
+  await drop('.mk-list.fold .mk-rows', 'dragenter', ['Dropped.pdf']);
+  await p.waitForSelector('.mk-list.fold.peek');
+  const other = await p.evaluate((a, b) => { const s = window.__mark.state().batch.students; const j = s.findIndex(x => x.key !== a && x.key !== b); return { j, key: s[j].key }; }, KEY, who.key);
+  await drop('[data-st="' + other.j + '"]', 'dragover', ['Dropped.pdf']);
+  await drop('[data-st="' + other.j + '"]', 'drop', ['Dropped.pdf']);
+  await p.waitForFunction(k => window.__mark.state().batch.students.find(s => s.key === k).files.some(x => x.path === k + '/Dropped.pdf'), { timeout: 30000 }, other.key);
+  assert.ok(!await p.$('.mk-list.peek'), 'the list folds again');
+  // several dropped on the paper go to Bring in files
+  await drop('.mk-paper', 'drop', ['Bram Sample page 3.pdf', 'Bram Sample page 4.pdf']);
+  await p.waitForSelector('dialog[open] [data-bfgo]', { timeout: 30000 });
+  await p.click('dialog[open] [data-bfcancel]');
+  await p.evaluate(() => window.__mark.saved());
+  await p.close();
+  const m2 = await page(ctx, errors);
+  await m2.goto(srv.url); await appReady(m2);
+  await m2.evaluate(id => window.__gs.reopenKept(id), id);
+  await m2.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
+  const was = await m2.evaluate((a, b, c) => { const s = window.__gs.state().batch.students, f = k => s.find(x => x.key === k).files.map(x => x.path); return [f(a), f(b), f(c)]; }, who.key, KEY, other.key);
+  assert.ok(was[0].includes(who.key + '/Their essay.pdf'), was[0].join());
+  assert.ok(was[1].includes(KEY + '/Retake essay.pdf'), was[1].join());
+  assert.ok(was[2].includes(other.key + '/Dropped.pdf'), was[2].join());
   assert.deepEqual(errors, []);
   await ctx.close();
 });

@@ -1141,3 +1141,12 @@ dialog.dlg:has(.mk-rd){width:min(640px,calc(100vw - 32px))}
 :root[data-mkfs=all] .markscreen .mk-tools{opacity:0;pointer-events:none;transition:opacity .15s}
 :root[data-mkfs=all][data-mktools] .markscreen .mk-tools{opacity:1;pointer-events:auto}
 @media (prefers-reduced-motion:reduce){:root[data-mkfs] .mk-body .mk-list,:root[data-mkfs=all] .markscreen .mk-tools{transition:none}}
+/* files dragged over the marking screen (mark/fileui.jsx dropWire): where they would go, and the folded list opened to its names */
+.mk-row.drop-on,.mk-paper.drop-on{outline:2px dashed var(--acc);outline-offset:-4px}
+.mk-list.fold.peek{position:relative;z-index:6;width:260px;box-shadow:var(--sh-f)}
+.mk-list.fold.peek .mk-row{flex-direction:row;gap:8px;padding:6px 10px}
+.mk-list.fold.peek .mk-row .nm{display:inline}
+/* nothing turned in yet: what she can do, and Add their file… first */
+.mk-ffoot.none>[data-nofile]{flex-basis:100%;text-align:center;margin:0 0 4px}
+/* Replace: a new link and its Next on one line */
+.mk-rplink{display:flex;gap:8px;align-items:flex-end}.mk-rplink>:first-child{flex:1}

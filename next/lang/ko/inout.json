@@ -84,5 +84,29 @@
  "inout.f_marks_kept": "이 파일에 한 표시는 그대로 저장되어 있습니다.",
  "inout.f_goes_back": "내가 추가한 파일이라 내보내기와 함께 돌아갑니다.",
  "inout.op_later": "과제가 들어오면 {setup}의 {bring}이나 그 과제의 {add}를 쓰세요.",
- "inout.heic_reading": "iPhone 사진을 읽는 중…"
+ "inout.heic_reading": "iPhone 사진을 읽는 중…",
+ "inout.nf_say": "여기서 과제를 추가하거나 파일을 페이지나 이름 위에 놓으세요. 과제 없이도 점수를 줄 수 있습니다.",
+ "inout.nf_add": "파일 추가…",
+ "inout.tr_add": "재시험 과제 추가…",
+ "inout.rp_t": "{name} 바꾸기",
+ "inout.rp_comp": "이 컴퓨터에서…",
+ "inout.rp_drive": "Google 드라이브에서…",
+ "inout.rp_or_drop": "또는 새 파일을 여기에 놓기",
+ "inout.rp_say": "바뀌기 전에 두 파일을 나란히 확인합니다.",
+ "inout.rp_link": "새 링크",
+ "inout.rp_next": "다음",
+ "inout.rp_or": "또는",
+ "inout.rp_vfile": "동영상 파일…",
+ "inout.rp_vdrive": "Google 드라이브…",
+ "inout.rp_vsay": "같은 동영상을 가진 파트너도 새 동영상을 받습니다. 다음 단계에서 뺄 수 있습니다.",
+ "inout.rp_vq": "이 동영상을 바꿀까요?",
+ "inout.rp_vtext": "새 동영상이 이전 동영상을 대신합니다. 점수와 메모는 그대로입니다. 이전 링크는 제거한 파일에 남아 있어 되돌릴 수 있습니다.",
+ "inout.rp_vk_file": "동영상 파일",
+ "inout.rp_vk_drive": "Google 드라이브에서",
+ "inout.rp_also": "{names}에게도",
+ "inout.rp_grp": {
+  "one": "{names}도 이 과제를 함께 쓰므로 함께 바뀝니다.",
+  "other": "{names}도 이 과제를 함께 쓰므로 함께 바뀝니다."
+ },
+ "inout.rp_for": "{names}의 {name}을(를) 바꿨습니다"
 }
