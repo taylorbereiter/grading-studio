@@ -80,6 +80,8 @@ async function page(ctx, errors, D) {
   p.on('pageerror', e => errors.push(e.message)); p.on('dialog', d => { errors.push('dialog: ' + d.message()); d.dismiss(); });
   await p.setBypassServiceWorker(true);
   await p.evaluateOnNewDocument(STEADY);
+  // GS_THROTTLE=6 runs the page that many times slower (CDP), to find what depends on timing before CI does
+  if (+process.env.GS_THROTTLE > 1) await (await p.target().createCDPSession()).send('Emulation.setCPUThrottlingRate', { rate: +process.env.GS_THROTTLE });
   await p.setViewport({ width: 1440, height: 900 });
   await fakeGoogle(p, D);
   return p;

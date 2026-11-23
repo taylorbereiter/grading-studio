@@ -37,6 +37,8 @@ async function page(ctx, errors) {
   await p.setRequestInterception(true);
   p.on('request', r => { const u = r.url(); if (/^https?:\/\/(127\.0\.0\.1|localhost)[:/]/.test(u) || /^(data|blob|about):/.test(u)) return r.continue(); r.abort(); });
   await p.evaluateOnNewDocument(STEADY);
+  // GS_THROTTLE=6 runs the page that many times slower (CDP), to find what depends on timing before CI does
+  if (+process.env.GS_THROTTLE > 1) await (await p.target().createCDPSession()).send('Emulation.setCPUThrottlingRate', { rate: +process.env.GS_THROTTLE });
   await p.setViewport({ width: 1440, height: 900 });
   return p;
 }
@@ -212,6 +214,8 @@ async function pageYT(ctx, errors) {
     if (/^https:\/\/www\.youtube-nocookie\.com\/embed\/abcDEF12345\?enablejsapi=1/.test(u)) return r.respond({ status: 200, contentType: 'text/html', body: FAKE_YT });
     if (/^https?:\/\/(127\.0\.0\.1|localhost)[:/]/.test(u) || /^(data|blob|about):/.test(u)) return r.continue(); r.abort(); });
   await p.evaluateOnNewDocument(STEADY);
+  // GS_THROTTLE=6 runs the page that many times slower (CDP), to find what depends on timing before CI does
+  if (+process.env.GS_THROTTLE > 1) await (await p.target().createCDPSession()).send('Emulation.setCPUThrottlingRate', { rate: +process.env.GS_THROTTLE });
   await p.setViewport({ width: 1440, height: 900 });
   return p;
 }

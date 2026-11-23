@@ -1115,6 +1115,7 @@ dialog.dlg:has(.mk-rd){width:min(640px,calc(100vw - 32px))}
 .mk-paper .rd-pages canvas{background:#fff;box-shadow:var(--sh-r)}
 .mk-paper .rd-grip{height:10px;cursor:ns-resize;border-radius:0 0 var(--r2) var(--r2);background:linear-gradient(var(--line),var(--line)) center/40px 3px no-repeat}
 .mk-paper .rd-grip:focus-visible{outline:2px solid var(--acc)}
+.mk-paper .rd-wait{visibility:hidden}.mk-paper .rd-scroll.rd-tall{height:70vh}
 /* Transcripts for every recording (mark/transcripts.jsx) */
 .mk-trall{display:flex;flex-direction:column;gap:8px}.mk-trall p{margin:0}
 /* The top bar's This assignment set (mark/topbar.jsx): marked so far, missing or excused and the average, one button to Insights;
