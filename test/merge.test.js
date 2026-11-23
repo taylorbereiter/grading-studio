@@ -856,3 +856,23 @@ test('the copies for the phone of lessons too big to send: each by its time, non
   // none on either side: no lite at all, as before
   assert.ok(!('lite' in plain(M.mergePlan({ lessons: {}, kv: {}, gone: {} }, { lessons: {}, kv: {}, gone: {} }))));
 });
+
+test('the rubric bank on two devices: each rubric and scale by its own time, so the device that syncs last never wipes one saved on the other', () => {
+  const r = (id, name, at) => ({ id, name, criteria: ['Ideas', 'Organisation'], at });
+  // computer: saved "Essay" and changed "Poem" after the last sync. Phone: synced later with a bank that changed for another reason.
+  const A = { lessons: {}, gone: {}, kv: { bank: { t: 100, v: { rubrics: [r('e', 'Essay', 90), r('p', 'Poem v2', 95)], scales: [{ id: 's1', name: 'Out of 12', scale: { 12: 100 }, at: 10 }], gone: {} } }, units: { t: 100, v: [] } } };
+  const B = { lessons: {}, gone: {}, kv: { bank: { t: 200, v: { rubrics: [r('p', 'Poem', 40), r('x', 'Speech', 150), r('old', 'Gone one', 20)], scales: [], gone: { old: 160, s1: 5 } } }, units: { t: 200, v: [{ id: 'u' }] } } };
+  for (const [x, y] of [[A, B], [B, A]]) {
+    const m = plain(M.mergePlan(x, y)), b = m.kv.bank;
+    assert.deepEqual(b.v.rubrics.map(q => q.name), ['Essay', 'Poem v2', 'Speech'], 'both sides’ rubrics stay; the newer copy of one wins');
+    assert.deepEqual(b.v.scales.map(q => q.id), ['s1'], 'a scale saved after an old delete stays');
+    assert.deepEqual(b.v.gone, { old: 160 }, 'a delete stays; one saved again is forgotten');
+    assert.equal(b.t, 200);
+    assert.deepEqual(m.kv.units.v, [{ id: 'u' }], 'other Planner records still go by their time');
+  }
+  // the same name saved on both devices with different ids: the newer stays, as a save replaces one by name
+  const n = plain(M.mergePlan({ lessons: {}, gone: {}, kv: { bank: { t: 1, v: { rubrics: [r('a', 'Lab', 50)], scales: [], gone: {} } } } }, { lessons: {}, gone: {}, kv: { bank: { t: 2, v: { rubrics: [r('b', 'lab', 70)], scales: [], gone: {} } } } }));
+  assert.deepEqual(n.kv.bank.v.rubrics.map(q => q.id), ['b']);
+  // one side has no bank yet: the other's comes through whole
+  const one = plain(M.mergePlan({ lessons: {}, gone: {}, kv: {} }, B)); assert.deepEqual(one.kv.bank, B.kv.bank);
+});

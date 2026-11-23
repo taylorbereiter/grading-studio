@@ -1,11 +1,11 @@
 {
- "version": "1.28.80",
- "build": "c0e47eb39c29",
+ "version": "1.28.81",
+ "build": "83ad6748aa32",
  "notes": [
-  "Only this student is no longer copied between computers by Google Drive sync, so an old one can’t keep taking over your screen. One left over from before, or from more than three hours ago, is let go by itself."
+  "Saved rubrics and grading scales now stay when you use more than one device: a sync adds the other device’s rubrics to yours one by one, instead of letting the device that synced last replace the whole list."
  ],
  "files": {
-  "index.html": "a0d89871fd40da5ee37c993a49fd7fbab9ce8172158e8ae6cb1615a33b0584a6",
+  "index.html": "157a5bcd88a4b99eef7ba4525a584adf1d9a4498310c241fec7350fa43ddc785",
   "planner.html": "01d1e77793068616c172796c249b3ffb162df3ac94d099ab8b46fd2d473474a5"
  },
  "langs": {
