@@ -17,13 +17,6 @@ export const GROUPS = [['classes', 'people', 'settings.classes'], ['timetable', 
   ['focus', 'timer', 'settings.focus'], ['ai', 'assist', 'settings.ai'], ['saving', 'cloud', 'settings.saving'], ['display', 'sun', 'settings.display'], ['about', 'info', 'settings.about']];
 
 // The grading settings load with their pages, not with Settings (PARTS.setgrade): their part brings the grading engines.
-function GradingPart({ name }) {
-  const [P, setP] = useState(null);
-  useEffect(() => { PARTS.setgrade().then(setP); }, []);
-  if (!P) return null;
-  const C = P[name];
-  return <C />;
-}
 // Focus and goals load with their page too (PARTS.setfocus): the timer's engine comes with them.
 // The rest of each page (PARTS.setmore), after what is already there.
 function MorePart({ name }) {
@@ -32,6 +25,13 @@ function MorePart({ name }) {
   if (!P) return null;
   const C = P[name];
   return <C />;
+}
+// A page made of more than one part comes in whole, once every part has arrived. Drawn one by one, a part arriving above another
+// pushed what she was about to press down from under the pointer (Settings > Classes: the class list came in above Email opens in).
+function Parts({ names, draw }) {
+  const [P, setP] = useState(null);
+  useEffect(() => { Promise.all(names.map(n => PARTS[n]())).then(setP, e => console.error(e)); }, []);
+  return P ? draw(...P) : null;
 }
 function SavePart() {
   const [P, setP] = useState(null);
@@ -86,8 +86,9 @@ export default function Settings({ route }) {
       <section class="setbody" aria-label={t(g[2])}>
         <h2 class="h2">{t(g[2])}</h2>
         {g[0] === 'display' ? <><Display /><MorePart name="DisplayMore" /></> : g[0] === 'about' ? <About /> : g[0] === 'timetable' ? <TimetableSettings />
-          : g[0] === 'grading' ? <><GradingPart name="GradingSettings" /><MorePart name="GradingMore" /></> : g[0] === 'marking' ? <><GradingPart name="MarkingSettings" /><MorePart name="MarkingMore" /></>
-          : g[0] === 'focus' ? <FocusPart /> : g[0] === 'classes' ? <><MorePart name="ClassesList" /><GradingPart name="ClassesSettings" /><MorePart name="ClassesMore" /><MorePart name="ClassesSetup" /></> : g[0] === 'ai' ? <MorePart name="AiSettings" /> : g[0] === 'saving' ? <SavePart />
+          : g[0] === 'grading' ? <Parts key="grading" names={['setgrade', 'setmore']} draw={(G, M) => <><G.GradingSettings /><M.GradingMore /></>} />
+          : g[0] === 'marking' ? <Parts key="marking" names={['setgrade', 'setmore']} draw={(G, M) => <><G.MarkingSettings /><M.MarkingMore /></>} />
+          : g[0] === 'focus' ? <FocusPart /> : g[0] === 'classes' ? <Parts key="classes" names={['setclasses', 'setgrade', 'setmore']} draw={(C, G, M) => <><C.ClassList /><G.ClassesSettings /><M.ClassesMore /><M.ClassesSetup /></>} /> : g[0] === 'ai' ? <MorePart name="AiSettings" /> : g[0] === 'saving' ? <SavePart />
           : <EmptyState icon="spark" title={t('settings.later_title')} text={t('settings.later_text')} />}
       </section>
     </div>
