@@ -329,7 +329,10 @@ test('hide names: the switch, Check the covers (a box drawn, used on every paper
   const p = await page(ctx, errors);
   await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(old.id));
   await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
-  await menuPick(p, '[data-setupopen]', 'Hide names');
+  // the switch is always in the list's footer, off, with no Shuffle until names are hidden; it opens Hide names
+  assert.equal(await p.$eval('[data-anonsw]', e => e.getAttribute('aria-checked')), 'false');
+  assert.equal(await p.$('[data-anonshuf]'), null, 'no Shuffle while names show');
+  await p.click('[data-anonsw]');
   await p.waitForSelector('dialog[open] [data-hnstart]', { timeout: 30000 });
   await p.waitForFunction(() => /checked/.test((document.querySelector('[data-hncount]') || {}).textContent || ''), { timeout: 30000 });
   await p.click('[data-hncheck]');

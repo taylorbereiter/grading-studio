@@ -384,6 +384,16 @@ test('the marking screen around the paper: a picked mark moved, resized, copied 
   // the highlighter: H again switches between snapping and freehand, and the bar says which
   await p.keyboard.press('h'); await p.keyboard.press('h');
   assert.equal(await p.$eval('[data-hlm="free"]', b => b.getAttribute('aria-pressed')), 'true');
+  // and once more: a box dragged over anything highlights it, with no width to choose
+  await p.keyboard.press('h');
+  assert.equal(await p.$eval('[data-hlm="box"]', b => b.getAttribute('aria-pressed')), 'true');
+  assert.equal(await p.$('[data-hlw]'), null, 'no width for a box');
+  const n0 = (await marksOf(p, 0)).length;
+  await nextDrag(p, 0, [[260, 360], [200, 330], [100, 300]]);
+  const bx = (await marksOf(p, 0)).at(-1);
+  assert.deepEqual([bx.t, bx.pts, bx.rects, bx.x, bx.y, bx.w, bx.h], ['hl', undefined, undefined, 100, 300, 160, 60], 'one plain box: ' + JSON.stringify(bx));
+  await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
+  assert.equal((await marksOf(p, 0)).length, n0, 'Ctrl Z takes the box back');
   await p.click('[data-hlm="auto"]');
   assert.equal(await p.$eval('[data-hlm="auto"]', b => b.getAttribute('aria-pressed')), 'true');
   await p.keyboard.press('v');

@@ -268,7 +268,7 @@ document.addEventListener('keydown', e => {
     if (e.key.toLowerCase() === 'l') { curPlay.skip(5); return; }
   }
   const map = { v: 'select', p: 'pen', h: 'hl', o: 'oval', t: 'text', c: 'note', k: 'check', e: 'erase' };
-  if (e.key.toLowerCase() === 'h' && tool === 'hl') { setHlMode(hlMode === 'free' ? 'auto' : 'free', true); return; }
+  if (e.key.toLowerCase() === 'h' && tool === 'hl') { setHlMode(nextHlMode(), true); return; }
   if (map[e.key.toLowerCase()]) { setTool(map[e.key.toLowerCase()]); return; }
   if (e.key.toLowerCase() === 'b') { e.preventDefault(); spToggle(); return; }   // the side pane (src/sidepane.js)
   if (e.key.toLowerCase() === 'n') { nextUnscored(); return; }

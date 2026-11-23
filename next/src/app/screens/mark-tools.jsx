@@ -36,8 +36,8 @@ function Tools() {
     <IconButton icon="stamp" label={t('mark.t_stamp')} aria-pressed={bar === 'stamp' ? 'true' : 'false'} onClick={() => M.setStampTool(bar !== 'stamp')} data-tool="stamp" />
     {bar !== 'select' && bar !== 'erase' && bar !== 'stamp' && <span class="sep" />}
     {bar === 'hl' ? sw(HL, s.hlColor, M.chooseHl, t('mark.hl_color')) : bar === 'check' ? sw(COLORS, s.checkInk, M.chooseCheck, t('mark.check_color')) : bar !== 'select' && bar !== 'erase' && bar !== 'stamp' ? sw(COLORS, s.inkColor, M.chooseInk, t('mark.ink')) : null}
-    {bar === 'hl' && <ToolSet class="mk-hlm" label={t('mark.hl_how')}><button type="button" aria-pressed={M.hlFree() ? 'false' : 'true'} title={t('mark.hl_snap_tip')} data-hlm="auto" onClick={() => M.setHlFree(false)}>{t('mark.hl_snap')}</button><button type="button" aria-pressed={M.hlFree() ? 'true' : 'false'} title={t('mark.hl_free_tip')} data-hlm="free" onClick={() => M.setHlFree(true)}>{t('mark.hl_free')}</button></ToolSet>}
-    {bar === 'hl' && <ToolSet class="mk-w mk-hlw" label={t('mark.hl_width')}>{HL_W.map(([w, l]) => <button type="button" aria-pressed={M.hlWidth() === w ? 'true' : 'false'} title={l()} aria-label={l()} data-hlw={w} onClick={() => M.setHlWidth(w)}><i style={'--w:' + w / 3} /></button>)}</ToolSet>}
+    {bar === 'hl' && <ToolSet class="mk-hlm" label={t('mark.hl_how')}>{HL_HOW.map(([k, line, tip]) => <button type="button" aria-pressed={M.hlHow() === k ? 'true' : 'false'} title={t(tip)} data-hlm={k} onClick={() => M.setHlHow(k)}>{t(line)}</button>)}</ToolSet>}
+    {bar === 'hl' && M.hlHow() !== 'box' && <ToolSet class="mk-w mk-hlw" label={t('mark.hl_width')}>{HL_W.map(([w, l]) => <button type="button" aria-pressed={M.hlWidth() === w ? 'true' : 'false'} title={l()} aria-label={l()} data-hlw={w} onClick={() => M.setHlWidth(w)}><i style={'--w:' + w / 3} /></button>)}</ToolSet>}
     {bar === 'pen' && <ToolSet class="mk-w" label={t('mark.width')}>{WIDTHS.map(([w, l]) => <button type="button" aria-pressed={s.penW === w ? 'true' : 'false'} title={l()} aria-label={l()} data-w={w} onClick={() => M.chooseWidth(w)}><i style={'--w:' + w} /></button>)}</ToolSet>}
     <span class="sep" />
     <IconButton icon="undo" label={t('mark.undo')} kbd="mod+z" disabled={!s.undoStack.length} onClick={M.undo} data-undo />
@@ -138,7 +138,10 @@ export { Marking as Tools };
 // Starts marking on the open paper: the hooks, the keys, and the pages already on screen. Returns what stops it again.
 let say = () => {};
 const snip = () => PARTS.snip().then(m => m.startSnip({ toast: say })).catch(e => console.error(e));
-const hlSwitch = () => { const free = !M.hlFree(); M.setHlFree(free); say(t(free ? 'mark.hl_free_on' : 'mark.hl_snap_on')); };
+// H with the highlighter in hand goes round Snap, Free and Box, as the current app does
+const HL_HOW = [['auto', 'mark.hl_snap', 'mark.hl_snap_tip'], ['free', 'mark.hl_free', 'mark.hl_free_tip'], ['box', 'mark.hl_box', 'mark.hl_box_tip']];
+const HL_ON = { auto: 'mark.hl_snap_on', free: 'mark.hl_free_on', box: 'mark.hl_box_on' };
+const hlSwitch = () => { const now = M.hlHow(), how = now === 'auto' ? 'free' : now === 'free' ? 'box' : 'auto'; M.setHlHow(how); say(t(HL_ON[how])); };
 export function start({ toast, openStudent, changed, zoom }) {
   say = toast; M.startMarking({ toast, openStudent });
   const up = e => { if (/^Arrow/.test(e.key)) M.nudgeDone(); }; addEventListener('keyup', up);

@@ -314,6 +314,18 @@ test('with no typed text the highlighter is freehand by itself, and the choice i
   assert.equal(await page.evaluate(() => window.__gs.hlMode()), 'free');
   await page.evaluate(() => document.activeElement && document.activeElement.blur());
   await page.keyboard.press('h');
+  assert.equal(await page.evaluate(() => window.__gs.hlMode()), 'box', 'H again gives the box');
+  assert.equal(await page.$eval('[data-hlm="box"]', e => e.getAttribute('aria-pressed')), 'true');
+  assert.equal(await page.$('[data-hlw]'), null, 'no width for a box');
+  // A box dragged up and to the left, over typed text: one plain rectangle, no snapping.
+  await drag(page, 0, [[320, lineY(2) + 30], [250, lineY(2) + 10], [120, lineY(2) - 6]]);
+  ms = await marks(page);
+  assert.deepEqual([ms[1].t, ms[1].pts, ms[1].rects, ms[1].x, ms[1].y, ms[1].w, ms[1].h], ['hl', undefined, undefined, 120, lineY(2) - 6, 200, 36], 'the box: ' + JSON.stringify(ms[1]));
+  assert.ok((await probeScreen(page, 0, [[180, lineY(2) + 10, 60, 6]]))[0].yellow > 0, 'and it shows');
+  await page.keyboard.down('Control'); await page.keyboard.press('z'); await page.keyboard.up('Control');
+  ms = await marks(page);
+  assert.equal(ms.length, 1, 'undo takes the box away');
+  await page.keyboard.press('h');
   assert.equal(await page.evaluate(() => window.__gs.hlMode()), 'auto', 'H again goes back');
   assert.equal(await page.$eval('[data-hlm="auto"]', e => e.getAttribute('aria-pressed')), 'true');
   await drag(page, 0, [[100, lineY(3)], [200, lineY(3)]]);
