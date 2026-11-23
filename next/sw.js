@@ -12,23 +12,49 @@ const hex = buf => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, 
 const versionIn = async name => { try { const r = await caches.has(name) && await (await caches.open(name)).match(at('version.json')); return r ? await r.json() : null; } catch { return null; } };
 const mode = async () => { try { const r = await caches.has(KEPT) && await (await caches.open(KEPT)).match(at('mode')); return r && (await r.text()) === 'auto' ? 'auto' : 'ask'; } catch { return 'ask'; } };
 let queue = Promise.resolve();
+// The check running now (one at a time: a press while it runs joins it) and how far its download is, told to the page now and then.
+let run = null, prog = null, saidAt = 0;
+const said = () => { if (Date.now() - saidAt > 700) { saidAt = Date.now(); tell({ progress: prog }); } };
+const checkNow = () => run || (run = inTurn(check).finally(() => { run = null; prog = null; }));
+// What a failed check says: no connection at all, or the site answered but the version wasn't whole (a file missing or changed
+// while the site was being updated).
+const why = e => (e instanceof TypeError ? 'offline' : 'site');
+const checkTell = () => checkNow().then(() => tell({ checked: 'ok' }), err => tell({ checked: why(err) }));
 const inTurn = fn => { const p = queue.then(fn, fn); queue = p.catch(() => {}); return p; };
 const TYPES = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', json: 'application/json', woff2: 'font/woff2', webp: 'image/webp' };
 const typeOf = p => TYPES[p.split('.').pop()] || 'application/octet-stream';
 
+// Six files at a time, each tried three times. A file is kept in the cache as soon as it is checked, so a check stopped part way
+// (the browser stops a worker that runs too long, or the window closed) goes on from there next time; a file the version in use
+// already has with the same SHA-256 is taken from it, so an update fetches only what changed. The page hears how far it has got.
 async function download(name, v) {
-  const got = [];
-  for (const [p, sum] of Object.entries(v.files)) {
-    const r = await fetch(at(p), { cache: 'no-store' });
-    if (!r.ok) throw new Error(p + ': ' + r.status);
-    const buf = await r.arrayBuffer();
-    if (hex(await crypto.subtle.digest('SHA-256', buf)) !== sum) throw new Error(p + ' is not the file version.json describes');
-    got.push([p, new Response(buf, { headers: { 'Content-Type': typeOf(p) } })]);
+  const c = await caches.open(name), mark = await c.match(at('building'));
+  if (!mark || (await mark.text()) !== v.build) { await caches.delete(name); }
+  const to = await caches.open(name), cur = await versionIn(APP), app = cur && await caches.open(APP);
+  await to.put(at('building'), new Response(v.build));
+  const todo = Object.entries(v.files);
+  prog = { v: v.version, done: 0, of: todo.length };
+  const ok = async (r, sum) => r && hex(await crypto.subtle.digest('SHA-256', await r.clone().arrayBuffer())) === sum;
+  async function one([p, sum]) {
+    if (await ok(await to.match(at(p)), sum)) return;
+    const had = name !== APP && cur.files[p] === sum && await app.match(at(p));
+    if (await ok(had, sum)) return to.put(at(p), had);
+    for (let n = 0; ; n++) {
+      try {
+        const r = await fetch(at(p), { cache: 'no-store' });
+        if (!r.ok) throw new Error(p + ': ' + r.status);
+        const buf = await r.arrayBuffer();
+        if (hex(await crypto.subtle.digest('SHA-256', buf)) !== sum) throw new Error(p + ' is not the file version.json describes');
+        return to.put(at(p), new Response(buf, { headers: { 'Content-Type': typeOf(p) } }));
+      } catch (e) { if (n === 2) throw e; await new Promise(r => setTimeout(r, 1500 * (n + 1))); }
+    }
   }
-  await caches.delete(name);
-  const c = await caches.open(name);
-  for (const [p, r] of got) await c.put(at(p), r);
-  await c.put(at('version.json'), new Response(JSON.stringify(v), { headers: { 'Content-Type': 'application/json' } }));
+  let i = 0, failed = null;
+  const lane = async () => { while (!failed && i < todo.length) { try { await one(todo[i++]); prog.done++; said(); } catch (e) { failed = e; } } };
+  await Promise.all(Array.from({ length: 6 }, lane));
+  if (failed) throw failed;
+  await to.delete(at('building'));
+  await to.put(at('version.json'), new Response(JSON.stringify(v), { headers: { 'Content-Type': 'application/json' } }));
 }
 const latest = async () => { const r = await fetch(at('version.json'), { cache: 'no-store' }); if (!r.ok) throw new Error('version.json: ' + r.status); const v = await r.json(); if (!v || !v.build || !v.files) throw new Error('version.json is not a version'); return v; };
 async function check() {
@@ -53,7 +79,7 @@ async function tell(extra) {
   const msg = { type: 'gsn-state', state: await state(), ...extra };
   for (const c of await self.clients.matchAll({ type: 'window', includeUncontrolled: true })) if (c.url.startsWith(SCOPE)) c.postMessage(msg);
 }
-self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(inTurn(check).then(() => tell(), () => {})); });
+self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(checkTell()); });
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 async function answer(key, req, page) {
   try {
@@ -94,13 +120,13 @@ self.addEventListener('fetch', e => {
   if (page && key !== 'index.html') return;   // the gallery and the proof page always come from the web
   if (!page && !/^dist\//.test(key)) return;
   e.respondWith(answer(key, req, page));
-  if (page) e.waitUntil(inTurn(check).then(() => tell(), () => {}));
+  if (page) e.waitUntil(checkTell());
 });
 self.addEventListener('message', e => {
   const d = e.data || {};
   if (d.type === 'gs-drive-ok' && e.ports[0]) e.ports[0].postMessage({ drive: 1 });
   else if (d.type === 'gsn-state') e.waitUntil(tell());
-  else if (d.type === 'gsn-check') e.waitUntil(inTurn(check).then(() => tell({ checked: 'ok' }), () => tell({ checked: 'offline' })));
+  else if (d.type === 'gsn-check') { if (prog) tell({ progress: prog }); e.waitUntil(checkTell()); }
   else if (d.type === 'gsn-apply') e.waitUntil(inTurn(promote).then(done => tell({ applied: !!done })));
   else if (d.type === 'gsn-mode') e.waitUntil(caches.open(KEPT).then(c => c.put(at('mode'), new Response(d.mode === 'auto' ? 'auto' : 'ask'))).then(() => tell()));
 });
