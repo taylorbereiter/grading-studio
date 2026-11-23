@@ -62,10 +62,10 @@ function About() {
   const u = useUpdate(), standalone = typeof matchMedia === 'function' && matchMedia('(display-mode: standalone)').matches;
   return <><Card title={t('settings.about')}>
     <p>{u.current ? t('update.current', { v: u.current }) : t('update.not_kept')}</p>
-    {u.waiting && <p role="status">{t('update.ready_v', { v: u.waiting })}</p>}
-    <div class="row gap">{u.waiting ? <Button variant="primary" onClick={u.apply}>{t('update.now')}</Button> : <Button onClick={u.check}>{t('update.check')}</Button>}</div>
+    <p role="status" data-updsays>{u.waiting ? t('update.ready_v', { v: u.waiting }) : u.progress ? (u.progress.of ? t('update.getting_n', { v: u.progress.v, n: u.progress.done, of: u.progress.of }) : t('update.getting', { v: u.progress.v }))
+      : u.checking ? t('update.checking') : u.checked === 'ok' ? t('update.newest', { v: u.current }) : u.checked === 'offline' ? t('update.offline') : u.checked === 'site' ? t('update.failed') : ''}</p>
+    <div class="row gap">{u.waiting ? <Button variant="primary" onClick={u.apply}>{t('update.now')}</Button> : <Button onClick={u.check} disabled={u.checking} data-updcheck>{t('update.check')}</Button>}</div>
     <Segmented label={t('update.mode')} value={u.mode} onChange={u.setMode} options={[{ value: 'ask', label: t('update.mode_ask') }, { value: 'auto', label: t('update.mode_auto') }]} />
-    {u.checked === 'offline' && <p class="hint">{t('update.offline')}</p>}
     {/* the previous version, whole at classic/ beside this one, on the same saved work (build.js writes it) */}
     <p class="mute">{t('update.previous_text')}</p>
     <div class="row gap"><a class="btn" href="classic/" data-focus="previous-version">{t('update.previous')}</a></div>
