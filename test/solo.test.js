@@ -171,3 +171,37 @@ test('papers brought in while it is on stay open, and it ends; a gone student en
   assert.deepEqual(page.errors, []);
   await close();
 });
+
+// 11/23 again: the flag travelled with Drive sync, so every sync switched it back on for an old download, even a deleted one.
+test('it never travels with sync, and an old flag (no time, or hours old) is let go at once', async () => {
+  const { page, close } = await openApp(browser, { seed: { ls: { 'gs.lib': lib } } });
+  await openZip(page, essay);
+  // what travels with her work (src/folder.js LS_LOCAL keeps it here) and what a sync file brings in (src/merge.js mergeLs)
+  const fs = require('fs'), path = require('path'), vm = require('vm');
+  const local = new RegExp(fs.readFileSync(path.join(__dirname, '..', 'src', 'folder.js'), 'utf8').match(/const LS_LOCAL = \/(.+?)\/;/)[1]);
+  assert.equal(local.test('gs.solo'), true, 'not written to the folder or Drive');
+  const M = vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'src', 'merge.js'), 'utf8') + ';({ mergeLs })', { SCALE12: [] });
+  assert.equal('gs.solo' in M.mergeLs({}, { 'gs.solo': JSON.stringify({ id: 'b1', key: 'Ben Beta' }) }), false, 'not taken from a folder or Drive file');
+  // one that came in before this change, with no time on it
+  await page.evaluate(() => { localStorage.setItem('gs.solo', JSON.stringify({ id: window.__gs.state().batch.id, key: 'Ben Beta' })); });
+  await page.reload();
+  await until(page, () => window.__gs && !document.querySelector('#start').hidden || (window.__gs && window.__gs.state().batch));
+  await wait(500);
+  let l = await look(page);
+  assert.equal(l.solo, false); assert.equal(l.flag, null); assert.equal(l.rail, true);
+  // one four hours old
+  await page.evaluate(() => { localStorage.setItem('gs.solo', JSON.stringify({ id: 'x', key: 'Ben Beta', at: Date.now() - 4 * 3600e3 })); });
+  await page.reload(); await wait(800);
+  l = await look(page);
+  assert.equal(l.solo, false); assert.equal(l.flag, null);
+  // and the screen gives everything back if the flag goes while it is on
+  await page.evaluate(() => { location.hash = '#/'; });
+  await openZip(page, essay);
+  await page.evaluate(() => window.__gs.soloStart(0));
+  await until(page, () => document.documentElement.classList.contains('solo'));
+  await page.evaluate(() => { localStorage.removeItem('gs.solo'); location.hash = '#/settings'; }); await wait(400);
+  l = await look(page);
+  assert.equal(l.solo, false); assert.equal(l.rail, true);
+  assert.deepEqual(page.errors, []);
+  await close();
+});

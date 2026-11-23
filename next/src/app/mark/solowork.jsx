@@ -58,7 +58,7 @@ export function OtherWork({ st }) {
   if (!me) return null;
   const b = state().batch, done = (rows || []).filter(r => r.p).length, pc = (rows || []).map(r => r.p).filter(p => p && p.pct != null && !p.partial && !p.status).map(p => p.pct);
   const head = [t('paper.pw_in', { cls: me.c.name })].concat(rows && rows.length ? [t('mark.sw_in', { done, n: rows.length })] : [], pc.length ? [t('mark.sw_avg', { pct: fmtPct(pc.reduce((a, x) => a + x, 0) / pc.length) })] : []).join(' · ');
-  const open1 = r => { setOpen(false); if (r.id === b.id) return; prefs.set('gs.solo', { id: r.id, key: r.k }); go('mark', r.id); };
+  const open1 = r => { setOpen(false); if (r.id === b.id) return; prefs.set('gs.solo', { id: r.id, key: r.k, at: (prefs.get('gs.solo', null) || {}).at || Date.now() }); go('mark', r.id); };
   return <span class="mk-solow">
     <Button size="sm" aria-expanded={open ? 'true' : 'false'} onClick={() => setOpen(o => !o)} data-solother>{t('mark.sw_btn')}</Button>
     {open && <div class="mk-swbox" role="region" aria-label={t('mark.sw_btn')} data-solowork>
