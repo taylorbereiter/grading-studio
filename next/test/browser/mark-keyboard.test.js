@@ -378,5 +378,9 @@ test('A-107 A-108 Escape closes the calculator and Lighting from the paper as we
   await p.waitForFunction(() => { const b = document.querySelector('[data-light]'); if (b) b.click(); return !!b; }, { timeout: 30000 });
   await p.waitForSelector('.mk-light');
   await p.evaluate(() => document.querySelector('.mk-paper').focus()); await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('.mk-light'), { timeout: 5000 });  // and an Escape in the very moment Lighting goes into the page (before it is drawn): CI caught this one twice
+  await p.evaluate(() => { const o = new MutationObserver(() => { if (!document.querySelector('.mk-light')) return; o.disconnect();
+    (document.activeElement || document.body).dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })); });
+    o.observe(document.body, { childList: true, subtree: true }); document.querySelector('[data-light]').click(); });
   await p.waitForFunction(() => !document.querySelector('.mk-light'), { timeout: 5000 });
 }));
