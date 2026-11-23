@@ -163,8 +163,11 @@ function Student({ x, n, i, cols, r, onMove, onRemove, onTool, onStep, term, who
   const days = B.attDays(c), att = days.length ? B.attCount(c, n, days) : null, here = att ? Math.round((att.p + att.l) / days.length * 100) : null;
   const recent = cols.filter(col => col.type !== 'xc').slice(-6).reverse();
   const trend = recent.map(col => col.cells.get(n)).filter(B.bkCounts).map(k => k.pct).reverse();
-  const [note, setNote] = useState(B.infoOf(c, n).note || ''), wait = useRef(0);
-  useEffect(() => () => clearTimeout(wait.current), []);
+  const [note, setNote] = useState(B.infoOf(c, n).note || ''), wait = useRef(0), due = useRef(null);
+  // A note is saved a moment after the last key, and at once when she leaves the box or the card goes (the next student, another
+  // tab, the card drawn again): a note typed just before that is saved, never dropped with the timer.
+  const flushNote = () => { clearTimeout(wait.current); const f = due.current; due.current = null; if (f) f(); };
+  useEffect(() => flushNote, []);
   const [More, setMore] = useState(null);
   useEffect(() => { let live = true; import('./student-more.jsx').then(m => { if (live) setMore(() => m.StudentMore); }, e => console.error(e)); return () => { live = false; }; }, []);
   // an MYP class: levels and a 1 to 7, never a percent (src/ib.js ibOneView; audit B-905)
@@ -172,7 +175,7 @@ function Student({ x, n, i, cols, r, onMove, onRemove, onTool, onStep, term, who
   useEffect(() => { if (!myp) return; let live = true; import('./ib.jsx').then(m => { if (live) setIb(() => m.MypStudent); }, e => console.error(e)); return () => { live = false; }; }, [myp]);
   const termName = whole ? t('class.whole_year') : ((x.conf.terms || []).find(k => k.id === term) || {}).name || '';
   const left = leftOf(c.id), labelOf = id => kindOf(id) || t('class.type_none');
-  const typeNote = v => { setNote(v); clearTimeout(wait.current); wait.current = setTimeout(() => change(t('class.u_note'), l => { const k = classIn(l, c.id); if (k && k.names.includes(n)) B.setInfo(k, n, { note: v.trim() ? v : '' }); }), 600); };
+  const typeNote = v => { setNote(v); clearTimeout(wait.current); due.current = () => change(t('class.u_note'), l => { const k = classIn(l, c.id); if (k && k.names.includes(n)) B.setInfo(k, n, { note: v.trim() ? v : '' }); }); wait.current = setTimeout(flushNote, 600); };
   return <article class="card cp-sp" aria-labelledby="h-stu" data-student={i}>
     <div class="sp-head"><span class="cav lg" aria-hidden="true" data-raw>{initials(n)}</span>
       <div><h2 id="h-stu" data-raw>{n}</h2><div class="sub"><span data-raw>{c.name}</span>{(B.infoOf(c, n).id || '') && <span data-raw>{B.infoOf(c, n).id}</span>}<span data-stu-pos>{t('class.st_pos', { n: i + 1, of: c.names.length })}</span></div></div>
@@ -199,7 +202,7 @@ function Student({ x, n, i, cols, r, onMove, onRemove, onTool, onStep, term, who
     {attOn(x.lib) && <AttStudent c={c} n={n} term={x.now ? x.conf.terms.find(k => k.id === x.now) : null} onDay={d => onTool({ k: 'att', d })} />}
     <Details c={c} n={n} />
     <section class="sp-sec"><div class="sp-h"><h3><label for="stu-note">{t('class.notes')}</label></h3><span class="grow" /><Mic onText={w => typeNote((note.trim() ? note.replace(/\s*$/, ' ') : '') + w.trim())} />{note.trim() && <CopyButton text={note} data-note-copy />}</div>
-      <textarea id="stu-note" class="input" rows="3" value={note} placeholder={t('class.notes_ph')} onInput={e => typeNote(e.currentTarget.value)} data-stu-note /></section>
+      <textarea id="stu-note" class="input" rows="3" value={note} placeholder={t('class.notes_ph')} onInput={e => typeNote(e.currentTarget.value)} onBlur={flushNote} data-stu-note /></section>
     {/* the charts load a moment later: last, so nothing above them moves when they come */}
     {More && x.way !== 'myp' && <More c={c} n={n} cols={cols} conf={x.conf} labelOf={labelOf} inn={m => !left.has(m)} whole={whole} />}
   </article>;
