@@ -1,11 +1,11 @@
 {
- "version": "1.28.79",
- "build": "d20289363f72",
+ "version": "1.28.80",
+ "build": "1f993b30a71c",
  "notes": [
-  "With the highlighter on Box or Free, the pointer is now a crosshair everywhere, even over typed words. The text pointer shows only on Snap, where the highlight really follows the words."
+  "Saved rubrics and grading scales now stay when you use more than one device: a sync adds the other device’s rubrics to yours one by one, instead of letting the device that synced last replace the whole list."
  ],
  "files": {
-  "index.html": "fab4a81dd6ba1a3468801853a4018fa42fd98a46df349fc0f50e45eaae2fc5fc",
+  "index.html": "56195d7ba383f1a7b16f82ec99781ed98a29ee1cdb43261d3d2a96820754c10b",
   "planner.html": "01d1e77793068616c172796c249b3ffb162df3ac94d099ab8b46fd2d473474a5"
  },
  "langs": {
