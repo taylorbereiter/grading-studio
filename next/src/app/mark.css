@@ -53,6 +53,7 @@
 .mk-side .total .mute{font-size:var(--t4)}
 .mk-side .total b{font-size:40px;font-weight:600;letter-spacing:-.02em}
 .mk-side .total .pct{font-size:var(--t5);color:var(--ink2)}
+.mk-side .total [data-stampscore]{align-self:center}
 .mk-side .nosc{display:none}
 .mk-side .comment{white-space:pre-wrap;padding:12px;border-radius:var(--r2);box-shadow:0 0 0 1px var(--line)}
 .mk-side .foot{flex:none;display:flex;gap:10px;padding:12px 22px;border-top:1px solid var(--line);background:var(--s)}

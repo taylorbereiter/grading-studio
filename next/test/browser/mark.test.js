@@ -404,8 +404,11 @@ test('the marking screen around the paper: a picked mark moved, resized, copied 
   await p.click('.mk-crit[data-row="2"] .sticks button[data-v="2"]');
   await menuPick(p, '[data-pmore]', 'Put the score on the paper'); { const q = await nextAt(p, 0, 450, 120); await p.mouse.click(q.x, q.y); }
   await press(p, '[data-critstamp="0"]'); { const q = await nextAt(p, 0, 450, 220); await p.mouse.click(q.x, q.y); }
+  // the stamp button beside the total does the same as the menu
+  await press(p, '.mk-side .total [data-stampscore]'); { const q = await nextAt(p, 0, 450, 320); await p.mouse.click(q.x, q.y); }
   const stamps = (await marksOf(p, 0)).filter(m => m.t === 'stamp');
-  assert.deepEqual(stamps.map(m => m.k), ['score', 'crit']);
+  assert.deepEqual(stamps.map(m => m.k), ['score', 'crit', 'score']);
+  assert.equal(stamps[2].text, stamps[0].text);
   assert.match(stamps[0].text, /^9\/12 = \d+%$/); assert.equal(stamps[1].text, '3/4');
   // the score changes: the stamps keep up
   await p.click('.mk-crit[data-row="0"] .sticks button[data-v="4"]');
