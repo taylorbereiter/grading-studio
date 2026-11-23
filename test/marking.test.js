@@ -317,6 +317,8 @@ test('with no typed text the highlighter is freehand by itself, and the choice i
   assert.equal(await page.evaluate(() => window.__gs.hlMode()), 'box', 'H again gives the box');
   assert.equal(await page.$eval('[data-hlm="box"]', e => e.getAttribute('aria-pressed')), 'true');
   assert.equal(await page.$('[data-hlw]'), null, 'no width for a box');
+  const cursorAt = async (x, y) => { const p = await at(page, 0, x, y); await page.mouse.move(p.x, p.y); return page.evaluate(() => window.__gs.state().pages[0].canvas.style.cursor); };
+  assert.equal(await cursorAt(150, lineY(4) - 4), 'crosshair', 'Box over typed words: a crosshair, not the text I-beam');
   // A box dragged up and to the left, over typed text: one plain rectangle, no snapping.
   await drag(page, 0, [[320, lineY(2) + 30], [250, lineY(2) + 10], [120, lineY(2) - 6]]);
   ms = await marks(page);
@@ -328,6 +330,8 @@ test('with no typed text the highlighter is freehand by itself, and the choice i
   await page.keyboard.press('h');
   assert.equal(await page.evaluate(() => window.__gs.hlMode()), 'auto', 'H again goes back');
   assert.equal(await page.$eval('[data-hlm="auto"]', e => e.getAttribute('aria-pressed')), 'true');
+  assert.equal(await cursorAt(150, lineY(4) - 4), 'text', 'Snap over typed words keeps the I-beam');
+  assert.equal(await cursorAt(150, 650), 'crosshair', 'and away from the words it is a crosshair');
   await drag(page, 0, [[100, lineY(3)], [200, lineY(3)]]);
   ms = await marks(page);
   assert.equal(ms[1].pts, undefined, 'and it snaps again');
