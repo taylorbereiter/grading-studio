@@ -213,18 +213,20 @@ function Card({ st, r }) {
     if (r.for) return dropRef(r.path);
     setSkip(st, r.path, true); toast(t('rd.hidden'));
   };
-  const frame = kind === 'frame' || kind === '';
+  // while it is read, the card already takes the room it will (the bar and grip kept in place unseen, and a PDF or picture the
+  // reading's full height), so a card above that finishes drawing doesn't push the one she is reaching for down the screen
+  const frame = kind === 'frame' || kind === '', wait = kind === '' ? ' rd-wait' : '', tall = kind === '' && /\.(pdf|png|jpe?g|gif|webp|bmp|heic|heif|tiff?|avif)$/i.test(r.name);
   return <details class="rd-card" open={open} onToggle={e => { const o = e.currentTarget.open; if (o !== open) { setOpen(o); prefs.set(ok, o); } }} data-rdcard={r.path || 'doc'}>
     <summary>{doc ? <span>{t('rd.doc_card', { name: r.doc.name })}</span> : <><span data-raw>{r.name}</span> <span class="mute">· {t(r.for ? 'rd.card_one' : 'rd.card_all')}</span>
       <button type="button" class="link" onClick={hide} data-rdhide>{t(r.for ? 'rd.remove' : 'rd.hide')}</button></>}</summary>
     <div class="rd-body">
-      {frame && !doc && <div class="rd-bar" role="toolbar" aria-label={t('rd.zoom')} hidden={kind === ''}>
+      {frame && !doc && <div class={'rd-bar' + wait} role="toolbar" aria-label={t('rd.zoom')}>
         <span class="seg"><button type="button" title={t('rd.zoom_out')} aria-label={t('rd.zoom_out')} onClick={() => setZoom(z.current / 1.25, true)} data-rz="-">−</button>
           <button type="button" class="rzv" title={t('rd.zoom_fit')} onClick={() => setZoom(1, true)} data-rz="1">{Math.round(zoom * 100)}%</button>
           <button type="button" title={t('rd.zoom_in')} aria-label={t('rd.zoom_in')} onClick={() => setZoom(z.current * 1.25, true)} data-rz="+">+</button></span>
         <span class="mute">{t('rd.zoom_how')}</span></div>}
-      <div ref={scroll} class="rd-scroll" hidden={!frame} style={height ? { maxHeight: height + 'px' } : undefined}>{kind === '' && <div class="loading" aria-busy="true" />}</div>
-      {frame && !doc && kind === 'frame' && <div class="rd-grip" role="separator" aria-orientation="horizontal" tabindex="0" title={t('rd.grip')} aria-label={t('rd.grip')} onPointerDown={grip} onKeyDown={gripKey} />}
+      <div ref={scroll} class={'rd-scroll' + (tall ? ' rd-tall' : '')} hidden={!frame} style={height ? { maxHeight: height + 'px' } : undefined}>{kind === '' && <div class="loading" aria-busy="true" />}</div>
+      {frame && !doc && <div class={'rd-grip' + wait} role="separator" aria-orientation="horizontal" tabindex="0" title={t('rd.grip')} aria-label={t('rd.grip')} onPointerDown={grip} onKeyDown={gripKey} />}
       <div ref={media} hidden={kind !== 'media'} />
       {kind === 'other' && <div class="fcard other"><Icon name="file" /><div class="grow"><b data-raw>{r.name}</b><p>{t('rd.cant')}</p></div></div>}
       {kind === 'bad' && <p class="mute">{t('rd.cant')}</p>}
