@@ -54,9 +54,12 @@ test('E1-065: a failed book-list read or a failed index write keeps every existi
       window.bookFault = false;
       const proto = fault === 'open' ? IDBFactory.prototype : IDBObjectStore.prototype;
       const real = proto[fault];
+      // The fault holds until the save has failed, not for one call only: something else on the page (the Planner folder
+      // watcher on focus, say) can open the same store first and use up a one-time fault, and then the save goes through.
+      window.bookFaultOff = () => { proto[fault] = real; };
       proto[fault] = function(...args) {
         if (fault === 'open' ? args[0] === 'gs-lessons' : this.name === 'kv' && args[1] === 'pdfs') {
-          proto[fault] = real; window.bookFault = true;
+          window.bookFault = true;
           throw new DOMException('Synthetic book storage fault', 'InvalidStateError');
         }
         return real.apply(this, args);
@@ -64,6 +67,7 @@ test('E1-065: a failed book-list read or a failed index write keeps every existi
     }, fault);
     await choose(p, 'Uncommitted '+fault, fault === 'open' ? 'drop' : 'upload');
     await p.waitForFunction(() => window.bookFault && [...document.querySelectorAll('.toast')].some(t => t.textContent.includes('couldn’t be saved')));
+    await p.evaluate(() => window.bookFaultOff());
     assert.deepEqual(await contents(p), baseline);
   }
   await p.ctx.close();

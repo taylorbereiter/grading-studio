@@ -17,6 +17,16 @@ newer version waits in `gsn-next-1` until Update now (the sidebar's foot, Settin
 is next opened if the teacher chose to update by itself. next/version.json is made by next/build.js. next/test/browser/shell.test.js
 checks that the current app's worker keeps its scope and its `gs-*` caches untouched beside it, and the whole update on a phone.
 
+**Check for an update (fixed 23 Nov 2026).** A version is fetched six files at a time, each tried three times, and each file is
+kept in the staging cache as soon as it is checked (a `building` mark names the build), so a check the browser stopped part way
+goes on from there; a file the version in use already has with the same SHA-256 is copied from it. The worker tells the page how
+far it has got (`progress`) and how every check ended (`checked`: `ok`, `offline` for no connection, `site` for a version that
+didn't arrive whole). Before, the whole version was fetched one file at a time and nothing was said until the last one: at 633
+files that was a minute or more of silence on a slow network, and one failed file threw everything away. The page
+(app/update.js) says Checking… at once, asks the browser for the newest sw.js (`registration.update()`), and, because a worker
+kept from an older version answers only when its whole download is done, looks at the site's version.json itself after 10 s; it
+gives up with a plain reason after 6 minutes, or after a minute without progress. next/test/browser/update-check.test.js.
+
 **While both versions live side by side.** `next/sw.js` registered with scope `/next/` (a narrower scope wins for
 its own pages, so the root worker keeps answering the current app). Its caches are named `gsn-*` and it never opens, deletes or
 renames a `gs-*` cache. It keeps a version whole the same way the root worker does (a version file with a hash per file, the
