@@ -131,8 +131,8 @@ test('two windows of the new app mark one download: each keeps the other’s wor
   await newComment(a, 2, 'A again.', id);
   assert.deepEqual((await comments(a, id, keys)).slice(0, 3), ['From window A.', 'From window B.', 'A again.']);
   // B, coming back to the front, opens the newer work on the student it was on
-  await b.bringToFront(); await b.evaluate(() => window.dispatchEvent(new Event('focus')));
-  await b.waitForFunction(() => { const s = window.__mark.state(); return window.__mark.ready && s.batch.students[2].grade.comment === 'A again.'; }, { timeout: 60000 });
+  await b.bringToFront(); await upToDate(b, id, 'new');
+  assert.equal(await b.evaluate(() => window.__mark.state().batch.students[2].grade.comment), 'A again.');
   assert.equal(await b.evaluate(() => window.__mark.state().cur), 1, 'still on the student she was on');
   assert.deepEqual(errors, []);
   await ctx.close();
