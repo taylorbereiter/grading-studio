@@ -5,7 +5,7 @@
 import { folderHandle } from '../shared/device.js';
 
 // What travels with the work, and what belongs to this browser (src/folder.js LS_LOCAL, kept the same; a test compares them).
-export const LS_LOCAL = /^gs\.(b\..+|batches|syncT|syncAt|cloudP|planCopy|planSeen|planBig|phone|phCls|dataV|lastBackup|gcid|gEmail|tomb|rolls|setupUndo|focusRun|wlCodes|refOpen\..*)$/;
+export const LS_LOCAL = /^gs\.(b\..+|batches|syncT|syncAt|cloudP|planCopy|planSeen|planBig|phone|phCls|dataV|lastBackup|gcid|gEmail|tomb|rolls|setupUndo|focusRun|wlCodes|solo|refOpen\..*)$/;
 export function carryLs() {
   const o = {};
   for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('gs.') && !LS_LOCAL.test(k)) o[k] = localStorage.getItem(k); }
