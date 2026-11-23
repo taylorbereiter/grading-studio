@@ -322,13 +322,13 @@ async function nextLegs(old) {
       await inProfile2(linked, async ctx => {
         const q = await newPage(ctx); await q.goto(place.url('index') + '#/'); await appReady(q);
         await q.evaluate(() => { localStorage.setItem('gs.gcid', JSON.stringify('1234-test.apps.googleusercontent.com')); localStorage.setItem('gs.gEmail', JSON.stringify('teacher@example.com')); });
-        await q.evaluate(async () => { const h = await (await navigator.storage.getDirectory()).getDirectoryHandle('Linked', { create: true }); await window.__gs.folderUse(h); await window.__gs.folderWait(); });
+        await q.evaluate(async () => { const h = await (await navigator.storage.getDirectory()).getDirectoryHandle('Linked', { create: true }); await window.__gs.folderUse(h); await window.__gs.folderWait().then(async function w(s, i = 0) { if (s !== 'busy') return s; if (i > 11) throw new Error('main’s linked folder was still busy after two minutes'); return w(await window.__gs.folderWait(), i + 1); }); });
         // The download opened and saved once with nothing changed, as a teacher who has worked on it before: main's pages fill in what
         // an open download always carries (an empty "moved" list and the like), so both changes below start from the same records.
         await q.goto(place.url('index') + '#/a/' + ids.A); await appReady(q);
         await q.waitForFunction(() => { const b = window.__gs.state().batch; return !!(b && b.revs); }, { timeout: 30000 }); await sleep(1000);
-        await q.evaluate(async () => { await window.__gs.saveNow(); await window.__gs.folderWait(); });
-        await sleep(500); await q.evaluate(() => window.__gs.folderWait());
+        await q.evaluate(async () => { await window.__gs.saveNow(); await window.__gs.folderWait().then(async function w(s, i = 0) { if (s !== 'busy') return s; if (i > 11) throw new Error('main’s linked folder was still busy after two minutes'); return w(await window.__gs.folderWait(), i + 1); }); });
+        await sleep(500); await q.evaluate(() => window.__gs.folderWait().then(async function w(s, i = 0) { if (s !== 'busy') return s; if (i > 11) throw new Error('main’s linked folder was still busy after two minutes'); return w(await window.__gs.folderWait(), i + 1); }));
         await q.close();
       });
       // And opened once more in a new browser session, so what main's pages do on opening with a folder linked (the whole folder
@@ -336,7 +336,7 @@ async function nextLegs(old) {
       await inProfile2(linked, async ctx => {
         const q = await newPage(ctx); await q.goto(place.url('index') + '#/a/' + ids.A); await appReady(q);
         await q.waitForFunction(() => { const b = window.__gs.state().batch, f = window.__gs.folderState(); return !!(b && b.revs && f.at && f.state === 'ok'); }, { timeout: 30000 });
-        await sleep(2000); await q.evaluate(() => window.__gs.folderWait());
+        await sleep(2000); await q.evaluate(() => window.__gs.folderWait().then(async function w(s, i = 0) { if (s !== 'busy') return s; if (i > 11) throw new Error('main’s linked folder was still busy after two minutes'); return w(await window.__gs.folderWait(), i + 1); }));
         await q.close();
       });
       const TOUCHED = k => /^localStorage:gs\.(b\..+|batches|lib|rolls|words)$/.test(k) || /^grading-studio-keep\/(work|meta)\//.test(k);
@@ -350,13 +350,13 @@ async function nextLegs(old) {
             const b = window.__gs.state().batch, st = b.students.find(s => s.grade && (s.grade.rubric || []).some(v => v != null)) || b.students[0];
             st.grade.comment = C; await window.__gs.saveNow();
             window.__gs.state().lib.classes[0].name = N; window.__gs.saveLib();
-            await window.__gs.folderWait(); return st.key;
+            await window.__gs.folderWait().then(async function w(s, i = 0) { if (s !== 'busy') return s; if (i > 11) throw new Error('main’s linked folder was still busy after two minutes'); return w(await window.__gs.folderWait(), i + 1); }); return st.key;
           } catch (e) { throw new Error('main’s pages could not save: ' + e.stack); }
         }, COMMENT, NAME);
-        await sleep(500); await q.evaluate(() => window.__gs.folderWait());
+        await sleep(500); await q.evaluate(() => window.__gs.folderWait().then(async function w(s, i = 0) { if (s !== 'busy') return s; if (i > 11) throw new Error('main’s linked folder was still busy after two minutes'); return w(await window.__gs.folderWait(), i + 1); }));
         // main's pages put the library in the folder a moment after saveLib, later still on a busy machine: wait until it holds the rename
-        await q.waitForFunction(async N => { try { let d = await (await navigator.storage.getDirectory()).getDirectoryHandle('Linked'); try { d = await d.getDirectoryHandle('Grading Studio'); } catch {} return (await (await (await d.getFileHandle('library.json')).getFile()).text()).includes(N); } catch { return false; } }, { polling: 250, timeout: 20000 }, NAME).catch(() => {});
-        await q.evaluate(() => window.__gs.folderWait());
+        await q.waitForFunction(async N => { try { let d = await (await navigator.storage.getDirectory()).getDirectoryHandle('Linked'); try { d = await d.getDirectoryHandle('Grading Studio'); } catch {} return (await (await (await d.getFileHandle('library.json')).getFile()).text()).includes(N); } catch { return false; } }, { polling: 250, timeout: 90000 }, NAME);   // not swallowed: a folder that never got the rename is a failure, said as one
+        await q.evaluate(() => window.__gs.folderWait().then(async function w(s, i = 0) { if (s !== 'busy') return s; if (i > 11) throw new Error('main’s linked folder was still busy after two minutes'); return w(await window.__gs.folderWait(), i + 1); }));
         const folder = await folderTree(q);
         // Main's own sync, Drive played here with nothing in it yet, so what goes up is built from this browser's storage alone.
         D.body = null; await q.evaluate(async () => { await window.__gs.gIn(); await window.__gs.syncNow(); });

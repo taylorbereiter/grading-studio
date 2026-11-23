@@ -4,9 +4,9 @@
 // leaves the test. Every student and file here is made up.
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
-const http = require('http'), fs = require('fs'), path = require('path');
+const http = require('http'), fs = require('fs'), os = require('os'), path = require('path');
 const { launch } = require('../../../test/helpers/chrome.js');
-const { plant } = require('../../../test/helpers/app.js');
+const { plant, appReady } = require('../../../test/helpers/app.js');
 const { makePaper } = require('../../../test/helpers/fixtures.js');
 const { gradingSeed, STEADY } = require('../../../test/helpers/steady.js');
 const { plantPlan } = require('./planseed.js');
@@ -18,8 +18,9 @@ function serveSite() {
   const srv = http.createServer((req, res) => {
     let p = decodeURIComponent(req.url.split('?')[0]);
     if (p === '/blank') { res.writeHead(200, { 'Content-Type': TYPES.html }); return res.end('<!doctype html><title>blank</title>'); }
-    if (p === '/next/') p = '/next/index.html';
-    const ok = /^\/next\/(index\.html|sw\.js|version\.json|dist\/[\w-]+\.(js|css|woff2|webp))$/.test(p) || onDisk.extra(p);
+    if (p === '/') p = '/index.html'; if (p === '/next/') p = '/next/index.html';
+    // the current app too, which opens what the new app saved (C-086 to C-089)
+    const ok = /^\/(index|planner)\.html$|^\/(sw\.js|version\.json|manifest\.webmanifest)$|^\/icons\/[\w-]+\.png$|^\/lang\/[\w-]+\.js$|^\/next\/(index\.html|sw\.js|version\.json|dist\/[\w-]+\.(js|css|woff2|webp))$/.test(p) || onDisk.extra(p);
     const f = onDisk(p);
     if (!ok || !fs.existsSync(f)) { res.writeHead(404); return res.end(); }
     res.writeHead(200, { 'Content-Type': TYPES[f.split('.').pop()] || 'application/octet-stream', 'Cache-Control': 'no-store' }); res.end(fs.readFileSync(f));
@@ -303,6 +304,172 @@ test('D-021: Drive\'s mark beside a unit\'s Add files adds the file picked in Dr
   for (let k = 0; k < 100 && (await nFiles()) === before; k++) await new Promise(r => setTimeout(r, 150));
   const files = ((await kv('units')) || []).flatMap(u => u.files || []);
   assert.ok(files.some(f => f.name === 'Poem task.pdf'), 'the file picked in Drive is on the unit: ' + JSON.stringify(files.map(f => f.name)));
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('C-082 C-085: Readings from Google Drive, for everyone and just for the student on screen', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const D = { asked: [], folders: [], sent: [], videos: {}, papers: {
+    '1PaperAriaPaperAriaPaperAria00001': await makePaper({ title: 'Aria outline' }), '1PaperBramPaperBramPaperBram00002': await makePaper({ title: 'Bram outline' }),
+    '1ReadingReadingReadingReading003': await makePaper({ title: 'A reading for the class' }), '1PromptAriaPromptAriaPromptA0004': await makePaper({ title: 'The prompt Aria answered' }) } };
+  const p = await page(ctx, errors, D);
+  await p.goto(srv.url + 'blank'); await plant(p, seed());
+  await p.evaluate(() => Promise.all([['grading-studio-added', 'files'], ['grading-studio-videos', 'v']].map(([n, s]) => new Promise(res => { const r = indexedDB.open(n, 1); r.onupgradeneeded = () => r.result.createObjectStore(s); r.onsuccess = () => { r.result.close(); res(); }; }))));
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.evaluate(() => { window.__picks.push([
+    { id: '1PaperAriaPaperAriaPaperAria00001', name: 'Aria Testwell.pdf', mimeType: 'application/pdf', sizeBytes: '900' },
+    { id: '1PaperBramPaperBramPaperBram00002', name: 'Bram Sample.pdf', mimeType: 'application/pdf', sizeBytes: '900' }]); });
+  await p.click('[data-bring-for="i9"]');
+  await menuPick(p, 'Google Drive');
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  await goTo(p, 'Aria Testwell');
+  await p.waitForSelector('[data-pmore]', { timeout: 60000 });
+  await p.click('[data-pmore]');
+  await menuPick(p, 'Readings');
+  await p.waitForSelector('dialog[open] [data-readings]', { timeout: 30000 });
+  // C-082 From Google Drive, for everyone
+  await p.evaluate(() => { window.__picks.push([{ id: '1ReadingReadingReadingReading003', name: 'Reading.pdf', mimeType: 'application/pdf', sizeBytes: '900' }]); });
+  await tap(p, '[data-readings] [data-rddrive]');
+  await p.waitForSelector('[data-rdrm="Reading.pdf"]', { timeout: 30000 });
+  // C-085 From Google Drive, just for Aria
+  await p.evaluate(() => { window.__picks.push([{ id: '1PromptAriaPromptAriaPromptA0004', name: 'Prompt.pdf', mimeType: 'application/pdf', sizeBytes: '900' }]); });
+  await tap(p, '[data-readings] [data-rddriveone]');
+  await p.waitForSelector('[data-rdrm="Aria Testwell/Prompt.pdf"]', { timeout: 30000 });
+  await p.click('[data-rddone]');
+  await p.waitForFunction(() => [...document.querySelectorAll('[data-rdcards] [data-rdcard]')].map(e => e.dataset.rdcard).join('|') === 'Reading.pdf|Aria Testwell/Prompt.pdf', { timeout: 30000 });
+  await p.waitForFunction(() => document.querySelectorAll('[data-rdcard="Aria Testwell/Prompt.pdf"] canvas').length === 1, { timeout: 30000 });
+  // Bram has the reading for everyone, not Aria's
+  await goTo(p, 'Bram Sample');
+  await p.waitForFunction(() => [...document.querySelectorAll('[data-rdcards] [data-rdcard]')].map(e => e.dataset.rdcard).join('|') === 'Reading.pdf', { timeout: 30000 });
+  assert.ok(!D.asked.some(u => /files\?q=|files\?spaces=drive/.test(u)), 'the app never lists her Drive');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// C-032 C-086 C-087 C-088 C-089: Replace… on a paper asks where the new file comes from (this computer or Google Drive); on a video link,
+// a new link, a video file or a video in Drive. The check before it shows Also for the partners with the same video, ticked; Undo puts
+// both back; not ticked, only hers changes. The current app opens the files where the new app left them.
+test('C-032 C-086 C-087 C-088 C-089: Replace… from Google Drive, and on a video a new link, a video file or Drive, with Also for the partners; the current app opens the result', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const D = { asked: [], folders: [], sent: [], videos: {}, papers: { '1PaperAriaPaperAriaPaperAria00001': await makePaper({ title: 'Aria outline' }), '1PaperBramPaperBramPaperBram00002': await makePaper({ title: 'Bram outline' }), '1PaperFixedPaperFixedPaperFix0005': await makePaper({ title: 'Aria outline, fixed', pages: 2 }) } };
+  const p = await page(ctx, errors, D);
+  await p.goto(srv.url + 'blank'); await plant(p, seed());
+  await p.evaluate(() => Promise.all([['grading-studio-added', 'files'], ['grading-studio-videos', 'v']].map(([n, s]) => new Promise(res => { const r = indexedDB.open(n, 1); r.onupgradeneeded = () => r.result.createObjectStore(s); r.onsuccess = () => { r.result.close(); res(); }; }))));
+  const vid = path.join(os.tmpdir(), 'gs-rpl-' + process.pid + '.webm'); fs.writeFileSync(vid, Buffer.from(await makeVideo(p), 'base64'));
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.evaluate(() => { window.__picks.push([
+    { id: '1PaperAriaPaperAriaPaperAria00001', name: 'Aria Testwell.pdf', mimeType: 'application/pdf', sizeBytes: '900' },
+    { id: '1PaperBramPaperBramPaperBram00002', name: 'Bram Sample.pdf', mimeType: 'application/pdf', sizeBytes: '900' }]); });
+  await p.click('[data-bring-for="i9"]');
+  await menuPick(p, 'Google Drive');
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  const id = await p.evaluate(() => window.__mark.state().batch.id);
+  await goTo(p, 'Aria Testwell');
+  const A = 'Aria Testwell', B = 'Bram Sample', files = k => p.evaluate(k => { const s = window.__mark.state().batch.students.find(x => x.key === k); return { files: s.files.map(f => f.path), gone: (s.gone || []).map(f => f.path) }; }, k);
+  const menuDo = async (file, label) => {
+    await p.waitForFunction(f => { if (document.querySelector('.pop [role="menuitem"]')) return true; const b = window.__mark.ready && document.querySelector('[data-fmenu="' + f + '"]'); if (b) b.click(); return false; }, { timeout: 30000, polling: 400 }, file);
+    await menuPick(p, label);
+  };
+  // C-032 C-086: Replace… asks where from; From Google Drive…, then the check
+  await menuDo('Aria Testwell.pdf', 'Replace');
+  await p.waitForSelector('dialog[open] [data-rpcomp]', { timeout: 30000 });
+  await p.evaluate(() => { window.__picks.length = 0; window.__picks.push([{ id: '1PaperFixedPaperFixedPaperFix0005', name: 'Aria fixed.pdf', mimeType: 'application/pdf', sizeBytes: '900' }]); });
+  await p.click('dialog[open] [data-rpdrive]');
+  await p.waitForSelector('dialog[open] [data-ok]', { timeout: 30000 });
+  assert.match(await p.$eval('dialog[open]', e => e.textContent), /Aria Testwell\.pdf.*Aria fixed\.pdf.*2 pages/s);
+  await p.click('dialog[open] [data-ok]');
+  await p.waitForFunction(k => { const s = window.__mark.state().batch.students.find(x => x.key === k); return s.files.some(f => f.path === k + '/Aria fixed.pdf') && (s.gone || []).some(f => f.path === 'Aria Testwell.pdf'); }, { timeout: 60000 }, A);
+
+  // a video link Aria and Bram share (Add, A video…, with Bram as a partner)
+  await p.waitForFunction(() => { const it = [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => /video or recording/.test(e.textContent)); if (it) { it.click(); return true; } const b = document.querySelector('[data-addmenu]'); if (b && !document.querySelector('.pop')) b.click(); return false; }, { timeout: 30000, polling: 500 });
+  await p.waitForSelector('dialog[open] [data-vdlink] input, dialog[open] input[data-vdlink]');
+  await p.type('dialog[open] [data-vdlink] input, dialog[open] input[data-vdlink]', 'https://www.youtube.com/watch?v=aaaaaaaaaaa');
+  await tap(p, '[data-np="none"]'); await tap(p, '[data-vdto="Bram Sample"]'); await tap(p, '[data-vdadd]');
+  await p.waitForFunction((a, b) => [a, b].every(k => window.__mark.state().batch.students.find(x => x.key === k).files.some(f => f.kind === 'link')), { timeout: 60000 }, A, B);
+  const linkOf = k => p.evaluate(k => { const f = window.__mark.state().batch.students.find(x => x.key === k).files.find(f => f.kind === 'link'); return f ? [f.path, new TextDecoder().decode(f.data)] : null; }, k);
+  const [L0] = await linkOf(A);
+  // C-087 a new link, Next, and the check: Also for Bram, ticked
+  await menuDo(L0, 'Replace');
+  await p.waitForSelector('dialog[open] [data-rplink] input, dialog[open] input[data-rplink]', { timeout: 30000 });
+  assert.ok(await p.$('dialog[open] [data-rpvfile]') && await p.$('dialog[open] [data-rpvdrive]'), 'a video file or Google Drive');
+  await p.type('dialog[open] [data-rplink] input, dialog[open] input[data-rplink]', 'https://www.youtube.com/watch?v=bbbbbbbbbbb');
+  await tap(p, 'dialog[open] [data-rplinkgo]');
+  await p.waitForSelector('dialog[open] [data-rpalso] input', { timeout: 30000 });
+  assert.match(await p.$eval('dialog[open]', e => e.textContent), /Replace this video\?.*Also for Bram Sample/s);
+  assert.equal(await p.$eval('dialog[open] [data-rpalso] input', e => e.checked), true);
+  await p.click('dialog[open] [data-ok]');
+  await p.waitForFunction((a, b) => [a, b].every(k => { const f = window.__mark.state().batch.students.find(x => x.key === k).files.find(f => f.kind === 'link'); return f && /bbbbbbbbbbb/.test(new TextDecoder().decode(f.data)); }), { timeout: 60000 }, A, B);
+  // C-089 one Undo puts both back
+  await p.click('[data-undo]');
+  await p.waitForFunction((a, b) => [a, b].every(k => { const f = window.__mark.state().batch.students.find(x => x.key === k).files.find(f => f.kind === 'link'); return f && /aaaaaaaaaaa/.test(new TextDecoder().decode(f.data)); }), { timeout: 60000 }, A, B);
+  // C-088 Google Drive… (the videos folder first, once), Also for Bram not ticked: only Aria's changes
+  await menuDo(L0, 'Replace');
+  await p.waitForSelector('dialog[open] [data-rpvdrive]', { timeout: 30000 });
+  await p.evaluate(() => { window.__picks.length = 0; window.__picks.push([{ id: '1FolderVideosFolderVideos0000007', name: 'Class videos', mimeType: 'application/vnd.google-apps.folder' }], [{ id: '1VideoAriaVideoAriaVideoAria00009', name: 'Aria speech.webm', mimeType: 'video/webm', sizeBytes: '4000' }]); });
+  await p.click('dialog[open] [data-rpvdrive]');
+  await p.waitForSelector('dialog[open] [data-rpalso] input', { timeout: 30000 });
+  assert.match(await p.$eval('dialog[open]', e => e.textContent), /from Google Drive/);
+  await p.click('dialog[open] [data-rpalso] input');
+  await p.click('dialog[open] [data-ok]');
+  await p.waitForFunction(a => { const f = window.__mark.state().batch.students.find(x => x.key === a).files.find(f => f.kind === 'link'); return f && /GsDrive=1VideoAriaVideoAriaVideoAria00009/.test(new TextDecoder().decode(f.data)); }, { timeout: 60000 }, A);
+  assert.match((await linkOf(B))[1], /aaaaaaaaaaa/, 'Bram keeps his');
+  // C-088 A video file…: kept in this browser where the current app keeps videos
+  const [L1] = await linkOf(A);
+  await menuDo(L1, 'Replace');
+  await p.waitForSelector('dialog[open] [data-rpvfile]', { timeout: 30000 });
+  const [ch] = await Promise.all([p.waitForFileChooser(), p.click('dialog[open] [data-rpvfile]')]);
+  await ch.accept([vid]);
+  await p.waitForSelector('dialog[open] [data-ok]', { timeout: 30000 });
+  assert.match(await p.$eval('dialog[open]', e => e.textContent), /video file/);
+  await p.click('dialog[open] [data-ok]');
+  await p.waitForFunction((a, l) => { const s = window.__mark.state().batch.students.find(x => x.key === a), f = s.files.find(f => f.kind === 'link'); return f && /gs-video:/.test(new TextDecoder().decode(f.data)) && (s.gone || []).some(g => g.path === l); }, { timeout: 60000 }, A, L1);
+  const now = { a: await files(A), b: await files(B), link: (await linkOf(A))[0] };
+  await p.evaluate(() => window.__mark.saved());
+  await p.close(); fs.rmSync(vid, { force: true });
+  // the current app opens the same files, and knows which replaced which
+  const m2 = await page(ctx, errors, D);
+  await m2.goto(srv.url); await appReady(m2);
+  await m2.evaluate(id => window.__gs.reopenKept(id), id);
+  await m2.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
+  const was = await m2.evaluate((a, b) => { const bb = window.__gs.state().batch, f = k => { const s = bb.students.find(x => x.key === k); return { files: s.files.map(x => x.path), gone: (s.gone || []).map(x => x.path) }; }; return { a: f(a), b: f(b), removed: bb.removed }; }, A, B);
+  assert.deepEqual([was.a.files.sort(), was.a.gone.sort(), was.b.files.sort()], [now.a.files.sort(), now.a.gone.sort(), now.b.files.sort()]);
+  assert.equal(was.removed['Aria Testwell.pdf'].by, A + '/Aria fixed.pdf');
+  assert.equal(Object.values(was.removed).filter(r => r.by === now.link).length, 1, 'the video file replaced the Drive video');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// A-095: Rubric setup's own rubric, From Google Drive (src/rubricup.js ruDrive): the file picked in Drive comes in as one from the
+// computer does, a page of it after each student's work
+test('A-095: Rubric setup brings her rubric in From Google Drive, a page of it for every student', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const D = { asked: [], folders: [], sent: [], videos: {}, papers: {
+    '1PaperAriaPaperAriaPaperAria00001': await makePaper({ title: 'Aria outline' }), '1PaperBramPaperBramPaperBram00002': await makePaper({ title: 'Bram outline' }),
+    '1RubricRubricRubricRubricRu00005': await makePaper({ title: 'My rubric' }) } };
+  const p = await page(ctx, errors, D);
+  await p.goto(srv.url + 'blank'); await plant(p, seed());
+  await p.evaluate(() => Promise.all([['grading-studio-added', 'files'], ['grading-studio-videos', 'v']].map(([n, s]) => new Promise(res => { const r = indexedDB.open(n, 1); r.onupgradeneeded = () => r.result.createObjectStore(s); r.onsuccess = () => { r.result.close(); res(); }; }))));
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.evaluate(() => { window.__picks.push([
+    { id: '1PaperAriaPaperAriaPaperAria00001', name: 'Aria Testwell.pdf', mimeType: 'application/pdf', sizeBytes: '900' },
+    { id: '1PaperBramPaperBramPaperBram00002', name: 'Bram Sample.pdf', mimeType: 'application/pdf', sizeBytes: '900' }]); });
+  await p.click('[data-bring-for="i9"]');
+  await menuPick(p, 'Google Drive');
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  await p.click('[data-setupopen]');
+  await menuPick(p, 'Rubric setup');
+  await p.waitForSelector('dialog[open] [data-supage] [data-drive]', { timeout: 30000 });
+  await p.evaluate(() => { window.__picks.push([{ id: '1RubricRubricRubricRubricRu00005', name: 'My rubric.pdf', mimeType: 'application/pdf', sizeBytes: '900' }]); });
+  await tap(p, 'dialog[open] [data-supage] [data-drive]');
+  await p.waitForSelector('dialog[open] [data-surprm]', { timeout: 30000 });
+  await p.waitForFunction(() => !document.querySelector('dialog[open] [data-susave]').disabled);
+  await tap(p, 'dialog[open] [data-susave]');
+  await p.waitForFunction(() => { const s = window.__mark.state(); return s.setup.rubricPage && s.setup.rubricPage.name === 'My rubric.pdf' && s.batch.students.every(st => st.files.some(f => f.virtual)); }, { timeout: 30000 });
+  assert.ok(!D.asked.some(u => /files\?q=|files\?spaces=drive/.test(u)), 'the app never lists her Drive');
   assert.deepEqual(errors, []);
   await ctx.close();
 });

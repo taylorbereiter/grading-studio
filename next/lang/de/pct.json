@@ -1,0 +1,70 @@
+{
+ "pc.more": "und {n} weitere",
+ "pc.who": "Wer zählt",
+ "pc.late": "Verspätete Arbeiten",
+ "pc.out": "Arbeiten, die du ausgelassen hast",
+ "pc.part": "Teilweise bewertete Arbeiten, wie sie sind",
+ "pc.mid_h": "Mitte der Klasse",
+ "pc.middle": "Median",
+ "pc.target": "Arbeiten markieren unter (%)",
+ "pc.target_at": "Ziel {n}%",
+ "pc.bands": "Bereiche",
+ "pc.band": "Bereich",
+ "pc.tens": "Zehner",
+ "pc.fives": "Fünfer",
+ "pc.own": "Eigene",
+ "pc.cut": "Niedrigster Prozentwert eines Bereichs",
+ "pc.add": "Was wäre, wenn: Punkte für alle",
+ "pc.preview": "Nur eine Vorschau. Keine Bewertung ändert sich.",
+ "pc.none": "Mit dieser Auswahl zählt keine fertige Bewertung.",
+ "pc.now": "jetzt {v}, mit {d}",
+ "pc.counted": {
+  "one": "{n} Arbeit gezählt",
+  "other": "{n} Arbeiten gezählt"
+ },
+ "pc.range": "Spanne",
+ "pc.gap": "Typischer Abstand",
+ "pc.below": "Unter {n}%",
+ "pc.band_below": "Unter {n}",
+ "pc.band_to": "{a} bis {b}",
+ "pc.band_tip": {
+  "one": "{n} Arbeit, {p}% der Klasse",
+  "other": "{n} Arbeiten, {p}% der Klasse"
+ },
+ "pc.every": "Prozent jeder Arbeit",
+ "pc.table": "Arbeiten nach Prozent",
+ "pc.copy": "Diese Tabelle kopieren",
+ "pc.copied": {
+  "one": "{n} Prozentwert in der gezeigten Reihenfolge kopiert",
+  "other": "{n} Prozentwerte in der gezeigten Reihenfolge kopiert"
+ },
+ "pc.vs_avg": "Zum Durchschnitt",
+ "pc.vs_mid": "Zum Median",
+ "pc.tag_out": "Ausgelassen",
+ "pc.tag_part": "Teilweise",
+ "pc.score": "Punkte {v}",
+ "pc.see": "Als Tabelle ansehen",
+ "pc.who_col": "Wer",
+ "pc.row_avg": "Durchschnitt {v}",
+ "pc.row_sum": {
+  "one": "{n} Wert, {low} bei {half} oder weniger",
+  "other": "{n} Werte, {low} bei {half} oder weniger"
+ },
+ "pc.lv_h": "Wie jede Zeile bewertet wurde",
+ "pc.lv_tip": "{v} bei {row}",
+ "pc.lv_cap": "Wie viele Arbeiten welche Punkte in jeder Zeile bekamen, in der Reihenfolge des Rasters. Je kräftiger das Blau, desto höher.",
+ "pc.lv_half": "Ein halber Punkt zählt zur ganzen Zahl darunter.",
+ "pc.mv_h": "Veränderung seit der letzten Leistungsbewertung",
+ "pc.mv_wait": "Erscheint, sobald {name} in diesem Browser eine frühere bewertete Leistungsbewertung hat.",
+ "pc.mv_none": "Noch niemand hat hier und in {name} eine fertige Bewertung.",
+ "pc.mv_this": "diese",
+ "pc.mv_up": "Besser ({n})",
+ "pc.mv_down": "Schlechter ({n})",
+ "pc.mv_cap": "Prozent jedes Schülers bei der letzten Leistungsbewertung und bei dieser, größter Anstieg zuerst. Nur fertige Bewertungen. Klicke auf eine Zeile, um die Arbeit zu öffnen.",
+ "pc.ax_h": "Dieselbe Aufgabe in deinen anderen Klassen",
+ "pc.ax_n": {
+  "one": "{n} fertige Bewertung",
+  "other": "{n} fertige Bewertungen"
+ },
+ "pc.ax_cap": "Die Zahl ist der Klassendurchschnitt, dann aus wie vielen fertigen Bewertungen."
+}

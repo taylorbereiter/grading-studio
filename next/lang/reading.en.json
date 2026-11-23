@@ -1,0 +1,62 @@
+{
+ "rd.title": "Readings",
+ "rd.done": "Done",
+ "rd.about": "Files shown above the papers while you grade, like the reading or the prompt. They stay in this browser and are never sent back to students.",
+ "rd.everyone": "For everyone",
+ "rd.your_doc": "your document",
+ "rd.remove": "Remove",
+ "rd.remove_all": "Remove for everyone",
+ "rd.none": "None yet.",
+ "rd.add_all": "Add a file for everyone…",
+ "rd.for": "For {name}",
+ "rd.show": "Show {file}",
+ "rd.only": "only for {name}",
+ "rd.add_one": "Add a file just for {name}…",
+ "rd.hint": "For a student with a different reading: untick the everyone file above, then add theirs.",
+ "rd.doc_card": "Your document: {name}",
+ "rd.card_all": "shown with every paper, not sent back",
+ "rd.card_one": "only for this student, not sent back",
+ "rd.hide": "Hide for this student",
+ "rd.hidden": "Hidden for this student. Readings… brings it back or adds a different file.",
+ "rd.zoom": "Zoom the reading",
+ "rd.zoom_out": "Zoom out",
+ "rd.zoom_in": "Zoom in",
+ "rd.zoom_fit": "Back to fit the width",
+ "rd.zoom_how": "Pinch or Ctrl + scroll on the reading to zoom. Drag the bottom edge to make it taller.",
+ "rd.grip": "Drag to make the reading taller or shorter",
+ "rd.cant": "This file can’t be shown here.",
+ "rd.no_room": "This browser is out of room to keep {name}",
+ "rd.added": "“{file}” now shows above every paper",
+ "rd.added_for": "“{file}” now shows for {name}",
+ "rd.added_n": "{n} files now show above every paper",
+ "rd.added_n_for": "{n} files now show for {name}",
+ "rd.tr_title": "Transcripts",
+ "rd.tr_count": {
+  "one": "{n} recording in this assignment.",
+  "other": "{n} recordings in this assignment."
+ },
+ "rd.tr_have": {
+  "one": "{n} has a transcript already.",
+  "other": "{n} have a transcript already."
+ },
+ "rd.tr_redo": "Make the existing ones again too",
+ "rd.tr_about": "Runs in this browser (nothing is uploaded). The speech engine downloads once (about 150 MB). Keep this tab open while it works; you can keep grading in the meantime.",
+ "rd.tr_make": "Make transcripts",
+ "rd.tr_stop": "Stop",
+ "rd.tr_stopping": "Stopping…",
+ "rd.tr_close": "Close",
+ "rd.tr_at": "Student {n} ({k} of {of}) · {file} · {what}",
+ "rd.tr_all_have": "Every recording already has a transcript",
+ "rd.tr_done": {
+  "one": "Done. {n} transcript made.",
+  "other": "Done. {n} transcripts made."
+ },
+ "rd.tr_stopped": {
+  "one": "Stopped. {n} transcript made.",
+  "other": "Stopped. {n} transcripts made."
+ },
+ "rd.tr_failed": {
+  "one": "{n} couldn’t be read (try Chrome, or convert it to .mp4 or .m4a).",
+  "other": "{n} couldn’t be read (try Chrome, or convert those to .mp4 or .m4a)."
+ }
+}

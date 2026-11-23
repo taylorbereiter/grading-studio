@@ -65,6 +65,8 @@ export function startWhole() {
 }
 // Resolves when every save so far has reached the linked folder: the folder found again, the queue gone through, and the folder's own
 // writes (which wait a moment to gather changes) finished.
-export const settled = async () => { await booting; await queue; if (F.mod && F.state !== 'none') await F.mod.wait(); };
+// The folder's wait gives up after 20 s and says 'busy' (a slow machine, a big folder): asked again until the writes are done, at most
+// two minutes, and a folder still busy then is said, never taken as settled.
+export const settled = async () => { await booting; await queue; if (F.mod && F.state !== 'none') { let s = 'busy'; for (let i = 0; i < 6 && s === 'busy'; i++) s = await F.mod.wait(); if (s === 'busy') throw new Error('the linked folder is still busy'); } };
 export const syncPayload = async o => (await import('./sync.js')).syncPayload(o);
 export { folderState, onFolder, syncDue };

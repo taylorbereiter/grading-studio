@@ -84,5 +84,29 @@
  "inout.f_marks_kept": "Ihre Korrekturen darauf sind weiter gespeichert.",
  "inout.f_goes_back": "Sie geht mit dem Export zurück, weil Sie sie hinzugefügt haben.",
  "inout.op_later": "Wenn die Arbeit kommt, nutzen Sie {bring} unter {setup} oder {add} bei der Arbeit.",
- "inout.heic_reading": "iPhone-Foto wird gelesen …"
+ "inout.heic_reading": "iPhone-Foto wird gelesen …",
+ "inout.nf_say": "Füge die Arbeit hier hinzu oder zieh die Datei auf die Seite oder den Namen. Du kannst auch ohne Arbeit bewerten.",
+ "inout.nf_add": "Datei hinzufügen…",
+ "inout.tr_add": "Arbeit der Wiederholung hinzufügen…",
+ "inout.rp_t": "{name} ersetzen",
+ "inout.rp_comp": "Von diesem Computer…",
+ "inout.rp_drive": "Aus Google Drive…",
+ "inout.rp_or_drop": "oder die neue Datei hier ablegen",
+ "inout.rp_say": "Du prüfst beide Dateien nebeneinander, bevor sich etwas ändert.",
+ "inout.rp_link": "Ein neuer Link",
+ "inout.rp_next": "Weiter",
+ "inout.rp_or": "Oder",
+ "inout.rp_vfile": "Eine Videodatei…",
+ "inout.rp_vdrive": "Google Drive…",
+ "inout.rp_vsay": "Partner mit demselben Video bekommen das neue auch, außer du wählst es im nächsten Schritt ab.",
+ "inout.rp_vq": "Dieses Video ersetzen?",
+ "inout.rp_vtext": "Das neue Video ersetzt das alte. Bewertung und Notizen bleiben, wie sie sind. Der alte Link wartet unter Entfernte Dateien und lässt sich zurückholen.",
+ "inout.rp_vk_file": "Videodatei",
+ "inout.rp_vk_drive": "aus Google Drive",
+ "inout.rp_also": "Auch für {names}",
+ "inout.rp_grp": {
+  "one": "{names} teilt diese Arbeit, daher ändert sich ihre auch.",
+  "other": "{names} teilen diese Arbeit, daher ändert sich ihre auch."
+ },
+ "inout.rp_for": "{name} für {names} ersetzt"
 }

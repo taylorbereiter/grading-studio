@@ -8,7 +8,7 @@ const http = require('http'), fs = require('fs'), path = require('path');
 const { unzipSync } = require('fflate');
 const { launch } = require('../../../test/helpers/chrome.js');
 const { plant, appReady, openZip, markPage, settle, goToStudent, catchDownloads } = require('../../../test/helpers/app.js');
-const { standardFiles, zipOf } = require('../../../test/helpers/fixtures.js');
+const { standardFiles, zipOf, makeDocx } = require('../../../test/helpers/fixtures.js');
 const { gradingSeed, STEADY } = require('../../../test/helpers/steady.js');
 
 const ROOT = path.join(__dirname, '..', '..', '..');
@@ -50,6 +50,10 @@ const pdfPixels = `async (data, lib) => { const bin = atob(data), u8 = new Uint8
 
 // Main's page: made-up papers with marks of every kind and a score and comment on the first student, so the feedback page has
 // something to say; then main's own returned PDF of that paper, its list of returned files and its spreadsheet.
+// an item of a menu by its words (ui Menu): the opener pressed, then the item (gaps C-057: More for this paper holds what used to be on the panel)
+const menuPick = async (p, opener, label) => { await p.waitForSelector(opener, { timeout: 60000 }); await p.click(opener); await p.waitForSelector('.pop [role^="menuitem"]');
+  const ok = await p.evaluate(l => { const it = [...document.querySelectorAll('.pop [role^="menuitem"]')].find(e => (e.querySelector('b') || e).textContent.trim() === l); if (it) it.click(); return !!it; }, label);
+  if (!ok) throw new Error('no menu item ' + label); };
 async function mainSide(ctx, errors) {
   const p = await page(ctx, errors);
   await p.goto(srv.url + 'blank'); await plant(p, gradingSeed());
@@ -112,6 +116,12 @@ test('a paper returned from the new app is the paper the current app returns, an
   // exported is not returned; Mark as returned says so, and main reads it
   await p.waitForSelector('[data-doreturn]');
   await p.click('[data-doreturn]');
+  await p.waitForSelector('[data-unreturn]');
+  // a setting taken back says what came back (H-040, src/app/paper.js swapStep), and Redo puts it again
+  await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
+  await p.waitForSelector('[data-doreturn]');
+  await p.waitForFunction(() => [...document.querySelectorAll('.toast')].some(e => /Undone: Marked as returned/.test(e.textContent)), { timeout: 10000 });
+  await p.keyboard.down('Control'); await p.keyboard.press('y'); await p.keyboard.up('Control');
   await p.waitForSelector('[data-unreturn]');
   await p.evaluate(() => window.__mark.saved());
   const back = await p.evaluate(() => window.__mark.state().batch.returned);
@@ -258,29 +268,29 @@ test('Insights > Consistency says what the current app says about the same work,
   await ctx.close();
 });
 
-test('anchor papers: High, Mid or Low under the score, one paper each with one undo step, the tag in the list, and Return exports them named and covered; the current app reads the same tags', async () => {
+test('C-066: anchor papers: High, Mid or Low in More for this paper (gaps C-057), shown under the score once given, one paper each with one undo step, the tag in the list, and Return exports them named and covered, with Check the covers in its line; the current app reads the same tags', async () => {
   const ctx = await browser.createBrowserContext(), errors = [];
   const old = await mainSide(ctx, []);
   const p = await page(ctx, errors), dl = await catchDownloads(p);
   await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(old.id));
-  await p.waitForSelector('[data-anchrow] [data-anchor="high"]', { timeout: 60000 });
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
   const tags = () => p.evaluate(() => window.__mark.state().batch.students.map(s => s.grade.anchor || ''));
-  await p.click('[data-anchor="high"]');
+  assert.equal(await p.$('[data-anchrow]'), null, 'no anchor row on a paper that is not one');
+  await menuPick(p, '[data-pmore]', 'High');
   await p.waitForFunction(() => window.__mark.state().batch.students[0].grade.anchor === 'high');
   assert.equal(await p.$eval('[data-st="0"] [data-anchtag]', e => e.textContent), 'high', 'the tag in the list');
+  await p.waitForSelector('[data-anchrow] [data-anchor="high"][aria-pressed="true"]');
   // High on another paper moves it; one Ctrl Z puts both back
   await p.click('[data-st="2"]');
   await p.waitForFunction(() => document.querySelector('.mk-side h2') && /Cleo/.test(document.querySelector('.mk-side h2').textContent));
-  await p.waitForSelector('[data-anchrow] [data-anchor="high"]');
-  await p.click('[data-anchor="high"]');
+  await menuPick(p, '[data-pmore]', 'High');
   await p.waitForFunction(() => window.__mark.state().batch.students[2].grade.anchor === 'high');
   assert.deepEqual((await tags()).slice(0, 3), ['', '', 'high'], 'one paper each');
   await p.evaluate(() => document.activeElement && document.activeElement.blur());
   await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
   await p.waitForFunction(() => window.__mark.state().batch.students[0].grade.anchor === 'high');
   assert.deepEqual((await tags()).slice(0, 3), ['high', '', ''], 'one undo step puts both papers back');
-  await p.waitForSelector('[data-anchrow] [data-anchor="low"]');
-  await p.click('[data-anchor="low"]');
+  await menuPick(p, '[data-pmore]', 'Low');
   await p.waitForFunction(() => window.__mark.state().batch.students[2].grade.anchor === 'low');
   await p.evaluate(() => window.__mark.saved());
   // Return: the card lists them, and one button makes both files in a ZIP, named for the assignment and the level
@@ -293,6 +303,14 @@ test('anchor papers: High, Mid or Low under the score, one paper each with one u
   assert.equal(names.length, 2);
   assert.match(names[0], / - \S+ High\.pdf$/); assert.match(names[1], / - \S+ Low\.pdf$/);
   for (const n of names) assert.equal(Buffer.from(files[n].slice(0, 5)).toString(), '%PDF-');
+  // C-066: Check the covers in the card's line, opened at the first anchor paper, over Return
+  await p.click('#rtAnchors [data-anchcheck]');
+  await p.waitForSelector('dialog[open] [data-cc]', { timeout: 60000 });
+  const hi = await p.$eval('#rtAnchors [data-anchli="high"] button', e => e.textContent.trim());
+  assert.ok((await p.$eval('dialog[open] h2', e => e.textContent)).includes(hi), 'at the high anchor paper, ' + hi);
+  assert.match(await p.evaluate(() => location.hash), /\/return$/);
+  await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('dialog[open]'), { timeout: 10000 });
   await dl.close(); await p.close();
   const m = await page(ctx, errors);
   await m.goto(srv.url); await appReady(m);
@@ -308,9 +326,8 @@ test('hide names: the switch, Check the covers (a box drawn, used on every paper
   const old = await mainSide(ctx, []);
   const p = await page(ctx, errors);
   await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(old.id));
-  await p.waitForSelector('[data-anonsw]', { timeout: 60000 });
   await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
-  await p.click('[data-anonsw]');
+  await menuPick(p, '[data-setupopen]', 'Hide names');
   await p.waitForSelector('dialog[open] [data-hnstart]', { timeout: 30000 });
   await p.waitForFunction(() => /checked/.test((document.querySelector('[data-hncount]') || {}).textContent || ''), { timeout: 30000 });
   await p.click('[data-hncheck]');
@@ -372,7 +389,7 @@ test('hide names: the switch, Check the covers (a box drawn, used on every paper
   await ctx.close();
 });
 
-test('share with your assistant (src/app/claude.js): from Insights, a ZIP of papers by code with no names, a marks file, and the reply brought back into each comment box; the current app reads the same codes and comment', async () => {
+test('C-090: share with your assistant (src/app/claude.js): from Insights, a ZIP of papers by code with no names, a marks file saying who is left out, and the reply brought back into each comment box; the current app reads the same codes and comment', async () => {
   const ctx = await browser.createBrowserContext(), errors = [];
   const old = await mainSide(ctx, []);
   const p = await page(ctx, errors);
@@ -407,6 +424,10 @@ test('share with your assistant (src/app/claude.js): from Insights, a ZIP of pap
   // Marks only: one file, the same codes
   await p.click('dialog[open] [data-share] .seg [data-v="marks"]');
   await p.waitForSelector('dialog[open] [data-marksdl]');
+  // C-090: the students with nothing marked yet are left out, and it says so
+  const left = await p.$eval('dialog[open] [data-mkleft]', e => [+e.dataset.mkleft, e.textContent]), all = await p.evaluate(() => window.__mark.state().batch.students.length);
+  assert.ok(left[0] > 0 && left[0] < all, 'some students, not all');
+  assert.equal(left[1], 'Left out: ' + left[0] + ' students with no marks, score or comment yet. The file says how many.');
   const md = await dl.next(() => p.click('dialog[open] [data-marksdl]'));
   const mdText = new TextDecoder().decode(md.bytes);
   assert.match(md.name, /\.md$/); assert.ok(mdText.includes(st.codes[st.first])); for (const k of st.keys) assert.ok(!mdText.includes(k), k);
@@ -554,6 +575,246 @@ test('B-066: an assignment\'s views each have an address: grades/sheet opens the
   await p.goto(srv.url + 'blank'); await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id) + '/examples');
   await p.waitForSelector('[data-asgex]', { timeout: 60000 });
   assert.equal(await p.evaluate(() => location.hash.split('/').pop()), 'examples', 'stays at its own address');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// Insights > Percents (src/rubrics.js pctShell, pctDraw): who counts, the middle of the class, the places in an average, the target,
+// the bands and What if; the tiles and the table read as the current app's, the kept choices are the same ones both ways, and What if
+// changes no score. The summary's bars say whose they are and See this as a table lists them; How each row was scored counts each level.
+test('C-013 C-014 C-015 C-016 C-017 C-018 C-019 C-020 C-021 C-022 C-023 C-901 A-017: Insights > Percents, the bars\' tips and See this as a table, and How each row was scored; the current app reads the same', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const m = await page(ctx, []);
+  await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
+  await m.goto(srv.url); await appReady(m);
+  await openZip(m, zipOf(await standardFiles()));
+  await markPage(m, 0);
+  const id = await m.evaluate(() => {
+    const G = window.__gs, s = G.state(), rub = s.setup.mode === 'rubric';
+    s.batch.students.forEach((st, i) => {
+      if (i === 1) { st.grade.status = 'missing'; return; }
+      if (rub) st.grade.rubric = s.setup.criteria.map((_, r) => Math.max(1, 4 - ((i + r) % 4))); else st.grade.points = String(5 + i);
+      if (i === 2) st.grade.status = 'late';
+    });
+    G.saveNow(); return { id: s.batch.id, n: rub ? s.setup.criteria.length : 0 };
+  });
+  await goToStudent(m, 1); await goToStudent(m, 0); await settle(m);
+  await m.evaluate(id => { location.hash = '#/a/' + encodeURIComponent(id.replace(/^gs\.b\./, '')) + '/insights'; }, id.id);
+  await m.waitForSelector('#dlgBox [data-ovtab="pct"]', { timeout: 60000 });
+  await m.click('#dlgBox [data-ovtab="pct"]');
+  await m.waitForSelector('#pTiles', { timeout: 30000 });
+  const was = await m.evaluate(() => ({ tiles: [...document.querySelectorAll('#pTiles .ovv')].map(e => e.textContent), rows: window.__gs.pctRows().map(r => r.name + ' ' + r.pct) }));
+  // the target, set in the current app, is kept for the class
+  await m.$eval('#pTarget', e => { e.value = '80'; e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true })); });
+  await m.waitForFunction(() => window.__gs.pv().target === 80, { timeout: 10000 });
+  const was80 = await m.evaluate(() => [...document.querySelectorAll('#pTiles .ovv')].map(e => e.textContent));
+  await m.close();
+  assert.ok(was.rows.length >= 3, 'papers counted: ' + was.rows.join(', '));
+
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id.id) + '/insights');
+  await p.waitForSelector('#ovTiles', { timeout: 60000 });
+  // the summary's bars: each says whose it is, and See this as a table lists them (C-023, C-901)
+  await p.waitForSelector('#ovSpread [data-bin][tabindex="0"]', { timeout: 30000 });
+  assert.match(await p.$eval('#ovSpread [data-bin][tabindex="0"]', e => e.getAttribute('aria-label')), /\d/);
+  await p.click('#ovSpread [data-spreadtbl] summary');
+  const tbl = await p.$$eval('#ovSpread [data-spreadtbl] tbody tr', l => l.map(r => +r.children[1].textContent));
+  assert.equal(tbl.reduce((a, c) => a + c, 0), was.rows.length, 'every counted paper is in the table');
+  if (id.n) {
+    assert.ok(await p.$('#ovRows [data-rowbar][tabindex="0"]'), 'the rows\' bars can be reached by the keyboard');
+    // How each row was scored: every row's levels add up to the papers scored (A-017)
+    const lv = await p.$$eval('#insRows .pc-lvr', l => l.map(r => [...r.querySelectorAll('[data-lv]')].reduce((a, s) => a + +/\d+/.exec(s.getAttribute('aria-label').split(':').pop())[0], 0)));
+    assert.equal(lv.length, id.n); for (const k of lv) assert.equal(k, was.rows.length);
+  }
+  // Percents: the same tiles as the current app, with its target of 80 read back
+  await p.evaluate(() => [...document.querySelectorAll('.mk-ins [role="radio"]')].find(b => /Percents/.test(b.textContent)).click());
+  await p.waitForSelector('[data-pct] #pTiles', { timeout: 30000 });
+  assert.equal(await p.$eval('[data-pctarget]', e => e.value), '80');
+  assert.deepEqual(await p.$$eval('#pTiles .tv', l => l.map(e => e.textContent)), was80, 'the same five tiles');
+  // the table, in the current app's order
+  assert.deepEqual(await p.$$eval('[data-pcrow]', l => l.map(r => r.querySelector('button').textContent + ' ' + r.children[2].textContent.replace('%', ''))), was.rows);
+  // sorted by name
+  await p.click('[data-psort="name"]');
+  const byName = await p.$$eval('[data-pcrow] button', l => l.map(b => b.textContent));
+  assert.deepEqual(byName, byName.slice().sort((a, b) => a.localeCompare(b, undefined, { numeric: true })));
+  // the target back at 70: the current app's first tiles
+  // typed, and kept once she leaves the box (ui HeldInput)
+  await p.click('[data-pctarget]', { count: 3 }); await p.keyboard.type('70'); await p.keyboard.press('Tab');
+  await p.waitForFunction(w => [...document.querySelectorAll('#pTiles .tv')].map(e => e.textContent).join('|') === w, { timeout: 10000 }, was.tiles.join('|'));
+  // the places in an average, one setting everywhere (C-017)
+  await p.click('[data-pcdp] [data-v="0"]');
+  assert.equal(await p.evaluate(() => localStorage.getItem('gs.avgDp')), '0');
+  assert.match(await p.$eval('#pTiles .tv', e => e.textContent), /^\d+%$/);
+  await p.click('[data-pcdp] [data-v="2"]');
+  assert.equal(await p.evaluate(() => localStorage.getItem('gs.avgDp')), null);
+  // Who counts: late papers left out, then back
+  const n0 = (await p.$$('[data-pcrow]')).length, whoFirst = async () => { await p.click('[data-pcwho]'); await p.waitForSelector('.pop [role^="menuitem"]'); await p.evaluate(() => document.querySelector('.pop [role^="menuitem"]').click()); };
+  await whoFirst();
+  await p.waitForFunction(n => document.querySelectorAll('[data-pcrow]').length === n - 1, { timeout: 10000 }, n0);
+  const kept = Object.values(await p.evaluate(() => JSON.parse(localStorage.getItem('gs.pctView'))))[0];
+  assert.equal(kept.late, false); assert.equal(kept.target, 70);
+  await whoFirst();
+  await p.waitForFunction(n => document.querySelectorAll('[data-pcrow]').length === n, { timeout: 10000 }, n0);
+  // Fives, and my own bands with one taken away
+  await p.click('[data-pct] [role="radio"][data-v="5"]');
+  await p.waitForFunction(() => document.querySelectorAll('[data-band]').length === 9, { timeout: 10000 });
+  await p.click('[data-pct] [role="radio"][data-v="own"]');
+  await p.waitForSelector('[data-pccut="0"]');
+  await p.click('[data-pccut="2"]', { count: 3 }); await p.keyboard.press('Backspace'); await p.keyboard.press('Tab');
+  await p.waitForFunction(() => document.querySelectorAll('[data-band]').length === 4, { timeout: 10000 });
+  assert.deepEqual(Object.values(await p.evaluate(() => JSON.parse(localStorage.getItem('gs.pctView'))))[0].cuts, [90, 80, 60]);
+  // What if: only a preview, no score changes
+  const scores = await p.evaluate(() => JSON.stringify(window.__mark.state().batch.students.map(s => s.grade)));
+  await p.$eval('[data-pcadd]', e => { e.value = '1'; e.dispatchEvent(new Event('input', { bubbles: true })); });
+  await p.waitForSelector('[data-pcpreview]', { timeout: 10000 });
+  assert.match(await p.$eval('#pTiles .tile.main .ts', e => e.textContent), /\+1/);
+  assert.equal(await p.evaluate(() => JSON.stringify(window.__mark.state().batch.students.map(s => s.grade))), scores);
+  // Copy this table
+  await p.click('[data-pccopy]');
+  await p.waitForFunction(() => [...document.querySelectorAll('.toast, [role="status"]')].some(e => /\d/.test(e.textContent)), { timeout: 10000 });
+  // a dot opens that paper
+  const dot = await p.$eval('[data-pcdot]', e => +e.dataset.pcdot);
+  await p.click('[data-pcdot="' + dot + '"]');
+  await p.waitForFunction(i => window.__mark.state().cur === i && !document.querySelector('[data-pct]'), { timeout: 30000 }, dot);
+  assert.deepEqual(errors, []);
+  await p.close();
+
+  // the current app reads who counts and the bands as they were left
+  const c = await page(ctx, []);
+  await c.goto(srv.url); await appReady(c);
+  await c.evaluate(id => window.__gs.reopenKept(id), id.id);
+  await c.waitForFunction(() => window.__gs.state().batch, { timeout: 60000 });
+  await c.evaluate(id => { location.hash = '#/a/' + encodeURIComponent(id.replace(/^gs\.b\./, '')) + '/insights'; }, id.id);
+  await c.waitForSelector('#dlgBox [data-ovtab="pct"]', { timeout: 60000 });
+  await c.click('#dlgBox [data-ovtab="pct"]');
+  await c.waitForSelector('#pTiles', { timeout: 30000 });
+  const pv = await c.evaluate(() => window.__gs.pv());
+  assert.deepEqual([pv.late, pv.band, pv.cuts, pv.target], [true, 'own', [90, 80, 60], 70]);
+  await ctx.close();
+});
+
+// Insights, after the summary (src/tabs.js insMore): each student's percent on the class's last summative beside this one, a row
+// opening that paper, and this assignment's linked copies in the other classes, read from saved work only.
+test('A-018 A-019: Insights shows Change since the last summative (a row opens that paper) and The same assignment in your other classes; the current app reads the same', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const seed = gradingSeed(), lib = JSON.parse(seed.ls['gs.lib']);
+  lib.classes[0].units[1].items.push({ id: 'i14', name: 'Poetry essay', classId: 'c1', type: 'sum', due: '2026-11-10', group: 'g1' });
+  lib.classes[1].units.push({ id: 'u9', name: 'Poetry', items: [{ id: 'i15', name: 'Poetry essay', classId: 'c2', type: 'sum', due: '2026-11-10', group: 'g1', typed: { max: null, s: { 'Nia Elsewhere': { v: 80 }, 'Omar Stand-in': { v: 60 } } } }] });
+  seed.ls['gs.lib'] = JSON.stringify(lib);
+  const m = await page(ctx, []);
+  await m.goto(srv.url + 'blank'); await plant(m, seed);
+  await m.goto(srv.url); await appReady(m);
+  await openZip(m, zipOf(await standardFiles()));
+  await markPage(m, 0);
+  const id = await m.evaluate(() => {
+    const G = window.__gs, s = G.state(), f = G.findItem('i14');
+    f.it.batchId = s.batch.id; s.batch.assignment = f.it; G.saveLib();
+    s.batch.students.forEach((st, i) => { if (s.setup.mode === 'rubric') st.grade.rubric = s.setup.criteria.map((_, r) => Math.max(1, 4 - ((i + r) % 3))); else st.grade.points = String(6 + i); });
+    G.saveNow(); return s.batch.id;
+  });
+  await goToStudent(m, 1); await goToStudent(m, 0); await settle(m);
+  await m.evaluate(id => { location.hash = '#/a/' + encodeURIComponent(id.replace(/^gs\.b\./, '')) + '/insights'; }, id);
+  await m.waitForSelector('#insMove .insdb', { timeout: 60000 });
+  await m.waitForSelector('#insAcross .insxr', { timeout: 60000 });
+  const was = await m.evaluate(() => ({
+    move: [...document.querySelectorAll('#insMove .insdb')].map(g => g.getAttribute('aria-label').replace(' then ', ', ')),
+    across: [...document.querySelectorAll('#insAcross .insxr:not(.insxax)')].map(r => r.querySelector('.insxn').textContent + ' ' + ((r.querySelector('.insxv b') || {}).textContent || '')),
+  }));
+  await m.close();
+  assert.ok(was.move.length >= 3, 'rows: ' + was.move.join('; '));
+  assert.equal(was.across.length, 2);
+
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id) + '/insights');
+  await p.waitForSelector('#insMove [data-mv]', { timeout: 60000 });
+  assert.deepEqual(await p.$$eval('#insMove [data-mv]', l => l.map(b => b.getAttribute('aria-label'))), was.move, 'the same students, the same two percents, in the same order');
+  assert.match(await p.$eval('#insMove .pc-leg', e => e.textContent), /Poetry analysis/);
+  await p.waitForSelector('#insAcross [data-across]', { timeout: 30000 });
+  assert.deepEqual(await p.$$eval('#insAcross [data-across]', l => l.map(r => r.querySelector('.pc-axn').textContent + ' ' + ((r.querySelector('.num b') || {}).textContent || ''))), was.across, 'each class and its average');
+  // a row opens that paper
+  const i = await p.$eval('#insMove [data-mv]:last-child', b => +b.dataset.mv);
+  await p.click('#insMove [data-mv="' + i + '"]');
+  await p.waitForFunction(i => window.__mark.state().cur === i && !document.querySelector('#insMove'), { timeout: 30000 }, i);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// The Grades tab's links (src/app/dialogs.js openGrades): Student details beside each roster name and each name with nothing turned
+// in, the class's page in the school's system in the footer, and each chip on the paper column opening the grade sheet.
+test('A-014 A-015 A-016: Grades has Student details beside the names, the school system link, and the paper chips open the grade sheet; the current app has the same', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const seed = gradingSeed(), lib = JSON.parse(seed.ls['gs.lib']);
+  lib.classes[0].mb = 'https://school.example/classes/9e'; lib.me = { ...(lib.me || {}), sys: 'Our School' };
+  seed.ls['gs.lib'] = JSON.stringify(lib);
+  const m = await page(ctx, []);
+  await m.goto(srv.url + 'blank'); await plant(m, seed);
+  await m.goto(srv.url); await appReady(m);
+  await openZip(m, zipOf(await standardFiles()));
+  await m.evaluate(() => window.__gs.saveNow()); await settle(m);
+  const id = await m.evaluate(() => window.__gs.state().batch.id);
+  await m.evaluate(id => { location.hash = '#/a/' + encodeURIComponent(id.replace(/^gs\.b\./, '')) + '/grades'; }, id);
+  await m.waitForSelector('#glTable', { timeout: 60000 });
+  const was = await m.evaluate(() => ({ mb: document.querySelector('#dlgBox .mb-go').getAttribute('href'), mbText: document.querySelector('#dlgBox .mb-go').textContent,
+    who: [...document.querySelectorAll('#glTable .whob')].map(b => b.getAttribute('aria-label').replace('Student details for ', '')) }));
+  await m.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id) + '/grades');
+  await p.waitForSelector('#glTable', { timeout: 60000 });
+  // the school system link (A-015)
+  assert.equal(await p.$eval('[data-mblink]', a => a.getAttribute('href')), was.mb);
+  assert.equal((await p.$eval('[data-mblink]', a => a.textContent)).trim(), was.mbText.replace('↗', '').trim());
+  assert.equal(await p.$eval('[data-mblink]', a => a.target), '_blank');
+  // Student details beside the names: the same students as the current app's (A-014)
+  const who = await p.$$eval('#glTable [data-who]', l => l.map(b => b.dataset.who));
+  assert.ok(who.length >= 6, who.join(', '));
+  assert.deepEqual(who, was.who.filter(n => who.includes(n)));
+  assert.deepEqual(was.who.filter(n => !who.includes(n)), [], 'every name with details in the current app has them here');
+  await p.click('#glTable [data-who="Esme Placeholder"]');
+  await p.waitForSelector('[data-pmwho]', { timeout: 30000 });
+  assert.match(await p.$eval('dialog[open]', d => d.textContent), /Esme Placeholder/);
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('[data-pmwho]'));
+  // a chip on the paper column opens the grade sheet (A-016): Cleo's paper says 9.5 and her own score differs
+  const cleo = await p.evaluate(() => window.__mark.state().batch.students.findIndex(st => /Cleo/.test(st.key)));
+  await p.evaluate(i => { const s = window.__mark.state(); const g = s.batch.students[i].grade; g.rubric = s.setup.criteria.map(() => 1); g.sheet = '9.5'; }, cleo);
+  await p.evaluate(() => [...document.querySelectorAll('.mk-grades [role="radio"]')].find(b => /Grade sheet/.test(b.textContent)).click());
+  await p.waitForSelector('[data-sheet] .gs-tbl', { timeout: 60000 });
+  await p.evaluate(() => [...document.querySelectorAll('.mk-grades [role="radio"]')].find(b => /Table/.test(b.textContent)).click());
+  await p.waitForSelector('#glTable [data-opchip]', { timeout: 60000 });
+  await p.click('#glTable [data-opchip]');
+  await p.waitForSelector('[data-sheet] .gs-tbl', { timeout: 30000 });
+  await p.evaluate(() => [...document.querySelectorAll('.mk-grades [role="radio"]')].find(b => /Table/.test(b.textContent)).click());
+  await p.waitForSelector('[data-gsheet]', { timeout: 30000 });
+  await p.click('[data-gsheet]');
+  await p.waitForSelector('[data-sheet] .gs-tbl', { timeout: 30000 });
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// B-059: a Word paper can't be boxed in Check the covers, so Hide names lists the ones that may show a name (src/names.js wordFlagsHtml,
+// src/app/anon.js data-wp), each student's name opening their paper; the current app lists the same papers.
+test('B-059: Hide names lists the Word papers that may show a name, and a name opens that paper; the current app lists the same', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const m = await page(ctx, []);
+  await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
+  await m.goto(srv.url); await appReady(m);
+  const files = await standardFiles(); files['Dov Madeup/Essay.docx'] = makeDocx('A short essay in Word with no name at the top.');
+  await openZip(m, zipOf(files));
+  await m.evaluate(() => window.__gs.saveNow()); await settle(m);
+  const id = await m.evaluate(() => window.__gs.state().batch.id);
+  await m.evaluate(() => window.__gs.openAnon());
+  await m.waitForSelector('#wordFlags [data-wp]', { timeout: 60000 });
+  const was = await m.evaluate(() => [...document.querySelectorAll('#wordFlags li')].map(li => li.textContent.trim()));
+  await m.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  await menuPick(p, '[data-setupopen]', 'Hide names');
+  await p.waitForSelector('dialog[open] [data-hnword] li button', { timeout: 60000 });
+  assert.deepEqual(await p.$$eval('dialog[open] [data-hnword] li', l => l.map(li => li.textContent.trim())), was);
+  assert.ok(was.some(x => /Dov Madeup/.test(x) && /Essay\.docx/.test(x)), was.join(' | '));
+  const dov = await p.evaluate(() => window.__mark.state().batch.students.findIndex(s => s.key === 'Dov Madeup'));
+  await p.evaluate(() => [...document.querySelectorAll('dialog[open] [data-hnword] li button')].find(b => b.textContent === 'Dov Madeup').click());
+  await p.waitForFunction(i => !document.querySelector('dialog[open]') && window.__mark.state().cur === i, { timeout: 30000 }, dov);
   assert.deepEqual(errors, []);
   await ctx.close();
 });

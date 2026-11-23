@@ -1,0 +1,64 @@
+{
+ "top.pg_fb": "{n} de {of} com feedback concluído",
+ "top.pg_off": "{n} não entregues ou dispensados",
+ "top.pg_avg": "Média {v}",
+ "top.pg_avg_tip": {
+  "one": "Média da porcentagem de {n} nota concluída: {mean} / {max}. Trabalhos parciais, não entregues, dispensados ou deixados de fora não contam. Abre Análise.",
+  "other": "Média das porcentagens de {n} notas concluídas: {mean} / {max}. Trabalhos parciais, não entregues, dispensados ou deixados de fora não contam. Abre Análise."
+ },
+ "top.pg_tip": "Ainda não há notas concluídas. Abre Análise.",
+ "top.tk_so_far": "{time} até agora",
+ "top.tk_per": {
+  "one": "cerca de {n} minuto por trabalho",
+  "other": "cerca de {n} minutos por trabalho"
+ },
+ "top.tk_left": "faltam cerca de {time}",
+ "top.tk_from": {
+  "one": "com base em {n} trabalho até agora",
+  "other": "com base em {n} trabalhos até agora"
+ },
+ "top.tk_tip": "Tempo gasto corrigindo esta tarefa, segundo o registro de tempo",
+ "top.fs_go": "Tela cheia",
+ "top.fs_leave": "Sair da tela cheia",
+ "top.fs_tab": "Mostrar a lista de alunos",
+ "top.book_tip": "Todas as tarefas desta turma, por período, com notas do período e gráficos",
+ "top.su_sys_open": "Página da turma",
+ "top.su_sys_add": "Vincular à página da turma…",
+ "top.su_sys_add_n": "Vincular a {name}…",
+ "top.su_link_tip": "Abre em uma nova aba",
+ "top.bb_menu": "Trazer de volta do seu assistente",
+ "top.cmd_sheet": "Folha de notas",
+ "top.cmd_cons": "Verificar a consistência",
+ "top.cmd_ex": "Exemplos",
+ "top.cmd_late": "Adicionar trabalhos atrasados",
+ "top.sh_mk_left": {
+  "one": "Ficam de fora: {n} aluno ainda sem marcações, nota ou comentário. O arquivo diz quantos.",
+  "other": "Ficam de fora: {n} alunos ainda sem marcações, nota ou comentário. O arquivo diz quantos."
+ },
+ "top.pm_more": "Mais para este trabalho",
+ "top.pm_details": "Dados do aluno",
+ "top.pm_notes": "Digitar as notas em vez disso",
+ "top.pm_export": "Exportar agora o trabalho de {name}",
+ "top.pm_export_anon": "Exportar este trabalho agora",
+ "top.pm_sent": "Exportado {when}. Exporte de novo depois de qualquer alteração.",
+ "top.pm_edit": "Editar a rubrica",
+ "top.pm_edit_pts": "Editar",
+ "top.pm_keys": "Todas as teclas",
+ "top.pm_type": "Mudar o tipo",
+ "top.pm_page": "Abrir a página do aluno na turma",
+ "top.rd_menu": "Leituras…",
+ "top.rd_menu_n": {
+  "one": "{n} aparece com este trabalho",
+  "other": "{n} aparecem com este trabalho"
+ },
+ "top.st_not_on": "Nome da pasta · fora da lista de {cls}",
+ "top.st_no_roster": "Nome da pasta · este download não tem lista",
+ "top.st_looks": "Parece ser {name}.",
+ "top.st_is": "É",
+ "top.st_matched": "Já associados",
+ "top.st_link": "Vincular",
+ "top.st_saves": "Vincular salva “{folder}” como outra grafia desse aluno, e os próximos downloads com esse nome vão para ele sozinhos.",
+ "top.st_add": "Adicione alunos à lista de {cls} para vincular esta pasta a um deles.",
+ "top.st_none": "Este download não tem lista, então esta pasta não pode ser vinculada a um aluno.",
+ "top.st_linked": "“{folder}” agora está vinculado a {name}"
+}

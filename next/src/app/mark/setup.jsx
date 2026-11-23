@@ -21,6 +21,8 @@ import './lines.js';
 import './setup-lines.js';
 import { DriveButton } from '../drive-button.jsx';
 import { heicSay } from './heic.js';
+import { library } from '../../students/index.js';
+import { PARTS } from '../router.js';
 
 const J = v => JSON.parse(JSON.stringify(v));
 const ROW_MAX = 6, TOP_MAX = 10;
@@ -78,7 +80,12 @@ export function SetupDialog({ onClose }) {
   const file = useRef(null);
   const [bk, setBk] = useState(null), [fk, setFk] = useState('*'), [asking, setAsking] = useState('');
   const loadBank = () => readBank().then(setBk, e => { console.error(e); setBk({ rubrics: [], scales: [], units: [] }); });
-  useEffect(() => { loadBank(); return onSaved(e => { if ((e.kind === 'plan' && e.id === 'bank') || (e.kind === 'setting' && /^gs\.rubrics/.test(e.id))) loadBank(); }); }, []);   // Undo, or a change in another window
+  // Undo, a change here, or one in another window or the current app (its gs-bank channel, src/rubrics.js bankChan): read again
+  useEffect(() => {
+    loadBank(); const off = onSaved(e => { if ((e.kind === 'plan' && e.id === 'bank') || (e.kind === 'setting' && /^gs\.rubrics/.test(e.id))) loadBank(); });
+    let ch = null; try { ch = new BroadcastChannel('gs-bank'); ch.onmessage = () => loadBank(); } catch {}
+    return () => { off(); if (ch) ch.close(); };
+  }, []);
   const goals = S.goalList(), max = draftMax(d), rp = page === undefined ? d.rubricPage : page;
   const scale12 = !!(s.lib.me || { scale12: true }).scale12;
 
@@ -94,6 +101,14 @@ export function SetupDialog({ onClose }) {
   const setHalf = on => { if (on) delete d.half; else d.half = false; re(); };
   const setLevel = (i, v, txt) => { d.levels ||= []; while (d.levels.length <= i) d.levels.push({}); (d.levels[i] ||= {})[v] = txt; re(); };
   const setGoalRow = (i, id) => { d.goals ||= []; while (d.goals.length <= i) d.goals.push(null); d.goals[i] = id || null; re(); };
+  // her list of learning goals (src/goals.js goalsDlg): Tag rows…, Edit goals…, or New goal… in a picker, which then picks the goal made
+  const [gbox, setGbox] = useState(null);
+  const editGoals = (add, row) => PARTS.goals().then(m => setGbox({ G: m.GoalsDialog, add, row }), e => console.error(e));
+  const goalsBack = id => { const l = library.json(null), cur = state().lib, row = gbox && gbox.row; if (l && cur) for (const k of ['goals', 'goalsGone']) { if (l[k]) cur[k] = l[k]; else delete cur[k]; }
+    setGbox(null); if (typeof id === 'string' && row != null) { if (row === 'all') setGoal(id); else setGoalRow(row, id); } re(); };
+  const goalPick = (row, v) => (v === '+' ? editGoals(true, row) : row === 'all' ? setGoal(v) : setGoalRow(row, v));
+  const goalLine = <p class="goalline" data-sugoalline>{goals.length ? <button type="button" class="link" onClick={() => editGoals(false)} data-sugoals>{t('setup.su_goal_edit')}</button>
+    : <><button type="button" class="link" onClick={() => editGoals(false)} data-sugoals>{t(d.mode === 'rubric' ? 'setup.su_goal_tag_rows' : 'setup.su_goal_tag_score')}</button> <span class="mute">{t('setup.su_goal_opt')}</span></>}</p>;
   const preset = k => {
     if (k === 'none') d.scale = null;
     else if (max === 12) d.scale = { ...(k === 'usual' ? SCALE12 : SCALE_FIVES) };
@@ -177,9 +192,9 @@ export function SetupDialog({ onClose }) {
 
   const say = stakes(d, from, n0.current), top = rowsTop(d);
   const topOpts = [...(top ? [] : [{ value: '', label: t('setup.su_each_own') }]), ...[...Array(TOP_MAX).keys()].map(k => ({ value: String(k + 1), label: String(k + 1) }))];
-  const goalOpts = sel => [{ value: '', label: t('setup.su_no_goal') }, ...goals.map(g => ({ value: g.id, label: g.name })), ...(sel && !goals.some(g => g.id === sel) ? [{ value: sel, label: t('setup.su_goal_gone') }] : [])];
+  const goalOpts = sel => [{ value: '', label: t('setup.su_no_goal') }, ...goals.map(g => ({ value: g.id, label: g.name })), ...(sel && !goals.some(g => g.id === sel) ? [{ value: sel, label: t('setup.su_goal_gone') }] : []), { value: '+', label: t('setup.su_goal_new') }];
 
-  return <Dialog open title={t('setup.su_title')} onClose={onClose}
+  return <Dialog open title={t('mark.su_title')} onClose={onClose}
     actions={<><Button onClick={onClose} data-sucancel>{t('setup.su_cancel')}</Button><Button variant="primary" disabled={busy} onClick={save} data-susave>{t('setup.su_save')}</Button></>}>
     <div class="mk-su" data-setup>
       <Segmented label={t('setup.su_how')} value={d.mode} onChange={setMode} options={[{ value: 'points', label: t('setup.su_total') }, { value: 'rubric', label: t('setup.su_rows') }]} />
@@ -189,7 +204,7 @@ export function SetupDialog({ onClose }) {
         {d.criteria.map((c, i) => { const lv = rowLevels(d, i), n = lv.filter(v => S.levelIn(d, i, v).trim()).length;
           return <div class="su-row" data-surow={i}>
             <div class="su-rowline"><TextInput label={t('setup.su_row_label', { n: i + 1 })} value={c} onInput={v => rowName(i, v)} data-raw data-suname={i} />
-              {!!goals.length && <Select label={t('setup.su_goal_row')} value={(d.goals && d.goals[i]) || ''} options={goalOpts(d.goals && d.goals[i])} onChange={v => setGoalRow(i, v)} data-raw data-sugoal={i} />}
+              {!!goals.length && <Select label={t('setup.su_goal_row')} value={(d.goals && d.goals[i]) || ''} options={goalOpts(d.goals && d.goals[i])} onChange={v => goalPick(i, v)} data-raw data-sugoal={i} />}
               {d.criteria.length > 1 && <IconButton icon="x" size="sm" label={t('setup.su_row_out', { n: i + 1 })} onClick={() => rowOut(i)} data-surm={i} />}</div>
             <details class="lved" open={open.has(i)} onToggle={e => { if (e.currentTarget.open) open.add(i); else open.delete(i); }}>
               <summary data-sulv={i}>{n ? t('setup.su_means_n', { n, of: lv.length }) : t('setup.su_means')}</summary>
@@ -198,6 +213,7 @@ export function SetupDialog({ onClose }) {
             </details>
           </div>; })}
         {d.criteria.length < ROW_MAX && <div><Button size="sm" icon="plus" onClick={rowAdd} data-suadd>{t('setup.su_add_row')}</Button></div>}
+        {goalLine}
         <div class="su-scale">
           <Select label={t('setup.su_top')} value={top ? String(top) : ''} options={topOpts} onChange={setTop} data-sutop />
           <Switch label={t('setup.su_half')} checked={rowHalf(d)} onChange={setHalf} />
@@ -216,7 +232,7 @@ export function SetupDialog({ onClose }) {
             : <div><Button size="sm" onClick={() => setAsking('rubric')} data-subsave>{t('setup.sb_save')}</Button></div>}
         </div>}
       </div> : <div class="su-out"><TextInput label={t('setup.su_out_of')} type="number" min="1" step="0.5" value={String(d.outOf ?? '')} onInput={v => { d.outOf = v; re(); }} data-suout />
-        {!!goals.length && b && <Select label={t('setup.su_goal_all')} value={goal} options={goalOpts(goal)} onChange={setGoal} data-raw data-sugoalall />}</div>}
+        {!!goals.length && b && <Select label={t('setup.su_goal_all')} value={goal} options={goalOpts(goal)} onChange={v => goalPick('all', v)} data-raw data-sugoalall />}{b && goalLine}</div>}
 
       <div class="su-grade" data-suscale>
         <b>{t('setup.su_scale')}</b>
@@ -246,5 +262,6 @@ export function SetupDialog({ onClose }) {
       {!!say.length && <div class="su-say" role="status" data-susay>{say.map(x => <p>{x}</p>)}</div>}
       <p class="mute">{b && b.assignment ? t('setup.su_kept_for', { name: b.assignment.name }) : t('setup.su_kept')}</p>
     </div>
+    {gbox && h(gbox.G, { lib: state().lib, add: gbox.add, onClose: goalsBack })}
   </Dialog>;
 }

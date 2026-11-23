@@ -14,8 +14,19 @@ import { PARTS } from '../router.js';
 import { setOpenWork } from '../openwork.js';
 import { saving } from '../../services/saving.js';
 import { savedStamp } from '../../shared/tabs.js';
+import './lines.js';
 import '../engine-lines.js';   // the engines' own words in the language, before any paper is opened
 import { heicSay } from './heic.js';
+import { toast } from '../../ui/index.js';
+import { t } from '../../i18n/t.js';
+
+// "Picked up where you left off" (src/app/keep.js pickedUpNew, gopen restore): said once for an assignment in each visit to this
+// window, and only on the marking screen itself (audit H-033).
+function pickedUp(id, n) {
+  if (!n || !/^#\/mark\//.test(location.hash)) return;
+  try { const said = JSON.parse(sessionStorage.getItem('gs.pickedUp') || '[]'); if (said.includes(id)) return; sessionStorage.setItem('gs.pickedUp', JSON.stringify(said.concat(id).slice(-40))); } catch {}
+  setTimeout(() => { const b = state().batch; if (/^#\/mark\//.test(location.hash) && b && b.id === id) toast(t('mark.picked_up', { n })); }, 300);
+}
 
 export class NotKept extends Error { constructor(id) { super('The papers for this one aren’t kept in this browser.'); this.name = 'NotKept'; this.id = id; } }
 
@@ -171,6 +182,7 @@ async function assemble({ raw, label, students, lib, assignment, question, earli
   batch.seen = savedStamp(bid);   // whose save this window opened (src/saving.js b.seen): a newer stamp means another window saved since
   batch.lastS = saved && saved.s;
   E.restore();
+  if (saved) pickedUp(batch.id, batch.students.filter(st => saved.s && saved.s[st.key]).length);
   await E.photoTurns();
   if (saved && saved.cls != null) batch.classId = saved.cls;
   E.rosterSort();

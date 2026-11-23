@@ -84,5 +84,29 @@
  "inout.f_marks_kept": "Sus correcciones en él siguen guardadas.",
  "inout.f_goes_back": "Vuelve con la exportación porque usted lo añadió.",
  "inout.op_later": "Cuando llegue su trabajo, use {bring} en {setup} o {add} en su trabajo.",
- "inout.heic_reading": "Leyendo una foto de iPhone…"
+ "inout.heic_reading": "Leyendo una foto de iPhone…",
+ "inout.nf_say": "Añade su trabajo aquí, o suelta el archivo en la página o en su nombre. Puedes poner una nota sin él.",
+ "inout.nf_add": "Añadir su archivo…",
+ "inout.tr_add": "Añadir el trabajo de la repetición…",
+ "inout.rp_t": "Reemplazar {name}",
+ "inout.rp_comp": "Desde este ordenador…",
+ "inout.rp_drive": "Desde Google Drive…",
+ "inout.rp_or_drop": "o suelta aquí el archivo nuevo",
+ "inout.rp_say": "Compruebas los dos archivos lado a lado antes de que cambie nada.",
+ "inout.rp_link": "Un enlace nuevo",
+ "inout.rp_next": "Siguiente",
+ "inout.rp_or": "O",
+ "inout.rp_vfile": "Un archivo de vídeo…",
+ "inout.rp_vdrive": "Google Drive…",
+ "inout.rp_vsay": "Los compañeros con el mismo vídeo también reciben el nuevo, salvo que lo quites en el paso siguiente.",
+ "inout.rp_vq": "¿Reemplazar este vídeo?",
+ "inout.rp_vtext": "El vídeo nuevo ocupa el lugar del anterior. La nota y las notas quedan igual. El enlace anterior espera en Archivos quitados, para recuperarlo.",
+ "inout.rp_vk_file": "archivo de vídeo",
+ "inout.rp_vk_drive": "de Google Drive",
+ "inout.rp_also": "También para {names}",
+ "inout.rp_grp": {
+  "one": "{names} comparte este trabajo, así que el suyo también cambia.",
+  "other": "{names} comparten este trabajo, así que el suyo también cambia."
+ },
+ "inout.rp_for": "{name} reemplazado para {names}"
 }

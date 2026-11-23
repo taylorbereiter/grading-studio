@@ -245,5 +245,20 @@
  "focus.wk_next": "다음 주 마감",
  "focus.wk_hide": "이번 주는 접어 두기",
  "focus.wk_day": "요일 바꾸기",
- "focus.wk_work": "학생 제출물"
+ "focus.wk_work": "학생 제출물",
+ "focus.sg_own": "무엇을 끝내고 싶나요?",
+ "focus.sg_fewer": "개수 줄이기",
+ "focus.sg_more": "개수 늘리기",
+ "focus.len_or": "또는",
+ "focus.sg_met": "이번 세션 목표 달성",
+ "focus.sg_rest": "남은 것은 다음 세션으로 넘어갑니다.",
+ "focus.sg_it": "다음 세션으로 넘어갑니다.",
+ "focus.sg_nocarry": "넘기지 않기",
+ "focus.sg_did": "끝냈어요",
+ "focus.wk_papers": {
+  "one": "이번 주 {n}개",
+  "other": "이번 주 {n}개"
+ },
+ "focus.nav_tip": "채점용 타이머와 하루 목표",
+ "focus.k_snip": "스크린샷: 화면 일부를 그림으로 복사"
 }

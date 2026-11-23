@@ -178,7 +178,6 @@
  "mark.fb_done": "Commentaires complets",
  "mark.fb_next": "Complet, élève suivant",
  "mark.fb_key": "Commentaires complets oui ou non (Shift : oui, puis élève suivant)",
- "mark.stamp": "Tampon",
  "mark.stamp_tip": "Mettre la note sur la copie",
  "mark.stamp_row": "Mettre la note de {c} sur la copie",
  "mark.stamp_open": "Ouvrez d’abord la copie, puis tamponnez-y la note.",
@@ -256,6 +255,15 @@
  "mark.cw_ul_change_n": "Changer le lien {name}",
  "mark.cw_ul_open": "Plan de séquence",
  "mark.cw_ul_open_n": "Ouvrir dans {name}",
+ "mark.hl_width": "Épaisseur du surlignage",
+ "mark.hlw_s": "Surlignage fin",
+ "mark.hlw_m": "Surlignage moyen",
+ "mark.hlw_l": "Surlignage large",
+ "mark.zoom_100": "Revenir à 100 %",
+ "mark.zoom_reset": "Revenir à 100 % ({key})",
+ "mark.next_fb": "Suivant sans retour",
+ "mark.cmd_book": "Carnet de notes",
+ "mark.tr_menu": "Transcriptions…",
  "mark.cw_typed": "Saisies",
  "mark.cw_ud_q": "Supprimer « {name} » ?",
  "mark.cw_ud_say": {
@@ -264,5 +272,28 @@
  },
  "mark.cw_loose_say": "Devoirs sans classe. Faites-en glisser un sur une classe dans la barre latérale, ou utilisez « Déplacer vers… » dans son menu ⋯.",
  "mark.examples": "Exemples",
+ "mark.tn_title": "Notes tapées",
+ "mark.su_title": "Configurer la grille",
+ "mark.r_marked": "Marqué comme rendu",
+ "mark.r_unmarked": "Marqué comme non rendu",
+ "mark.rs_title": "À rescanner",
+ "mark.v_turn": "Pivoter",
+ "mark.picked_up": {
+  "one": "Repris là où vous en étiez ({n} élève commencé)",
+  "other": "Repris là où vous en étiez ({n} élèves commencés)"
+ },
+ "mark.hl_lost": {
+  "one": "Une copie surlignée d’une ancienne grille est gardée pour {n} élève, mais cette grille ne l’affiche pas. Les notes restent : vérifiez-les avec cette grille.",
+  "other": "Une copie surlignée d’une ancienne grille est gardée pour {n} élèves, mais cette grille ne l’affiche pas. Les notes restent : vérifiez-les avec cette grille."
+ },
+ "mark.sp_show": "Afficher à côté",
+ "mark.sw_btn": "Autres travaux",
+ "mark.sw_in": "{done} sur {n} rendus",
+ "mark.sw_avg": "moyenne {pct}",
+ "mark.sw_none": "Pas encore de téléchargement pour cette classe.",
+ "mark.sw_looking": "Recherche dans le travail enregistré…",
+ "mark.sw_dl": "Un téléchargement",
+ "mark.sw_unscored": "pas encore noté",
+ "mark.sw_nothing": "rien de rendu",
  "mark.not_papers": "C’est un fichier à emporter, pas des copies. Pour l’importer, utilisez Importer du travail dans Réglages, Enregistrement et synchronisation."
 }

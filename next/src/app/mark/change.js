@@ -3,7 +3,6 @@
 // marks, for Bring back), and one put in another's place. What each does to the student's files, pages and the download's removed
 // list is the current app's; a file she added is kept in this browser through students/write.js keepAdded. Each change is one
 // step on the one undo list. Loaded as a part of its own (router.js PARTS.change).
-// Not here yet: a group's shared paper and a partner's video changing with it (sameCopies) comes with group work.
 import { state, noScore, use, tryGrade, roundPct, maxPoints } from '../../engines/gcore.js';
 import * as D from '../../engines/gdraw.js';
 import * as E from '../../engines/gopen.js';
@@ -13,6 +12,7 @@ import * as V from '../../engines/gmedia.js';
 import * as G from '../../engines/ggroup.js';
 import { set as setState } from '../../engines/gcore.js';
 import { PARTS } from '../router.js';
+import { getLocale } from '../../i18n/t.js';
 import { libs } from './paper.js';
 import { prefs } from '../../students/prefs.js';
 import { heicSay } from './heic.js';
@@ -21,7 +21,7 @@ const prefsGet = k => !!prefs.get(k, false);
 
 let M = null, show = () => {};
 // m: the marking code (mark/marking.js); open(i, path): show this student (and file) on screen.
-export function wire(m, open) { M = m; show = open; use({ rescanFile: rescan }); }
+export function wire(m, open) { M = m; show = open; use({ rescanFile: rescan, gradeMarksChanged: marksChanged }); }
 const b = () => state().batch;
 const tell = () => M && M.changedNow();
 const step = (back, again, what) => K.pushUndo({ act: { back, again }, what });
@@ -122,11 +122,59 @@ export async function replaceFile(st, path, file, steps) {
   tell(); show(i(), nf.path);
   return nf;
 }
-// What the Replace box shows of the two files: pages and marks on the old one, pages on the new one.
+// What the Replace box shows of the two files: pages and marks on the old one, pages on the new one. A video link put in a link's
+// place says what each is instead: a video file, from Google Drive, or the address itself (askReplace about).
+const vidSay = bytes => (V.vidRef(bytes) ? { k: 'file' } : V.drvRef(bytes) ? { k: 'drive' } : { k: 'addr', s: (u => u.replace(/^https?:\/\/(www\.)?/, '').slice(0, 48) + (u.length > 56 ? '…' : ''))(V.linkOf(bytes) || '') });
 export async function about(st, path, file) {
   const old = D.fileByPath(st, path); let np = 0;
+  const link = old.kind === 'link' && /\.(url|webloc)$/i.test(file.name);
+  if (link) return { link, oldName: V.linkTitle(old), oldSay: vidSay(old.data), newName: V.linkTitle(old), newSay: vidSay(new Uint8Array(await file.arrayBuffer())), marks: 0 };
   if (/\.pdf$/i.test(file.name)) try { const pdfjs = await libs(), d = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise; np = d.numPages; d.destroy(); } catch {}
   return { oldName: F.fileShown(st, old.name), oldPages: old.numPages || 0, marks: F.markCount(old), newName: file.name, newPages: np };
+}
+// The same file on other students, which changes with this one: partners sharing a video link, or the copies of a group's paper
+// (src/app/replace.js sameCopies). [[student, their file]]
+const groupOfSt = st => (b().groups || []).find(g => g.k.includes(st.key)) || null;
+export function sameCopies(st, f) {
+  const g = groupOfSt(st), mates = G.groupMates(st);
+  if (f.kind === 'link') { const k = V.linkKey(f); return mates.map(s => [s, s.files.find(x => x.kind === 'link' && V.linkKey(x) === k)]).filter(([, x]) => x); }
+  if (g && g.p && g.p[st.key] === f.path) return mates.map(s => [s, E.groupFileOf(g, s)]).filter(([, x]) => x);
+  return [];
+}
+export const groupPaperOf = (st, f) => { const g = groupOfSt(st); return !!(g && g.p && g.p[st.key] === f.path); };
+// partners' names joined in the language (ggroup groupNames joins them with an English "and")
+export const namesOf = list => { const a = list.map(x => D.shownName(x, b().students.indexOf(x))); try { return new Intl.ListFormat(getLocale(), { type: 'conjunction' }).format(a); } catch { return a.join(', '); } };
+// The new link, a video file (kept in this browser where the current app keeps them) or a video picked in Drive, as the file that
+// takes a video link's place, named as the old link (openReplace named, vkPut, drvBytes).
+export function linkFile(old, url) { return new File([V.linkBytes(url)], V.linkTitle(old) + '.url'); }
+export function driveVideoFile(old, d) { return new File([drvBytes(d)], V.linkTitle(old) + '.url'); }
+export async function videoFile(old, file) {
+  const W = await PARTS.write(); let id = null;
+  try { id = await W.keepVideo(file); } catch (e) { if (e && e.name !== 'NotThere') throw e; }
+  return id ? new File([V.vidBytes(id, file.name, file.size)], V.linkTitle(old) + '.url') : new File([file], V.linkTitle(old) + '.' + V.extOf(file.name), { type: file.type });
+}
+// One replace, with the partners' copies when also is set (a group's shared paper always changes for everyone): one undo step puts
+// every file, the group's paper and the clips back as they were (replaceDo). Returns { nf, who: the partners it changed for }.
+export async function replaceDo(st, path, file, also) {
+  const old = D.fileByPath(st, path); if (!old) return null;
+  const copies = also || groupPaperOf(st, old) ? sameCopies(st, old) : [];
+  if (!copies.length) { const nf = await replaceFile(st, path, file); return nf ? { nf, who: [] } : null; }
+  const bb = b(), oldKey = old.kind === 'link' ? V.linkKey(old) : '', gc0 = [J(bb.groups || null), J(bb.clips || null)], steps = [];
+  const was = [[st, path], ...copies.map(([s, f]) => [s, f.path])];
+  for (const [s, p] of was) await replaceFile(s, p, s === st ? file : new File([file], file.name, { type: file.type }), steps);
+  if (!steps.length) return null;
+  const nf = steps[0].nf, g = groupOfSt(st);
+  if (g && g.p) for (const x of steps) { const w = was.find(([s]) => s === x.st); if (w && g.p[x.st.key] === w[1]) g.p[x.st.key] = x.nf.path; }
+  if (bb.clips) {
+    const left = oldKey && bb.students.some(s => s.files.some(f => f.kind === 'link' && V.linkKey(f) === oldKey));
+    for (const c of bb.clips) { if (oldKey && !left && c.u === oldKey && nf.kind === 'link') c.u = V.linkKey(nf); if (c.p === path) c.p = nf.path; }
+  }
+  G.groupSync();
+  const gc1 = [J(bb.groups || null), J(bb.clips || null)], i = () => bb.students.indexOf(st);
+  const gc = ([g, c]) => { if (g) bb.groups = J(g); else delete bb.groups; if (c) bb.clips = J(c); else delete bb.clips; G.groupSync(); };
+  step(() => { for (const x of steps.slice().reverse()) x.back(); gc(gc0); tell(); show(i(), path); }, () => { for (const x of steps) x.again(); gc(gc1); tell(); show(i(), nf.path); }, 'replaced ' + F.fileShown(st, old.name));
+  tell(); show(i(), nf.path);
+  return { nf, who: steps.slice(1).map(x => x.st) };
 }
 export const shown = (st, name) => F.fileShown(st, name);
 // The tag on a file she added, or one that replaced another (addTag): who it came from and when.
@@ -262,10 +310,29 @@ export async function turnDoc(st, d) {
   const by = new Map(); for (const [path, p] of d.pages) { if (!by.has(path)) by.set(path, []); by.get(path).push(p); }
   for (const [path, list] of by) await turnPages(D.fileByPath(st, path), list, 1);
 }
+// gradeMarksChanged (src/app/paper.js): a grade lives in the mark that holds it. When those marks change, a reading taken from a mark
+// that is gone goes this moment, and the file is read again a moment later for the new one. Pen strokes and plain comments change nothing.
+const rereads = new Map();
+let rereadQ = Promise.resolve();
+const gradeMarks = (X, f) => Object.entries(f.marks || {}).flatMap(([p, a]) => D.marksMine(a, f).filter(m => !m.qza && (m.t === 'text' || m.t === 'note' || (m.t === 'stamp' && m.k === 'score')) && m.text && X.parseGrade(m.t === 'stamp' ? D.stampScore(m.text) : m.text, false)).map(m => p + '|' + m.text)).sort();
+function marksChanged(f) {
+  const bb = b(); if (!bb || !f || !D.viewable(f)) return;
+  PARTS.outEngine().then(({ X }) => {
+    if (b() !== bb) return;
+    const keys = gradeMarks(X, f); if (keys.join('\0') === ((f.scan && f.scan.marksSig) || '')) return;
+    const st = bb.students.find(x => x.files.includes(f));
+    if (st && f.scan && f.scan.found) {
+      const stale = g => g.mark && !keys.includes(g.page + '|' + g.full);
+      if (f.scan.found.some(stale)) { f.scan.found = f.scan.found.filter(g => !stale(g)); f.scan.shots = f.scan.shots.filter(g => !stale(g)); state().refound(st); state().renderList(); }
+    }
+    clearTimeout(rereads.get(f));
+    rereads.set(f, setTimeout(() => { rereads.delete(f); rereadQ = rereadQ.then(async () => { const was = f.scan; await rescan(f); if (b() === bb && f.scan && f.scan !== was) marksChanged(f); }).catch(e => console.error(e)); }, 250));
+  }, e => console.error(e));
+}
 // rescanFile: Kami notes and typed grades found again on the turned page.
 async function rescan(f) {
   const bb = b(), st = bb && bb.students.find(s => s.files.includes(f)); if (!st || !D.viewable(f)) return;
-  const X = (await PARTS.outEngine()).X;
+  const OE = await PARTS.outEngine(), X = OE.X; await OE.load();   // pdf.js ready before a page is read
   try { f.scan = await X.scanFile(f, f.hand || state().setup.spot || null); if (f.hand) f.scan.hand = true; f.kami = f.scan.kami; } catch (e) { console.error(e); return; }
   state().refound(st); state().renderList(); state().gradeShown(st);
   for (const pg of state().pages) if (pg.file === f) { pg.extra = (f.kami && f.kami[pg.idx] && f.kami[pg.idx].notes) || []; D.draw(pg); }

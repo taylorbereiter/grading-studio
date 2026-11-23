@@ -1,0 +1,64 @@
+{
+ "top.pg_fb": "{n} von {of} mit fertigem Feedback",
+ "top.pg_off": "{n} fehlend oder entschuldigt",
+ "top.pg_avg": "Ø {v}",
+ "top.pg_avg_tip": {
+  "one": "Durchschnitt des Prozentwerts von {n} fertigen Bewertung: {mean} / {max}. Teilweise, fehlende, entschuldigte und ausgelassene Arbeiten zählen nicht. Öffnet Auswertung.",
+  "other": "Durchschnitt der Prozentwerte von {n} fertigen Bewertungen: {mean} / {max}. Teilweise, fehlende, entschuldigte und ausgelassene Arbeiten zählen nicht. Öffnet Auswertung."
+ },
+ "top.pg_tip": "Noch keine fertigen Bewertungen. Öffnet Auswertung.",
+ "top.tk_so_far": "bisher {time}",
+ "top.tk_per": {
+  "one": "etwa {n} Minute pro Arbeit",
+  "other": "etwa {n} Minuten pro Arbeit"
+ },
+ "top.tk_left": "noch etwa {time}",
+ "top.tk_from": {
+  "one": "nach bisher {n} Arbeit",
+  "other": "nach bisher {n} Arbeiten"
+ },
+ "top.tk_tip": "Zeit für die Korrektur dieser Aufgabe, aus der Zeiterfassung",
+ "top.fs_go": "Vollbild",
+ "top.fs_leave": "Vollbild beenden",
+ "top.fs_tab": "Schülerliste zeigen",
+ "top.book_tip": "Alle Aufgaben dieser Klasse nach Halbjahr, mit Halbjahresnoten und Diagrammen",
+ "top.su_sys_open": "Klassenseite",
+ "top.su_sys_add": "Mit der Klassenseite verknüpfen…",
+ "top.su_sys_add_n": "Mit {name} verknüpfen…",
+ "top.su_link_tip": "Öffnet sich in einem neuen Tab",
+ "top.bb_menu": "Von Ihrem Assistenten zurückholen",
+ "top.cmd_sheet": "Notenblatt",
+ "top.cmd_cons": "Einheitlichkeit prüfen",
+ "top.cmd_ex": "Beispiele",
+ "top.cmd_late": "Verspätete Arbeiten hinzufügen",
+ "top.sh_mk_left": {
+  "one": "Nicht dabei: {n} Schüler ohne Markierungen, Punkte oder Kommentar bisher. Die Datei nennt die Anzahl.",
+  "other": "Nicht dabei: {n} Schüler ohne Markierungen, Punkte oder Kommentar bisher. Die Datei nennt die Anzahl."
+ },
+ "top.pm_more": "Mehr zu dieser Arbeit",
+ "top.pm_details": "Angaben zum Schüler",
+ "top.pm_notes": "Notizen stattdessen tippen",
+ "top.pm_export": "Arbeit von {name} jetzt exportieren",
+ "top.pm_export_anon": "Diese Arbeit jetzt exportieren",
+ "top.pm_sent": "Exportiert {when}. Nach jeder Änderung erneut exportieren.",
+ "top.pm_edit": "Bewertungsraster bearbeiten",
+ "top.pm_edit_pts": "Bearbeiten",
+ "top.pm_keys": "Alle Tasten",
+ "top.pm_type": "Art ändern",
+ "top.pm_page": "Seine Seite in der Klasse öffnen",
+ "top.rd_menu": "Lesetexte…",
+ "top.rd_menu_n": {
+  "one": "{n} wird bei dieser Arbeit gezeigt",
+  "other": "{n} werden bei dieser Arbeit gezeigt"
+ },
+ "top.st_not_on": "Ordnername · nicht auf der Liste von {cls}",
+ "top.st_no_roster": "Ordnername · keine Liste für diesen Download",
+ "top.st_looks": "Das sieht nach {name} aus.",
+ "top.st_is": "Das ist",
+ "top.st_matched": "Schon zugeordnet",
+ "top.st_link": "Verknüpfen",
+ "top.st_saves": "„{folder}“ wird als weitere Schreibweise gespeichert, damit spätere Downloads mit diesem Namen von selbst zugeordnet werden.",
+ "top.st_add": "Fügen Sie der Liste von {cls} Schüler hinzu, um diesen Ordner zuzuordnen.",
+ "top.st_none": "Dieser Download hat keine Liste, daher kann der Ordner keinem Schüler zugeordnet werden.",
+ "top.st_linked": "„{folder}“ ist jetzt mit {name} verknüpft"
+}

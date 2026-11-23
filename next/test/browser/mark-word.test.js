@@ -56,6 +56,8 @@ async function page(ctx, errors) {
   p.on('pageerror', e => errors.push(e.message)); p.on('dialog', d => { errors.push('dialog: ' + d.message()); d.dismiss(); });
   p.on('console', m => { if (m.type() === 'error' && !/favicon/.test(m.location().url || '')) errors.push(m.text()); });
   await p.evaluateOnNewDocument(STEADY);
+  // GS_THROTTLE=6 runs the page that many times slower (CDP), to find what depends on timing before CI does
+  if (+process.env.GS_THROTTLE > 1) await (await p.target().createCDPSession()).send('Emulation.setCPUThrottlingRate', { rate: +process.env.GS_THROTTLE });
   await p.setViewport({ width: 1440, height: 900 });
   return p;
 }
@@ -231,5 +233,73 @@ test('H-029 H-030: a Word paper boxed by hand is read for Grades with its pages,
   await p.waitForFunction(() => window.__mark.state().batch.students.find(s => s.key === 'Eve Pretend').files.some(x => x.path === 'Eve Pretend/Odd.pdf' && x.data && x.data.length > 1000), { timeout: 60000 })
     .catch(async e => { throw new Error('no pdf: ' + JSON.stringify(await p.evaluate(() => [window.__mark.state().batch.students.find(s => s.key === 'Eve Pretend').files.map(f => f.path), [...document.querySelectorAll('.toast,.dlg')].map(x => x.innerText)])) + JSON.stringify(errors)); });
   assert.deepEqual(errors.filter(e => !/no document\.xml/.test(e)), []);
+  await ctx.close();
+});
+
+test('C-025 C-026 C-027: typing in a Word paper, Enter is a line break, Ctrl B does nothing, a paste comes in as plain text; after a reload Back to the original takes the kept original back', async () => {
+  const errors = [], ctx = await browser.createBrowserContext(), m = await mainOpens(ctx, errors);
+  const id = await m.evaluate(() => window.__gs.state().batch.id); await m.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  const i = await p.evaluate(k => window.__mark.state().batch.students.findIndex(s => s.key === k), ESSAY_KEY);
+  await p.click('[data-st="' + i + '"]');
+  await p.waitForSelector('.docx [data-wedit]', { timeout: 60000 });
+  await p.click('.docx [data-wedit]');
+  await p.evaluate(() => { const el = document.querySelector('.docx p.wp'), r = document.createRange(); r.selectNodeContents(el); r.collapse(false); const s = getSelection(); s.removeAllRanges(); s.addRange(r); el.focus(); });
+  const paras = await p.$$eval('.docx p.wp', ps => ps.length);
+  // C-026: Enter is a line break in the same paragraph; Ctrl B leaves the words as they are
+  await p.keyboard.type(' One.'); await p.keyboard.press('Enter'); await p.keyboard.type('Two.');
+  await p.keyboard.down('Control'); await p.keyboard.press('b'); await p.keyboard.up('Control');
+  await p.keyboard.type(' Three.');
+  assert.equal(await p.$$eval('.docx p.wp', ps => ps.length), paras, 'no new paragraph');
+  assert.match(await p.$eval('.docx p.wp', e => e.innerText), /One\.\nTwo\. Three\./);
+  assert.equal(await p.$$eval('.docx p.wp b, .docx p.wp strong', x => x.length), 0, 'nothing made bold');
+  // C-027: a paste with formatting comes in as its words only
+  await p.evaluate(() => { const dt = new DataTransfer(); dt.setData('text/html', '<b>Loud</b> <i>words</i>'); dt.setData('text/plain', ' Loud words'); document.activeElement.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })); });
+  assert.match(await p.$eval('.docx p.wp', e => e.innerText), /Three\. Loud words$/);
+  assert.equal(await p.$$eval('.docx p.wp b, .docx p.wp i', x => x.length), 0, 'no formatting pasted');
+  // the edit's write held back 1.5 s (its database opens late), so the save below must wait for a Word save under way (CI caught it)
+  await p.evaluate(() => { const open = IDBFactory.prototype.open; IDBFactory.prototype.open = function (name, ...a) { const r = open.call(this, name, ...a); if (name !== 'grading-studio-keep') return r;
+    let fn = null; Object.defineProperty(r, 'onsuccess', { configurable: true, get: () => fn, set: f => { fn = f; } }); r.addEventListener('success', e => setTimeout(() => fn && fn.call(r, e), 1500)); return r; }; });
+  await p.click('.docx [data-wedit]');
+  await p.evaluate(() => window.__mark.saved());
+  // C-025: after a reload, Back to the original, from the original kept in this browser (here this copy's own is gone)
+  await p.reload();
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  await p.click('[data-st="' + i + '"]');
+  await p.waitForSelector('.docx [data-wedit]', { timeout: 60000 });
+  assert.match(await p.$eval('.docx p.wp', e => e.innerText), /Loud words/);
+  await p.evaluate((i, path) => { window.__mark.state().batch.students[i].files.find(f => f.path === path).orig = null; }, i, ESSAY_PATH);
+  await p.click('.docx [data-wedit]');
+  await p.waitForSelector('.docx [data-wreset]');
+  await p.click('.docx [data-wreset]');
+  await p.waitForFunction((i, path) => !window.__mark.state().batch.students[i].files.find(f => f.path === path).edited, { timeout: 10000 }, i, ESSAY_PATH);
+  await p.waitForFunction(() => { const e = document.querySelector('.docx p.wp'); return e && !/Loud words/.test(e.innerText); }, { timeout: 20000 });
+  assert.ok(await p.evaluate(id => new Promise(res => { const q = indexedDB.open('grading-studio-keep'); q.onsuccess = () => { const g = q.result.transaction('edits').objectStore('edits').getAllKeys(); g.onsuccess = () => { res(!g.result.some(k => String(k).startsWith(id + '|'))); q.result.close(); }; }; }), id), 'the kept edit taken off');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// src/shell.js findRows: while the assignment has Word papers, Find offers to convert them; it opens the Word paper and asks (A-005)
+test('A-005: Find has Convert to PDF pages while there are Word papers; it opens the Word paper and asks, as the current app does', async () => {
+  const errors = [], ctx = await browser.createBrowserContext(), m = await mainOpens(ctx, errors);
+  const id = await m.evaluate(() => window.__gs.state().batch.id); await m.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  const i = await p.evaluate(k => window.__mark.state().batch.students.findIndex(s => s.key === k), ESSAY_KEY);
+  assert.notEqual(await p.evaluate(() => window.__mark.state().cur), i, 'another student on screen');
+  await p.waitForFunction(() => window.__mark.ready, { timeout: 60000 });
+  await p.evaluate(() => document.activeElement && document.activeElement.blur());
+  await p.keyboard.down('Control'); await p.keyboard.press('k'); await p.keyboard.up('Control');
+  await p.waitForSelector('dialog.cmd[open]');
+  await p.keyboard.type('convert word');
+  await p.waitForFunction(() => [...document.querySelectorAll('dialog.cmd[open] [role="option"]')].some(o => o.textContent.includes('Convert to PDF pages')), { timeout: 10000 });
+  await p.evaluate(() => [...document.querySelectorAll('dialog.cmd[open] [role="option"]')].find(o => o.textContent.includes('Convert to PDF pages')).click());
+  await p.waitForFunction(i => window.__mark.state().cur === i, { timeout: 30000 }, i);
+  await p.waitForSelector('.dlg [data-ok]', { timeout: 30000 });
+  assert.match(await p.$eval('dialog[open]', d => d.textContent), /Convert to PDF pages/);
+  assert.deepEqual(errors, []);
   await ctx.close();
 });

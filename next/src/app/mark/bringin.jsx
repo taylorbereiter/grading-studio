@@ -18,6 +18,7 @@ import * as C from './change.js';
 import './lines.js';
 import './setup-lines.js';
 import './inout-lines.js';
+import { PARTS } from '../router.js';
 
 const nfc = s => String(s).normalize('NFC');
 // Picked files as [{ path, file }], keeping folder names (they often hold the student's name) and opening ZIPs (expandPicked).
@@ -59,10 +60,14 @@ export function pickMany(folder) {
 }
 // Files or folder? (src/app/bringin.js askFilesOrFolder, D-001, D-002): what the files are for, then the two ways to pick them.
 // kind 'bring': Bring in files on the marking screen; 'match': files to match to a roster.
+// Bring in files also has A scan to split… (src/app/wiring.js data-scanin, A-103): the scan's pages go onto names and are added here.
 export function FilesOrFolder({ kind, onPick, onClose }) {
+  const [sp, setSp] = useState(null);
   const pick = folder => { onClose(); pickMany(folder).then(list => (list.length ? onPick(list) : toast(t('setup.bf_nothing')))); };
+  const scan = () => { const i = document.createElement('input'); i.type = 'file'; i.onchange = () => { const f = i.files[0]; if (f) PARTS.split().then(S => setSp({ S, f }), e => console.error(e)); }; i.click(); };
+  if (sp) return <sp.S.Split file={sp.f} into lib={state().lib} onClose={onClose} />;
   return <Dialog open title={t(kind === 'match' ? 'inout.mr_title' : 'inout.bf_title')} onClose={onClose}
-    actions={<><Button onClick={onClose}>{t('setup.bf_cancel')}</Button><Button onClick={() => pick(false)} data-pf>{t('setup.w_files')}</Button><Button variant="primary" onClick={() => pick(true)} data-pd>{t('inout.bf_whole')}</Button></>}>
+    actions={<>{kind === 'bring' && <Button variant="quiet" onClick={scan} data-scanin>{t('setup.s_into')}</Button>}<Button onClick={onClose}>{t('setup.bf_cancel')}</Button><Button onClick={() => pick(false)} data-pf>{t('setup.w_files')}</Button><Button variant="primary" onClick={() => pick(true)} data-pd>{t('inout.bf_whole')}</Button></>}>
     <div data-fof={kind}>{kind === 'match' ? <p>{t('inout.mr_text')}</p> : <><p>{t('inout.bf_text')}</p><p><b>{t('inout.bf_late_h')}</b> {t('inout.bf_late')}</p><p><b>{t('inout.bf_scan_h')}</b> {t('inout.bf_scan')}</p></>}</div>
   </Dialog>;
 }

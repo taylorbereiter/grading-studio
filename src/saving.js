@@ -161,6 +161,7 @@ async function tabsCatchUp() {
   if (tabsBehind(b) && !b.behind) await tabsLook(b);
   if (batch !== b || !b.behind || !$('#dlg').hidden) return;
   b.catching = true;
+  const held = tabHoldTyping();
   try {
     commitEditors(); await saveNow();
     if (batch !== b) return;
@@ -175,7 +176,36 @@ async function tabsCatchUp() {
       if (i >= 0 && i !== cur) openStudent(i);
       toast('Newer work from another tab came in, so this download has been reopened.', 6000);
     }
-  } finally { b.catching = false; }
+  } finally { b.catching = false; tabGiveBack(held); }
+}
+// She came back to this tab and went straight on typing in a box (the comment, the points) while the download opens again, which
+// draws the box anew: what she types meanwhile is held, and the box gets the focus and the caret back with it put in, as typing
+// is (an input event, so it's saved as usual). Nothing typed is dropped.
+function tabHoldTyping() {
+  const box = document.activeElement;
+  if (!box || !box.id || !box.matches('textarea, input:not([type]), input[type=text], input[type=number], input[type=search]')) return null;
+  const h = { id: box.id, a: box.selectionStart, z: box.selectionEnd, text: '' };
+  h.key = e => {
+    if (e.isComposing || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key.length === 1) h.text += e.key;
+    else if (e.key === 'Enter' && box.tagName === 'TEXTAREA') h.text += '\n';
+    else if (e.key === 'Backspace' && h.text) h.text = h.text.slice(0, -1);
+    else return;
+    e.preventDefault(); e.stopImmediatePropagation();
+  };
+  window.addEventListener('keydown', h.key, true);
+  return h;
+}
+function tabGiveBack(h) {
+  if (!h) return;
+  window.removeEventListener('keydown', h.key, true);
+  const el = document.getElementById(h.id); if (!el || el.disabled) return;
+  el.focus({ preventScroll: true });
+  const n = el.value.length, a = Math.min(h.a ?? n, n), z = Math.min(h.z ?? n, n);
+  let caret = true; try { el.setSelectionRange(a, z); } catch { caret = false; }   // a number box has no caret to put back
+  if (!h.text) return;
+  if (caret) el.setRangeText(h.text, a, z, 'end'); else el.value += h.text;
+  el.dispatchEvent(new Event('input', { bubbles: true }));
 }
 // Forgotten in another tab after this one opened it: it stays forgotten. A tombstone from another computer isn't this: that one she's asked about.
 const forgotKey = id => 'gsc.forgot.' + id;

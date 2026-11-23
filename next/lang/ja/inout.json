@@ -84,5 +84,29 @@
  "inout.f_marks_kept": "このファイルへの書き込みは保存されたままです。",
  "inout.f_goes_back": "あなたが追加したファイルなので、書き出しと一緒に返却されます。",
  "inout.op_later": "提出物が届いたら、「{setup}」の「{bring}」か、その答案の「{add}」を使います。",
- "inout.heic_reading": "iPhone の写真を読み込んでいます…"
+ "inout.heic_reading": "iPhone の写真を読み込んでいます…",
+ "inout.nf_say": "ここで提出物を追加するか、ファイルをページか名前にドロップします。提出物がなくても採点できます。",
+ "inout.nf_add": "ファイルを追加…",
+ "inout.tr_add": "再提出の答案を追加…",
+ "inout.rp_t": "{name} を置き換え",
+ "inout.rp_comp": "このコンピューターから…",
+ "inout.rp_drive": "Google ドライブから…",
+ "inout.rp_or_drop": "または新しいファイルをここにドロップ",
+ "inout.rp_say": "変更する前に、2 つのファイルを並べて確認できます。",
+ "inout.rp_link": "新しいリンク",
+ "inout.rp_next": "次へ",
+ "inout.rp_or": "または",
+ "inout.rp_vfile": "動画ファイル…",
+ "inout.rp_vdrive": "Google ドライブ…",
+ "inout.rp_vsay": "同じ動画のパートナーにも新しい動画が入ります。次の手順で外すこともできます。",
+ "inout.rp_vq": "この動画を置き換えますか？",
+ "inout.rp_vtext": "新しい動画が古い動画と入れ替わります。点数とメモはそのままです。古いリンクは「削除したファイル」に残り、元に戻せます。",
+ "inout.rp_vk_file": "動画ファイル",
+ "inout.rp_vk_drive": "Google ドライブから",
+ "inout.rp_also": "{names} にも",
+ "inout.rp_grp": {
+  "one": "{names} はこの答案を共有しているので、そちらも変わります。",
+  "other": "{names} はこの答案を共有しているので、そちらも変わります。"
+ },
+ "inout.rp_for": "{names} の {name} を置き換えました"
 }

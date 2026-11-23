@@ -12,6 +12,8 @@ import * as C from './change.js';
 import './lines.js';
 import './setup-lines.js';
 import './paper-lines.js';
+import './inout-lines.js';
+import { tryOfFile } from '../../engines/gopen.js';
 import { shownName, anonOn } from '../../engines/gdraw.js';
 
 const RULE = { high: ['setup.sm_r_high', 'setup.sm_r_high_say', 'setup.sm_c_high'], last: ['setup.sm_r_last', 'setup.sm_r_last_say', 'setup.sm_c_last'], avg: ['setup.sm_r_avg', 'setup.sm_r_avg_say', 'setup.sm_c_avg'] };
@@ -27,6 +29,8 @@ export function ScoreMore({ st }) {
   if (xcOpenFor && xcOpenFor !== st.key) xcOpenFor = null; if (pkOpenFor && pkOpenFor !== st.key) pkOpenFor = null;
   const showXc = +g.xc > 0 || xcOpenFor === st.key, showPk = rub && (g.pk != null || pkOpenFor === st.key);
   const u = g.xc ? (g.xcU === 'pct' ? 'pct' : 'pts') : C.xcUnitNow();
+  const addRetake = () => { const i = document.createElement('input'); i.type = 'file'; i.multiple = true; i.onchange = async () => { const made = await C.addFiles(st, [...i.files].map(file => ({ path: file.name, file })));
+    if (made.notKept) toast(t('setup.f_not_kept', { name: made.notKept[0] })); if (made.length) toast(t('setup.f_added', { n: made.length, name: shownName(st, state().batch.students.indexOf(st)) })); re(); }; i.click(); };
   const focus = sel => setTimeout(() => { const e = document.querySelector(sel); if (e) { e.focus(); e.select && e.select(); } }, 0);
   const items = [
     { label: g.outAvg ? t('setup.sm_out_back') : t('setup.sm_out'), icon: 'minus', onSelect: () => { C.outAvg(st); re(); } },
@@ -57,15 +61,18 @@ export function ScoreMore({ st }) {
       <div class="count"><span>{gr.tryNow ? t('setup.sm_counts', { pct: fmtPct(gr.pct), how: t(RULE[rule][2], { n }) }) : t(tries.length > 1 ? 'setup.sm_until_n' : 'setup.sm_until_1', { pct: fmtPct(gr.pct) })}</span>
         <Menu label={t('setup.sm_rule')} trigger={b => <Button {...b} size="sm" variant="quiet" data-smrule>{t('setup.sm_change')}</Button>}
           items={RETAKE_RULES.map(([k]) => ({ label: t(RULE[k][0]), icon: k === rule ? 'check' : undefined, onSelect: () => { C.retakeRuleSet(k).then(() => { re(); toast(t('setup.sm_rule_done', { how: t(RULE[k][1]) }), { undo: C.undo }); }); } }))} /></div>
+      {/* until the retake has a paper of its own, the way to add it (src/grades.js tryHtml data-tryadd, src/app/kept.js pickAdd) */}
+      {!st.files.some(f => !tryOfFile(st, f) && !f.virtual) && <Button size="sm" icon="file" onClick={addRetake} data-tryadd>{t('inout.tr_add')}</Button>}
     </div>}
   </div>;
 }
 
-// Under the score: Anchor paper, High Mid Low (src/anchors.js anchorHtml). Shown where anchors belong, once the paper has something in it.
+// Under the score: Anchor paper, High Mid Low (src/anchors.js anchorHtml). Shown where anchors belong, once this paper is one: making
+// it one is in More for this paper (mark/paper-more.jsx), so the row isn't one more thing to press on every paper.
 export const anchorName = lv => t(lv === 'high' ? 'mark.an_high' : lv === 'mid' ? 'mark.an_mid' : 'mark.an_low');
 export function Anchors({ st }) {
   const [, again] = useState(0), b = state().batch;
-  if (!st || !st.files.length || noScore(st) || !C.anchorsHere()) return null;
+  if (!st || !st.files.length || noScore(st) || !C.anchorsHere() || !st.grade.anchor) return null;
   const on = st.grade.anchor || '';
   const tip = lv => { const j = C.anchorOf(lv), nm = anchorName(lv).toLowerCase(); return on === lv ? t('paper.an_on', { lv: nm }) : j >= 0 && b.students[j] !== st ? (anonOn() ? t('paper.an_move_anon', { lv: nm }) : t('paper.an_move', { lv: nm, who: b.students[j].key })) : t('paper.an_make', { lv: nm }); };
   return <AnchorRow><span class="lab" title={t('paper.an_tip')}>{t('paper.an_label')}</span>
