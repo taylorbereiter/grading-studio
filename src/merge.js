@@ -898,6 +898,8 @@ function mergeLs(a, b, skip = () => false) {
   if (!(b || {})['gs.rubrics'] && (a || {})['gs.rubrics']) { const x = parse(a['gs.rubrics'], []); if (Array.isArray(x) && !x.every(alive)) set['gs.rubrics'] = JSON.stringify(x.filter(alive)); }
   for (const [k, v] of Object.entries(b || {})) {
     if (k === 'gs.lib' || k === 'gs.rubricsGone' || skip(k)) continue;
+    // Only this student belongs to one screen at one desk (src/solo.js). A copy that came through sync kept switching it back on (11/23).
+    if (k === 'gs.solo') continue;
     if (k === 'gs.bank') {
       let x = [], y = [];
       try { x = JSON.parse(a[k] || '[]'); y = JSON.parse(v); } catch {}

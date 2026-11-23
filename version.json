@@ -1,11 +1,11 @@
 {
- "version": "1.28.78",
- "build": "b5e8e671f1ec",
+ "version": "1.28.80",
+ "build": "c0e47eb39c29",
  "notes": [
-  "The highlighter has a third way to draw, Box: drag a rectangle over anything to highlight it, for scans, tables and layouts that don’t select well. Press H again with the highlighter to go round Snap, Free and Box."
+  "Only this student is no longer copied between computers by Google Drive sync, so an old one can’t keep taking over your screen. One left over from before, or from more than three hours ago, is let go by itself."
  ],
  "files": {
-  "index.html": "732e4b524ed5003f36b4bf76fc0454862eee8319fca82003dfde7f3ffbbd08f3",
+  "index.html": "a0d89871fd40da5ee37c993a49fd7fbab9ce8172158e8ae6cb1615a33b0584a6",
   "planner.html": "01d1e77793068616c172796c249b3ffb162df3ac94d099ab8b46fd2d473474a5"
  },
  "langs": {

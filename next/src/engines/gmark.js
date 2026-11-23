@@ -751,7 +751,7 @@ function hoverCursor(pg, x, y) {
   if (tool === 'select') return grip ? 'ew-resize' : hitMark(pg, x, y, 4) ? (x > pg.W ? 'pointer' : 'move') : 'default';
   if (tool === 'text') { const h = hitMark(pg, x, y, 3); return grip ? 'ew-resize' : h && h.t === 'text' ? 'move' : h && x > pg.W ? 'pointer' : 'text'; }
   if (tool === 'note') { const h = hitMark(pg, x, y, 3); return h && h.t === 'note' ? (x > pg.W ? 'pointer' : 'move') : 'crosshair'; }
-  if (tool === 'hl') return lineAt(pg, x, y) >= 0 ? 'text' : 'crosshair';
+  if (tool === 'hl') return hlMode !== 'box' && lineAt(pg, x, y) >= 0 ? 'text' : 'crosshair';   // the text I-beam only where Snap really follows the words; Free and Box draw, so a crosshair
   return '';
 }
 // src/marking.js
