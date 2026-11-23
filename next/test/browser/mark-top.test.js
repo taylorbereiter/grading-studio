@@ -52,6 +52,8 @@ const findOpen = async (p, say) => {
   await p.keyboard.down('Control'); await p.keyboard.press('k'); await p.keyboard.up('Control');
   await p.waitForSelector('dialog.cmd[open]');
   await p.keyboard.type(say);
+  // every key reached the Find box: the list shows every command before anything is typed, so it alone proves nothing
+  assert.equal(await p.$eval('dialog.cmd[open] input', e => e.value), say, 'what was typed is in the Find box');
   return p.waitForFunction(s => [...document.querySelectorAll('dialog.cmd[open] [role="option"]')].some(o => o.textContent.includes(s)), { timeout: 10000 }, say).then(() => true, () => false);
 };
 const findHas = async (p, say) => {
@@ -225,6 +227,27 @@ test('A-116 A-118 A-121 A-126: Setup has What opened; Find has Where your work i
   await opened(p, id); await asCard(p); await redraw(p);
   await p.click('.mk-top [aria-label="Close marking"]');
   await p.waitForFunction(() => location.hash === '#/class/c1', { timeout: 30000 });
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// Find opened with Ctrl+K on the marking screen has the focus before the next key can arrive: a key pressed in the very next task
+// goes into its box, not to the marking screen behind it.
+test('Find takes the keys pressed the moment it opens', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const { p } = await both(ctx, errors, await standardFiles());
+  await p.waitForSelector('.mk-top', { timeout: 60000 });
+  const ready = await p.evaluate(() => new Promise(res => {
+    document.activeElement && document.activeElement.blur();
+    const at = document.activeElement || document.body;
+    at.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', code: 'KeyK', ctrlKey: true, bubbles: true, cancelable: true }));
+    // the next task: where a key pressed straight after Ctrl+K would go
+    setTimeout(() => { const a = document.activeElement; res(!!a && a.matches('dialog.cmd[open] input')); }, 0);
+  }));
+  assert.ok(ready, 'the Find box has the focus by the next task');
+  await p.keyboard.type('Where');
+  assert.equal(await p.$eval('dialog.cmd[open] input', e => e.value), 'Where');
+  await p.keyboard.press('Escape');
   assert.deepEqual(errors, []);
   await ctx.close();
 });

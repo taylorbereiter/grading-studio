@@ -147,6 +147,22 @@ test('Grades tab: the table as drawn has main\'s term grades; Whole year; Copy s
 });
 
 const libOf = p => p.evaluate(() => JSON.parse(localStorage.getItem('gs.lib')));
+test('a note typed on a student and the next student opened at once is saved, not dropped with the card', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, bookSeed());
+  await p.goto(srv.url + 'next/#/class/c1/people/1');
+  await p.waitForSelector('[data-student="0"] [data-stu-note]', { timeout: 60000 });
+  const n = (await libOf(p)).classes[0].names[0];
+  // Forced order: the card goes (Next student) straight after the last key, before the moment the note waits for after typing.
+  await p.type('[data-stu-note]', 'Left early today.');
+  await p.click('[data-stu-next]');
+  await p.waitForSelector('[data-student="1"]');
+  await p.waitForFunction(n => ((JSON.parse(localStorage.getItem('gs.lib')).classes[0].info || {})[n] || {}).note === 'Left early today.', { timeout: 10000, polling: 100 }, n);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
 test('People tab: the roster edited (order as pasted, an ID kept as a detail), a note, a student moved and one taken off with Undo; the current app reads the same', async () => {
   const ctx = await browser.createBrowserContext(), errors = [];
   const p = await page(ctx, errors);
