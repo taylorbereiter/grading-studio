@@ -1,11 +1,11 @@
 {
- "version": "1.28.77",
- "build": "2a7d6053497c",
+ "version": "1.28.78",
+ "build": "b5e8e671f1ec",
  "notes": [
-  "Only this student is now in the ⋯ beside the student’s name, not a person button, so it doesn’t start when you mean to add partners. Pressing I with a menu or button in hand no longer starts it. A short press on Hold to show everyone now says to keep holding, and papers you bring in while it’s on stay open and end it, so you can’t get stuck."
+  "The highlighter has a third way to draw, Box: drag a rectangle over anything to highlight it, for scans, tables and layouts that don’t select well. Press H again with the highlighter to go round Snap, Free and Box."
  ],
  "files": {
-  "index.html": "1d277e0f7628c07b0208f5040755bd2a2f7a3159063fde4d7cbbd0e9bbe9bfa0",
+  "index.html": "732e4b524ed5003f36b4bf76fc0454862eee8319fca82003dfde7f3ffbbd08f3",
   "planner.html": "01d1e77793068616c172796c249b3ffb162df3ac94d099ab8b46fd2d473474a5"
  },
  "langs": {

@@ -102,7 +102,7 @@ function StudentList({ batch, cur, onPick, onReport, lf, setLf, fold, setFold, f
         {sc && <span class={'sc ' + (sc.tone || '')}>{sc.done && <Icon name="check" size="xs" />}{sc.text}</span>}
       </button></li>; })}
       {lf !== 'all' && !q && rows.length <= 1 && <li class="mute mk-lfnone">{t('mark.lf_none')} <button type="button" class="link" onClick={() => setLf('all')}>{t('mark.lf_everyone')}</button></li>}</ol>
-    {onHide && anonOn() && <div class="mk-lfoot">
+    {onHide && <div class="mk-lfoot">
       <button type="button" class="hn-sw" role="switch" aria-checked={anonOn() ? 'true' : 'false'} title={t('mark.hn_sw_tip')} onClick={onHide} data-anonsw>{t('mark.hn_sw')}<i /></button>
       <span class="grow" />{anonOn() && <Button size="sm" variant="quiet" title={t('mark.hn_shuf_tip')} onClick={onShuffle} data-anonshuf>{t('mark.hn_shuf')}</Button>}</div>}
   </aside>;

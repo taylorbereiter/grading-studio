@@ -241,11 +241,18 @@ function setRects(m, rects) {
 const HL_WIDTHS = { 8: 'S', 14: 'M', 22: 'L' };
 let hlMode = store.get('gs.hlMode', 'auto'), hlW = store.get('gs.hlW', 14);   // 'auto' snaps to typed lines where there are any; 'free' never does
 function hlBegin(pg, x, y, e) {
-  const color = HL[hlColor], a = lineAt(pg, x, y);
+  const color = HL[hlColor];
+  if (hlMode === 'box') return { boxHl: true, x0: x, y0: y, m: { t: 'hl', color, x: r1(x), y: r1(y), w: 0, h: 0 } };   // a box dragged over anything: scans, tables, odd layouts
+  const a = lineAt(pg, x, y);
   if (a >= 0) return { snapHl: true, a, x0: x, y0: y, m: setRects({ t: 'hl', color }, snapRects(pg.tl, a, x, a, x)) };
   return { ...inkBegin({ t: 'hl', color, sw: hlW, pts: [[r1(x), r1(y)]], x, y, w: 0, h: 0 }, x, y, e, pg.s), x0: x, y0: y };
 }
 function hlMove(pg, g, e, at) {
+  if (g.boxHl) {
+    const [x, y] = at(e), x1 = clamp(x, 0, pg.W), y1 = clamp(y, 0, pg.H);
+    Object.assign(g.m, { x: r1(Math.min(g.x0, x1)), y: r1(Math.min(g.y0, y1)), w: r1(Math.abs(x1 - g.x0)), h: r1(Math.abs(y1 - g.y0)) });
+    draw(pg, [g.m]); return;
+  }
   if (!g.snapHl) { inkMove(pg, g, e, at); return; }
   const [x, y] = at(e), b = nearestSeg(pg.tl, clamp(x, 0, pg.W), clamp(y, 0, pg.H), g.a);
   setRects(g.m, snapRects(pg.tl, g.a, g.x0, b, x));
@@ -253,6 +260,7 @@ function hlMove(pg, g, e, at) {
 }
 function hlEnd(pg, g) {
   if (g.snapHl) return;
+  if (g.boxHl) { if (g.m.w < 4 && g.m.h < 4) Object.assign(g.m, { x: r1(g.x0 - 30), y: r1(g.y0 - 7), w: 60, h: 14 }); else { g.m.w = Math.max(g.m.w, 4); g.m.h = Math.max(g.m.h, 4); } return; }   // a click: the usual strip
   const m = g.m;
   inkEnd(pg, g);
   if (m.pts.length < 2 || Math.max(...m.pts.map(q => Math.hypot(q[0] - g.x0, q[1] - g.y0))) < 3) {   // a click: one line-height strip, as it has always been
@@ -265,10 +273,11 @@ function hlEnd(pg, g) {
 }
 function setHlMode(mode, say) {
   hlMode = mode; store.set('gs.hlMode', mode); renderTools();
-  if (say) toast(mode === 'free' ? 'Highlight: freehand' : 'Highlight: snaps to typed lines. Freehand where there are none.');
+  if (say) toast(mode === 'box' ? 'Highlight: box. Drag over what you want highlighted.' : mode === 'free' ? 'Highlight: freehand' : 'Highlight: snaps to typed lines. Freehand where there are none.');
 }
-const hlBar = () => '<span class="seg" style="margin-left:4px"><button data-hlm="auto" aria-pressed="' + (hlMode !== 'free') + '" title="Snaps to typed lines. Goes freehand on scans and handwriting. Press H again to switch.">Snap</button><button data-hlm="free" aria-pressed="' + (hlMode === 'free') + '" title="Always draw it by hand. Hold Shift for a straight line. Press H again to switch." aria-label="Freehand">Free</button></span>' +
-  '<span class="seg" style="margin-left:4px"><button data-hlw title="How wide a freehand highlight is. Click to change.">' + (HL_WIDTHS[hlW] || 'M') + '</button></span>';
+const nextHlMode = () => hlMode === 'box' ? 'auto' : hlMode === 'free' ? 'box' : 'free';   // H with the highlighter in hand: Snap, Free, Box, round again
+const hlBar = () => '<span class="seg" style="margin-left:4px"><button data-hlm="auto" aria-pressed="' + (hlMode !== 'free') + '" title="Snaps to typed lines. Goes freehand on scans and handwriting. Press H again to switch.">Snap</button><button data-hlm="free" aria-pressed="' + (hlMode === 'free') + '" title="Always draw it by hand. Hold Shift for a straight line. Press H again to switch." aria-label="Freehand">Free</button><button data-hlm="box" aria-pressed="' + (hlMode === 'box') + '" title="Drag a box over anything to highlight it. Good for scans and odd layouts. Press H again to switch.">Box</button></span>' +
+  (hlMode === 'box' ? '' : '<span class="seg" style="margin-left:4px"><button data-hlw title="How wide a freehand highlight is. Click to change.">' + (HL_WIDTHS[hlW] || 'M') + '</button></span>');
 function hlBarClick(e) {
   const m = e.target.closest('[data-hlm]'); if (m) { setHlMode(m.dataset.hlm); return true; }
   if (e.target.closest('[data-hlw]')) { hlW = hlW === 14 ? 22 : hlW === 22 ? 8 : 14; store.set('gs.hlW', hlW); renderTools(); return true; }
@@ -432,4 +441,4 @@ function gripDrag(e, bar, pg, m, fit, ta) {
   const up = () => { bar.removeEventListener('pointermove', mv); bar.removeEventListener('pointerup', up); bar.removeEventListener('pointercancel', up); ta.focus(); };
   bar.addEventListener('pointermove', mv); bar.addEventListener('pointerup', up); bar.addEventListener('pointercancel', up);
 }
-Object.assign(window.__gs, { stepSize, cornerAt, ui: () => ({ tool, picked: selected ? JSON.parse(JSON.stringify(selected.mark)) : null, editing: !!activeEditor }), inkFilter, thinStroke, groupLines, snapRects, strokePath, hlMode: () => hlMode, setHlMode, draw, bboxOf, hitMark, drawMarks, sharePage });
+Object.assign(window.__gs, { nextHlMode, stepSize, cornerAt, ui: () => ({ tool, picked: selected ? JSON.parse(JSON.stringify(selected.mark)) : null, editing: !!activeEditor }), inkFilter, thinStroke, groupLines, snapRects, strokePath, hlMode: () => hlMode, setHlMode, draw, bboxOf, hitMark, drawMarks, sharePage });
