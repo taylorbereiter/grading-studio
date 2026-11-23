@@ -332,7 +332,8 @@ function ScorePanel({ batch, cur, onNext, onPrev, FU, fm, first, last, solo, onC
       : <div class="mk-pts"><input type="text" inputmode="decimal" aria-label={t('mark.points')} value={gr.pk != null && gr.pk !== '' ? gr.pk + '%' : gr.points} disabled={off}
           onInput={e => M.setPoints(e.currentTarget.value, e.currentTarget)} onBlur={() => M && M.leftPoints()} onKeyDown={ptsKey} /><span class="mute">{t('mark.out_of_pts', { n: su.outOf })}</span></div>}
     {FU && M && ibSetup() ? <FU.IbTotal st={st} onStamp={() => stamp(null)} /> : <div class={'total' + (g.total == null ? ' none' : '')}><b>{g.total != null ? fmtNum(g.total) : '–'}</b><span class="mute">{max ? t('mark.out_of', { n: fmtNum(max) }) : ''}</span>
-      <span class="grow" /><span class="pct">{g.pct != null ? fmtNum(g.pct) + '%' : ''}</span></div>}
+      <span class="grow" /><span class="pct">{g.pct != null ? fmtNum(g.pct) + '%' : ''}</span>
+      {M && g.total != null && !noScore(st) && <IconButton icon="stamp" size="sm" label={t('mark.stamp_tip')} onClick={() => stamp(null)} data-stampscore />}</div>}
     {g.total == null && <p class="mute nosc">{t('mark.no_score')}</p>}</>}
     <CommentBox value={gr.comment || ''} off={off} onInput={v => M.setComment(v)} />
     {M && <CommentChips text={gr.comment || ''} onAdd={c => M.setComment((gr.comment || '').trim() ? (gr.comment || '').replace(/\s+$/, '') + ' ' + c : c)} />}
