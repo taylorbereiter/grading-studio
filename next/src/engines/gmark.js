@@ -572,12 +572,19 @@ function setRects(m, rects) {
 let hlMode = store.get('gs.hlMode', 'auto'), hlW = store.get('gs.hlW', 14);   // 'auto' snaps to typed lines where there are any; 'free' never does
 // src/marking.js
 function hlBegin(pg, x, y, e) {
-  const color = HL[hlColor], a = lineAt(pg, x, y);
+  const color = HL[hlColor];
+  if (hlMode === 'box') return { boxHl: true, x0: x, y0: y, m: { t: 'hl', color, x: r1(x), y: r1(y), w: 0, h: 0 } };   // a box dragged over anything: scans, tables, odd layouts
+  const a = lineAt(pg, x, y);
   if (a >= 0) return { snapHl: true, a, x0: x, y0: y, m: setRects({ t: 'hl', color }, snapRects(pg.tl, a, x, a, x)) };
   return { ...inkBegin({ t: 'hl', color, sw: hlW, pts: [[r1(x), r1(y)]], x, y, w: 0, h: 0 }, x, y, e, pg.s), x0: x, y0: y };
 }
 // src/marking.js
 function hlMove(pg, g, e, at) {
+  if (g.boxHl) {
+    const [x, y] = at(e), x1 = clamp(x, 0, pg.W), y1 = clamp(y, 0, pg.H);
+    Object.assign(g.m, { x: r1(Math.min(g.x0, x1)), y: r1(Math.min(g.y0, y1)), w: r1(Math.abs(x1 - g.x0)), h: r1(Math.abs(y1 - g.y0)) });
+    draw(pg, [g.m]); return;
+  }
   if (!g.snapHl) { inkMove(pg, g, e, at); return; }
   const [x, y] = at(e), b = nearestSeg(pg.tl, clamp(x, 0, pg.W), clamp(y, 0, pg.H), g.a);
   setRects(g.m, snapRects(pg.tl, g.a, g.x0, b, x));
@@ -586,6 +593,7 @@ function hlMove(pg, g, e, at) {
 // src/marking.js
 function hlEnd(pg, g) {
   if (g.snapHl) return;
+  if (g.boxHl) { if (g.m.w < 4 && g.m.h < 4) Object.assign(g.m, { x: r1(g.x0 - 30), y: r1(g.y0 - 7), w: 60, h: 14 }); else { g.m.w = Math.max(g.m.w, 4); g.m.h = Math.max(g.m.h, 4); } return; }   // a click: the usual strip
   const m = g.m;
   inkEnd(pg, g);
   if (m.pts.length < 2 || Math.max(...m.pts.map(q => Math.hypot(q[0] - g.x0, q[1] - g.y0))) < 3) {   // a click: one line-height strip, as it has always been
@@ -599,7 +607,7 @@ function hlEnd(pg, g) {
 // src/marking.js
 function setHlMode(mode, say) {
   hlMode = mode; store.set('gs.hlMode', mode); renderTools();
-  if (say) toast(mode === 'free' ? 'Highlight: freehand' : 'Highlight: snaps to typed lines. Freehand where there are none.');
+  if (say) toast(mode === 'box' ? 'Highlight: box. Drag over what you want highlighted.' : mode === 'free' ? 'Highlight: freehand' : 'Highlight: snaps to typed lines. Freehand where there are none.');
 }
 // src/marking.js
 function hlBarClick(e) {
