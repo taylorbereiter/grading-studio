@@ -6,6 +6,7 @@
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { Card, Select, Switch, TextInput, HeldInput, Slider, Segmented, Button, IconButton, toast } from '../../ui/index.js';
+import { applySize } from '../../services/size.js';
 import { t } from '../../i18n/t.js';
 import { PARTS } from '../router.js';
 import { library, gradingSetup } from '../../students/index.js';
@@ -16,7 +17,7 @@ import * as undoList from '../../services/undo.js';
 import { GRADE_WAYS, gradeWay, meGrade, ME_OLD, useLib } from '../../engines/gways.js';
 import { readLibrary, J, change, useLibraryPlain } from './settings-me.js';
 import { rowScaleOf, rowsTop, rowHalf, rowsSay, ROW_TOP, COLORS, PTS_AMBER } from '../../engines/gcore.js';
-import { PROOF, PUNCT, markLabel0, MARK_MEAN, MARK_KEY } from '../../engines/gmark.js';
+import { PROOF, PUNCT, markLabel0, MARK_MEAN, MARK_KEY } from '../../engines/gkey.js';
 import { drawStamp } from '../../engines/gdraw.js';
 import '../mark/setup-lines.js';
 
@@ -93,6 +94,9 @@ export function MarkingSettings() {
   const pts = (k => (k === 'credit' || COLORS[k] ? k : ''))(prefs.get('gs.ptsInk', ''));
   const disp = { ...DISP0, ...(prefs.get('gs.disp', null) || {}) };
   const setDisp = (k, v) => { prefs.set('gs.disp', { ...(prefs.get('gs.disp', null) || {}), [k]: v }); re(); };
+  // Back to normal (src/app/display.js data-reset): the text boxes, the paper's fit, Word's size and spacing and the app's text size as
+  // they start; how a grade is cropped on the sheet (trim) stays
+  const dispReset = () => { const d = prefs.get('gs.disp', null) || {}; if (d.trim != null) prefs.set('gs.disp', { trim: d.trim }); else prefs.del('gs.disp'); prefs.del('gs.zoom'); applySize(1); re(); };
   const setPts = k => { if (k) prefs.set('gs.ptsInk', k); else prefs.del('gs.ptsInk'); re(); };
   const sw = c => <i class="sg-sw" style={{ background: c }} />;
   const row = (label, on, pick, attr) => <InkRow label={label}>
@@ -114,6 +118,7 @@ export function MarkingSettings() {
       <Slider label={t('setup.sg_dfs')} min={12} max={24} step={1} value={+disp.dfs || 15} onInput={v => setDisp('dfs', v)} format={v => t('setup.sg_px', { n: v })} />
       <div class="sg-line"><span>{t('setup.sg_dlh')}</span><Segmented label={t('setup.sg_dlh')} value={String(+disp.dlh || 1.45)} onChange={v => setDisp('dlh', +v)} options={[{ value: '1.3', label: t('setup.sg_dlh_tight') }, { value: '1.45', label: t('setup.sg_dlh_normal') }, { value: '1.8', label: t('setup.sg_dlh_roomy') }]} /></div>
       <p class="hint">{t('setup.sg_disp_about')}</p>
+      <div><Button onClick={dispReset} data-sgdreset>{t('setup.l_reset')}</Button></div>
     </div></Card>
     <Card title={t('setup.sg_names_h')}><p class="mute">{t('setup.sg_names_about')}</p>
       <span data-sgnames><Segmented label={t('setup.sg_names_h')} value={prefs.get('gs.nameFind', false) ? 'find' : 'mine'} onChange={v => { if (v === 'find') prefs.set('gs.nameFind', true); else prefs.del('gs.nameFind'); re(); }}
@@ -129,12 +134,16 @@ export function MarkingSettings() {
 }
 
 // Her saved comments (gs.bank, students/comments.js): changed in place, moved up, or removed with Undo. The comment box offers the same list.
+// The list part once it is here: a change and what the list shows happen in the same turn, so she never types into a row that is
+// about to move (a second import() of a loaded part still waits a turn).
+let CB = null;
+const cbank = () => (CB ? Promise.resolve(CB) : PARTS.cbank().then(m => (CB = m)));
 function SavedComments() {
   const [bank, setBank] = useState(null), [add, setAdd] = useState('');
-  useEffect(() => { let live = true; const read = () => PARTS.cbank().then(m => m.readBank()).then(b => { if (live) setBank(b); });
+  useEffect(() => { let live = true; const read = () => cbank().then(m => m.readBank()).then(b => { if (live) setBank(b); });
     read(); const off = onSaved(e => { if (e.kind === 'setting' && e.id === 'gs.bank') read(); }); return () => { live = false; off(); }; }, []);
   if (!bank) return null;
-  const change = (label, fn, said) => PARTS.cbank().then(m => { m.changeBank(label, fn); if (said) toast(said, { undo: () => undoList.undo() }); });
+  const change = (label, fn, said) => cbank().then(m => { setBank(m.changeBank(label, fn)); if (said) toast(said, { undo: () => undoList.undo() }); });
   const edit = (i, v) => { v = String(v || '').trim(); if (v === bank[i]) return; if (!v) return remove(i); change(t('setup.sg_cb_step_edit'), l => { l[i] = v; return l.filter((c, k) => k === i || c !== v); }); };
   const remove = i => change(t('setup.sg_cb_step_remove'), l => { l.splice(i, 1); return l; }, t('setup.sg_cb_removed'));
   const up = i => change(t('setup.sg_cb_step_move'), l => { [l[i - 1], l[i]] = [l[i], l[i - 1]]; return l; });
@@ -159,7 +168,7 @@ function MarkPic({ k }) {
 }
 // The mark key (src/stamps.js openMarkKey, gs.markKey): her own name and meaning for each proofreading and punctuation mark, and
 // whether returned papers get a key page listing the ones used. Each box saves when she leaves it.
-function MarkKey() {
+export function MarkKey() {
   const [, again] = useState(0), re = () => again(n => n + 1);
   const set0 = () => { const v = prefs.get(MARK_KEY, null); return v && typeof v === 'object' ? v : {}; };
   const setKey = change => { const v = { ...set0() }; change(v); prefs.set(MARK_KEY, v); re(); };

@@ -1,5 +1,5 @@
 // One stop in the Tab order for a set of buttons that belong together (the tools, the colours, a page's turn buttons): Tab reaches
-// the one that is on (or the first), and the arrow keys, Home and End move among them. A set inside a set keeps its own stop.
+// the one that is on (or the one marked data-rovehome, or the first), and the arrow keys, Home and End move among them. A set inside a set keeps its own stop.
 import { useLayoutEffect, useRef } from 'preact/hooks';
 
 const itemsOf = el => [...el.querySelectorAll('button, input, [role="tab"]')].filter(x => !x.disabled && x.closest('[data-rove]') === el && !x.closest('[role="menu"]'));
@@ -8,7 +8,7 @@ export function useRove(vertical = false) {
   useLayoutEffect(() => {
     const el = ref.current; if (!el) return;
     const items = itemsOf(el); if (!items.length) return;
-    const cur = items.find(x => x === document.activeElement) || items.find(x => x.getAttribute('aria-pressed') === 'true' || x.getAttribute('aria-checked') === 'true') || items[0];
+    const cur = items.find(x => x === document.activeElement) || items.find(x => x.getAttribute('aria-pressed') === 'true' || x.getAttribute('aria-checked') === 'true') || items.find(x => x.hasAttribute('data-rovehome')) || items[0];
     for (const x of items) x.tabIndex = x === cur ? 0 : -1;
   });
   const onKeyDown = e => {

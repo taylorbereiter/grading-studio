@@ -60,6 +60,8 @@ export const PARTS = {
   beside2: () => import('./screens/lesson-beside2.jsx'),
   besideBooks: () => import('./screens/lesson-books.jsx'),
   box: () => import('./screens/lesson-box.jsx'),
+  // a right-click in the Planner: a comment for the assistant, or the thing put in its box (plan/ctx.jsx)
+  ctx: () => import('./plan/ctx.jsx'),
   nb: () => import('./screens/lesson-nb.jsx'),
   docxin: () => import('./plan/docx-in.js'),
   doc: () => import('./screens/lesson-doc.jsx'),
@@ -82,6 +84,8 @@ export const PARTS = {
   // Grades, Insights and Return (the screen part), and what they run: the export engine with pdf-lib and fflate, loaded on their
   // own like pdf.js (each library is its own chunk, under the any-chunk budget)
   out: () => import('./screens/mark-out.jsx'),
+  pmore: () => import('./mark/paper-more.jsx'),
+  percents: () => import('./mark/percents.jsx'),
   outEngine: () => import('./mark/out.js'),
   retcards: () => import('./mark/retcards.jsx'),
   // the Grade sheet on the Grades tab
@@ -149,6 +153,10 @@ export const PARTS = {
   fileui: () => import('./mark/fileui.jsx'),
   // splitting a scan onto names (mark/split.jsx), from the class page or into an open download
   split: () => import('./mark/split.jsx'),
+  // Only this student's Other work (mark/solowork.jsx)
+  solowork: () => import('./mark/solowork.jsx'),
+  // Student details for a folder not on the roster (mark/stranger.jsx)
+  stranger: () => import('./mark/stranger.jsx'),
   // video and audio papers, their transcripts, and notes pages (mark/media.jsx)
   media: () => import('./mark/media.jsx'),
   // typed notes and the Timer under the comment (mark/typed.jsx)

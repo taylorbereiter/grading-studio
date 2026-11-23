@@ -74,7 +74,7 @@ function Controls({ st, f, m, video, turn = video }) {
     <Button size="sm" onClick={() => { const x = m(); if (x) x.currentTime = x.currentTime + 10; }} data-skip="10">{t('setup.v_ahead')}</Button>
     <Segmented size="sm" label={t('setup.v_speed')} value={String(r)} onChange={v => { prefs.set('gs.rate', +v); setR(+v); const x = m(); if (x) x.playbackRate = +v; }} options={RATES.map(x => ({ value: String(x), label: x + '×' }))} />
     <Button size="sm" onClick={() => { const x = m(); if (x) C.addStamp(st, x.currentTime); toast(t('setup.v_stamped')); }} title={t('setup.v_stamp_tip')} data-stamp>{t('setup.v_stamp')}</Button>
-    {turn && <Button size="sm" icon="turnr" onClick={() => C.vidTurn(f)} title={t('setup.v_turn_tip')} data-vrot>{t('setup.v_turn')}</Button>}
+    {turn && <Button size="sm" icon="turnr" onClick={() => C.vidTurn(f)} title={t('setup.v_turn_tip')} data-vrot>{t('mark.v_turn')}</Button>}
     {video && document.pictureInPictureEnabled && <Button size="sm" onClick={() => { const x = m(); if (!x) return; if (document.pictureInPictureElement === x) document.exitPictureInPicture().catch(() => {}); else x.requestPictureInPicture().catch(() => {}); }} title={t('setup.v_float_tip')} data-pip>{t('setup.v_float')}</Button>}
   </div>;
 }
@@ -124,7 +124,7 @@ function Link({ st, f }) {
         {play && <Button size="sm" variant={on ? undefined : 'primary'} aria-pressed={on ? 'true' : 'false'} onClick={() => setOn(v => !v)} data-vplay>{t(on ? 'setup.v_close' : 'setup.v_play')}</Button>}
         <Button size="sm" variant={play ? undefined : 'primary'} onClick={() => window.open(url, '_blank', 'noopener,noreferrer,popup,width=980,height=640')} title={t('setup.v_open_tip')} data-vopen>{t('setup.v_open')}</Button>
         <Button size="sm" onClick={() => navigator.clipboard.writeText(url).then(() => toast(t('setup.v_copied')), () => toast(t('setup.v_not_copied')))} data-vcopy>{t('setup.v_copy')}</Button>
-        {play && (play.frame || play.video) && <Button size="sm" icon="turnr" onClick={() => C.vidTurn(f)} title={t('setup.v_turn_tip')} data-vrot>{t('setup.v_turn')}</Button>}</div>
+        {play && (play.frame || play.video) && <Button size="sm" icon="turnr" onClick={() => C.vidTurn(f)} title={t('setup.v_turn_tip')} data-vrot>{t('mark.v_turn')}</Button>}</div>
       {play && play.frame && !ticks && V.vrotOf(f) > 0 && <p class="mute vlnote">{t('setup.v_caps_turn')}</p>}
       <p class="mute vlnote">{t(play ? 'setup.v_link_note' : 'setup.v_link_only')}</p>
       <ClipStrip f={f} media={on && ticks ? m : null} hint={play && play.frame && !ticks ? 'drive' : ''} /></div>

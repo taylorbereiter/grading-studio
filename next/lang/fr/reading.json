@@ -1,0 +1,62 @@
+{
+ "rd.title": "Lectures",
+ "rd.done": "Terminé",
+ "rd.about": "Des fichiers affichés au-dessus des devoirs pendant la correction, comme le texte à lire ou la consigne. Ils restent dans ce navigateur et ne sont jamais renvoyés aux élèves.",
+ "rd.everyone": "Pour tous",
+ "rd.your_doc": "votre document",
+ "rd.remove": "Retirer",
+ "rd.remove_all": "Retirer pour tous",
+ "rd.none": "Aucun pour l’instant.",
+ "rd.add_all": "Ajouter un fichier pour tous…",
+ "rd.for": "Pour {name}",
+ "rd.show": "Afficher {file}",
+ "rd.only": "seulement pour {name}",
+ "rd.add_one": "Ajouter un fichier seulement pour {name}…",
+ "rd.hint": "Pour un élève qui a une autre lecture : décochez le fichier commun ci-dessus, puis ajoutez le sien.",
+ "rd.doc_card": "Votre document : {name}",
+ "rd.card_all": "affiché avec chaque devoir, non renvoyé",
+ "rd.card_one": "seulement pour cet élève, non renvoyé",
+ "rd.hide": "Masquer pour cet élève",
+ "rd.hidden": "Masqué pour cet élève. Lectures… le fait revenir ou ajoute un autre fichier.",
+ "rd.zoom": "Zoom sur la lecture",
+ "rd.zoom_out": "Zoom arrière",
+ "rd.zoom_in": "Zoom avant",
+ "rd.zoom_fit": "Revenir à la largeur",
+ "rd.zoom_how": "Pincez ou faites Ctrl + molette sur la lecture pour zoomer. Faites glisser le bord du bas pour l’agrandir.",
+ "rd.grip": "Faites glisser pour agrandir ou réduire la lecture",
+ "rd.cant": "Ce fichier ne peut pas être affiché ici.",
+ "rd.no_room": "Ce navigateur n’a plus de place pour garder {name}",
+ "rd.added": "« {file} » s’affiche maintenant au-dessus de chaque devoir",
+ "rd.added_for": "« {file} » s’affiche maintenant pour {name}",
+ "rd.added_n": "{n} fichiers s’affichent maintenant au-dessus de chaque devoir",
+ "rd.added_n_for": "{n} fichiers s’affichent maintenant pour {name}",
+ "rd.tr_title": "Transcriptions",
+ "rd.tr_count": {
+  "one": "{n} enregistrement dans ce devoir.",
+  "other": "{n} enregistrements dans ce devoir."
+ },
+ "rd.tr_have": {
+  "one": "{n} a déjà une transcription.",
+  "other": "{n} ont déjà une transcription."
+ },
+ "rd.tr_redo": "Refaire aussi celles qui existent",
+ "rd.tr_about": "Tout se fait dans ce navigateur (rien n’est envoyé). Le moteur vocal se télécharge une seule fois (environ 150 Mo). Gardez cet onglet ouvert pendant le travail ; vous pouvez continuer à corriger.",
+ "rd.tr_make": "Faire les transcriptions",
+ "rd.tr_stop": "Arrêter",
+ "rd.tr_stopping": "Arrêt…",
+ "rd.tr_close": "Fermer",
+ "rd.tr_at": "Élève {n} ({k} sur {of}) · {file} · {what}",
+ "rd.tr_all_have": "Chaque enregistrement a déjà une transcription",
+ "rd.tr_done": {
+  "one": "Terminé. {n} transcription faite.",
+  "other": "Terminé. {n} transcriptions faites."
+ },
+ "rd.tr_stopped": {
+  "one": "Arrêté. {n} transcription faite.",
+  "other": "Arrêté. {n} transcriptions faites."
+ },
+ "rd.tr_failed": {
+  "one": "{n} n’a pas pu être lu (essayez Chrome, ou convertissez-le en .mp4 ou .m4a).",
+  "other": "{n} n’ont pas pu être lus (essayez Chrome, ou convertissez-les en .mp4 ou .m4a)."
+ }
+}

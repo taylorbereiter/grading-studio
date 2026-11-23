@@ -33,6 +33,8 @@ async function page(ctx, errors) {
   p.on('pageerror', e => errors.push(e.message)); p.on('dialog', d => { errors.push('dialog: ' + d.message()); d.dismiss(); });
   p.on('console', m => { if (m.type() === 'error' && !/favicon/.test(m.location().url || '')) errors.push(m.text()); });
   await p.evaluateOnNewDocument(STEADY);
+  // GS_THROTTLE=6 runs the page that many times slower (CDP), to find what depends on timing before CI does
+  if (+process.env.GS_THROTTLE > 1) await (await p.target().createCDPSession()).send('Emulation.setCPUThrottlingRate', { rate: +process.env.GS_THROTTLE });
   await p.setViewport({ width: 1440, height: 900 });
   return p;
 }
@@ -299,7 +301,7 @@ test('learning goals in Rubric setup: a goal picked beside two rows is kept with
   const id = await p.evaluate(() => window.__mark.state().batch.id);
   await setupDo(p, 'Rubric setup');
   await p.waitForSelector('dialog[open] select[data-sugoal="0"]');
-  assert.deepEqual((await p.$$eval('dialog[open] select[data-sugoal="0"] option', os => os.map(o => o.textContent))).slice(1), ['Uses evidence', 'Clear structure'], 'her goals to pick from');
+  assert.deepEqual((await p.$$eval('dialog[open] select[data-sugoal="0"] option', os => os.map(o => o.textContent))).slice(1), ['Uses evidence', 'Clear structure', 'New goal…'], 'her goals to pick from, then New goal… (B-044)');
   await p.select('dialog[open] select[data-sugoal="0"]', 'g1');
   await p.select('dialog[open] select[data-sugoal="2"]', 'g2');
   await tap(p, 'dialog[open] [data-susave]');
@@ -311,6 +313,43 @@ test('learning goals in Rubric setup: a goal picked beside two rows is kept with
   await m.evaluate(id => window.__gs.reopenKept(id), id);
   await m.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
   assert.deepEqual(await m.evaluate(() => window.__gs.state().setup.goals), ['g1', null, 'g2']);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// B-044 B-045: with no goals yet, Rubric setup has one quiet link to tag rows; with some, Edit goals… and New goal… in each picker,
+// which picks the goal just made (src/goals.js goalPick, goalsSetupHtml)
+test('B-044 B-045: Tag rows with learning goals… makes the first goal; New goal… in a row\'s picker makes another and picks it, kept with the setup', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, withCard());
+  const z = path.join(dir, 'Goals b.zip'); fs.writeFileSync(z, await twoZip());
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.click('[data-bring-for="i9"]');
+  await p.waitForSelector('.pop [role="menuitem"]');
+  const [chooser] = await Promise.all([p.waitForFileChooser(), p.click('.pop [role="menuitem"]')]);
+  await chooser.accept([z]);
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  await setupDo(p, 'Rubric setup');
+  await p.waitForSelector('dialog[open] [data-sugoals]');
+  assert.equal(await p.$('dialog[open] select[data-sugoal="0"]'), null, 'no pickers before a first goal');
+  assert.match(await p.$eval('dialog[open] [data-sugoalline]', e => e.textContent), /^Tag rows with learning goals… Optional/);
+  await p.click('dialog[open] [data-sugoals]');
+  await p.waitForSelector('[data-goal-row="0"]');
+  await p.type('[data-goal-row="0"]', 'Uses evidence'); await p.click('[data-goals-done]');
+  await p.waitForSelector('dialog[open] select[data-sugoal="0"]', { timeout: 15000 });
+  assert.equal(await p.$eval('dialog[open] [data-sugoals]', e => e.textContent), 'Edit goals…');
+  const lib = await p.evaluate(() => JSON.parse(localStorage.getItem('gs.lib')));
+  assert.deepEqual(lib.goals.map(g => g.name), ['Uses evidence']);
+  // New goal… in row 2's picker: her list with a new line ready; the goal made is picked
+  await p.select('dialog[open] select[data-sugoal="1"]', '+');
+  await p.waitForSelector('[data-goal-row="1"]');
+  await p.type('[data-goal-row="1"]', 'Clear structure'); await p.click('[data-goals-done]');
+  await p.waitForFunction(() => { const s = document.querySelector('dialog[open] select[data-sugoal="1"]'); return s && s.selectedOptions[0] && s.selectedOptions[0].textContent === 'Clear structure'; }, { timeout: 15000 });
+  await tap(p, 'dialog[open] [data-susave]');
+  const ids = await p.evaluate(() => JSON.parse(localStorage.getItem('gs.lib')).goals.map(g => g.id));
+  await p.waitForFunction(g => JSON.stringify(window.__mark.state().setup.goals) === JSON.stringify([null, g, null]), { timeout: 15000 }, ids[1]);
   assert.deepEqual(errors, []);
   await ctx.close();
 });
@@ -370,6 +409,38 @@ test('an MYP class: the band asks for this task\'s criteria, the ticked ones bec
   const theirs = await m.evaluate(() => JSON.parse(JSON.stringify(window.__gs.state().setup)));
   for (const k of ['mode', 'criteria', 'ib', 'top']) assert.deepEqual(theirs[k], kept[k], k);
   assert.deepEqual(await m.evaluate(() => window.__gs.state().batch.students[0].grade.rubric.slice()), [6, null]);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// Another window or the current app changing the rubric bank (src/rubrics.js bankChan 'gs-bank') redraws an open Rubric setup, and
+// saved comments changed in another tab (src/saving.js storage gs.bank) are the ones this screen uses (audit H-065, H-044).
+test('H-065 H-044: a rubric saved in another window shows in the open Rubric setup at once; saved comments changed in another tab are the ones used here', async () => {
+  const { plantPlan } = require('./planseed.js');
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, withCard()); await plantPlan(p);
+  const z = path.join(dir, 'Speech4.zip'); fs.writeFileSync(z, await twoZip());
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.click('[data-bring-for="i9"]');
+  await p.waitForSelector('.pop [role="menuitem"]');
+  const [chooser] = await Promise.all([p.waitForFileChooser(), p.click('.pop [role="menuitem"]')]);
+  await chooser.accept([z]);
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  await setupDo(p, 'Rubric setup');
+  await p.waitForSelector('dialog[open] [data-subuse="R1"]', { timeout: 10000 });
+  assert.equal(await p.$('dialog[open] [data-subuse="R9"]'), null);
+  // another window saves a rubric to the bank and says so on the channel, as the current app does
+  const q = await page(ctx, errors);
+  await q.goto(srv.url + 'blank');
+  await q.evaluate(() => new Promise((res, rej) => { const r = indexedDB.open('gs-lessons'); r.onerror = () => rej(r.error); r.onsuccess = () => { const tx = r.result.transaction('kv', 'readwrite'), o = tx.objectStore('kv'), g = o.get('bank');
+    g.onsuccess = () => { const b = g.result, one = b.rubrics.find(x => x.id === 'R1'); b.rubrics.push({ ...one, id: 'R9', name: 'Lab rubric' }); o.put(b, 'bank'); }; tx.oncomplete = () => { r.result.close(); const ch = new BroadcastChannel('gs-bank'); ch.postMessage('changed'); ch.close(); res(); }; }; }));
+  await p.waitForSelector('dialog[open] [data-subuse="R9"]', { timeout: 10000 });
+  // saved comments changed in that tab
+  await q.evaluate(() => localStorage.setItem('gs.bank', JSON.stringify(['From the other tab.'])));
+  await p.waitForFunction(() => JSON.stringify(window.__mark.state().bank) === JSON.stringify(['From the other tab.']), { timeout: 10000 });
+  await q.close();
   assert.deepEqual(errors, []);
   await ctx.close();
 });

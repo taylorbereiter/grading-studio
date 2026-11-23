@@ -5302,7 +5302,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.76";
+  const APP_VERSION = "1.28.77";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -16379,6 +16379,7 @@ if (!b || !b.revs || b.catching || $('#app').hidden || !tabLive()) return;
 if (tabsBehind(b) && !b.behind) await tabsLook(b);
 if (batch !== b || !b.behind || !$('#dlg').hidden) return;
 b.catching = true;
+const held = tabHoldTyping();
 try {
 commitEditors(); await saveNow();
 if (batch !== b) return;
@@ -16393,7 +16394,33 @@ const i = batch.students.findIndex(st => st.key === key);
 if (i >= 0 && i !== cur) openStudent(i);
 toast('Newer work from another tab came in, so this download has been reopened.', 6000);
 }
-} finally { b.catching = false; }
+} finally { b.catching = false; tabGiveBack(held); }
+}
+function tabHoldTyping() {
+const box = document.activeElement;
+if (!box || !box.id || !box.matches('textarea, input:not([type]), input[type=text], input[type=number], input[type=search]')) return null;
+const h = { id: box.id, a: box.selectionStart, z: box.selectionEnd, text: '' };
+h.key = e => {
+if (e.isComposing || e.ctrlKey || e.metaKey || e.altKey) return;
+if (e.key.length === 1) h.text += e.key;
+else if (e.key === 'Enter' && box.tagName === 'TEXTAREA') h.text += '\n';
+else if (e.key === 'Backspace' && h.text) h.text = h.text.slice(0, -1);
+else return;
+e.preventDefault(); e.stopImmediatePropagation();
+};
+window.addEventListener('keydown', h.key, true);
+return h;
+}
+function tabGiveBack(h) {
+if (!h) return;
+window.removeEventListener('keydown', h.key, true);
+const el = document.getElementById(h.id); if (!el || el.disabled) return;
+el.focus({ preventScroll: true });
+const n = el.value.length, a = Math.min(h.a ?? n, n), z = Math.min(h.z ?? n, n);
+let caret = true; try { el.setSelectionRange(a, z); } catch { caret = false; }
+if (!h.text) return;
+if (caret) el.setRangeText(h.text, a, z, 'end'); else el.value += h.text;
+el.dispatchEvent(new Event('input', { bubbles: true }));
 }
 const forgotKey = id => 'gsc.forgot.' + id;
 const tabForgot = b => +lsRaw(forgotKey(b.id)) > (b.opened || 0);
@@ -33871,7 +33898,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.76":["Only this student is now in the ⋯ beside the student’s name, not a person button, so it doesn’t start when you mean to add partners. Pressing I with a menu or button in hand no longer starts it. A short press on Hold to show everyone now says to keep holding, and papers you bring in while it’s on stay open and end it, so you can’t get stuck."]};
+const WHATS_NEW = {"1.28.77":["Only this student is now in the ⋯ beside the student’s name, not a person button, so it doesn’t start when you mean to add partners. Pressing I with a menu or button in hand no longer starts it. A short press on Hold to show everyone now says to keep holding, and papers you bring in while it’s on stay open and end it, so you can’t get stuck."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };

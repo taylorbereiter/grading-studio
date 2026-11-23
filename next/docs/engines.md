@@ -424,6 +424,8 @@ Two build rules make this work. An assignment in a later module to one of gcore'
 gcore's setter (`set.selected(null)`), so gcore stays the only place state changes and esbuild's refusal still catches anything else.
 A module can name the earlier modules it may import from (`uses`); gmark uses only gcore and gdraw and lifts its own copies of the
 few pure functions it needs from gopen, so the marking tools (their own part, `router.js PARTS.marking`) don't load the opening engine.
+The mark key's wording (`PROOF`, `PUNCT`, `MARK_MEAN`, `markLabel0`, `MARK_KEY`) is a small module of its own, `engines/gkey.js`, which gmark
+also uses: Settings > Marking edits the mark key from it without loading the marking engine, so a change to gmark doesn't grow that screen.
 
 **Undo.** The app has one undo list (`services/undo.js`). The lifted stack stays the engine that knows how to put a page's marks, a
 score or a setting back; each step it pushes records one entry in the app's list whose undo and redo run the lifted ones, so

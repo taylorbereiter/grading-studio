@@ -58,9 +58,10 @@ export function GoalsSheet({ x, cols, term, left, onClose }) {
 }
 
 // The teacher's list of goals (src/goals.js goalsDlg): her own words, one a line. Enter on the last line starts the next.
-export function GoalsDialog({ lib, onClose }) {
+// add: a new line ready at the end (Rubric setup's New goal…); onClose gets the id of a goal just made, if there is one
+export function GoalsDialog({ lib, add, onClose }) {
   B.bookUse({ lib });
-  const was = B.goalList(), [rows, setRows] = useState(() => { const r = was.map(g => ({ id: g.id, name: g.name })); if (!r.length) r.push({ id: '', name: '' }); return r; });
+  const was = B.goalList(), [rows, setRows] = useState(() => { const r = was.map(g => ({ id: g.id, name: g.name })); if (add || !r.length) r.push({ id: '', name: '' }); return r; });
   const set = (i, v) => setRows(rows.map((r, k) => (k === i ? { ...r, name: v } : r)));
   const focusLast = () => setTimeout(() => { const all = document.querySelectorAll('dialog[open] [data-goal-row]'); if (all.length) all[all.length - 1].focus(); });
   const done = async () => {
@@ -70,7 +71,8 @@ export function GoalsDialog({ lib, onClose }) {
       const gone = { ...(l.goalsGone || {}) }; for (const g of was) if (!next.some(k => k.id === g.id)) gone[g.id] = now;
       if (next.length) l.goals = next; else delete l.goals; if (Object.keys(gone).length) l.goalsGone = gone;
     }, true);
-    onClose();
+    const made = next.find(g => !was.some(w => w.id === g.id));
+    onClose(made ? made.id : undefined);
   };
   return <Dialog open title={t('class.gl_list')} onClose={onClose} actions={<><Button onClick={onClose}>{t('common.cancel')}</Button><Button variant="primary" onClick={done} data-goals-done>{t('class.done')}</Button></>}>
     <p class="mute small">{t('class.gl_list_say')}</p>

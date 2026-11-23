@@ -245,5 +245,20 @@
  "focus.wk_next": "Due next week",
  "focus.wk_hide": "Put it away for this week",
  "focus.wk_day": "Change the day",
- "focus.wk_work": "Student work"
+ "focus.wk_work": "Student work",
+ "focus.sg_own": "What do you want to get done?",
+ "focus.sg_fewer": "Fewer papers",
+ "focus.sg_more": "More papers",
+ "focus.len_or": "Or",
+ "focus.sg_met": "Session goal reached",
+ "focus.sg_rest": "The rest goes into your next session.",
+ "focus.sg_it": "It goes into your next session.",
+ "focus.sg_nocarry": "Don’t carry it over",
+ "focus.sg_did": "I got it done",
+ "focus.wk_papers": {
+  "one": "This week {n} paper",
+  "other": "This week {n} papers"
+ },
+ "focus.nav_tip": "A timer for grading, and your daily goal",
+ "focus.k_snip": "Screenshot: copy a picture of part of the screen"
 }

@@ -1,0 +1,62 @@
+{
+ "rd.title": "Lesetexte",
+ "rd.done": "Fertig",
+ "rd.about": "Dateien, die beim Korrigieren über den Arbeiten stehen, etwa der Lesetext oder die Aufgabenstellung. Sie bleiben in diesem Browser und gehen nie an die Schüler zurück.",
+ "rd.everyone": "Für alle",
+ "rd.your_doc": "Ihr Dokument",
+ "rd.remove": "Entfernen",
+ "rd.remove_all": "Für alle entfernen",
+ "rd.none": "Noch keine.",
+ "rd.add_all": "Datei für alle hinzufügen…",
+ "rd.for": "Für {name}",
+ "rd.show": "{file} zeigen",
+ "rd.only": "nur für {name}",
+ "rd.add_one": "Datei nur für {name} hinzufügen…",
+ "rd.hint": "Für einen Schüler mit einem anderen Text: oben die Datei für alle abwählen und dann seine hinzufügen.",
+ "rd.doc_card": "Ihr Dokument: {name}",
+ "rd.card_all": "bei jeder Arbeit gezeigt, nicht zurückgegeben",
+ "rd.card_one": "nur für diesen Schüler, nicht zurückgegeben",
+ "rd.hide": "Für diesen Schüler ausblenden",
+ "rd.hidden": "Für diesen Schüler ausgeblendet. Unter Lesetexte… holen Sie ihn zurück oder fügen eine andere Datei hinzu.",
+ "rd.zoom": "Lesetext zoomen",
+ "rd.zoom_out": "Verkleinern",
+ "rd.zoom_in": "Vergrößern",
+ "rd.zoom_fit": "Zurück auf Breite",
+ "rd.zoom_how": "Zum Zoomen auf dem Text mit zwei Fingern ziehen oder Strg + Mausrad nutzen. Den unteren Rand ziehen, um ihn höher zu machen.",
+ "rd.grip": "Ziehen, um den Text höher oder niedriger zu machen",
+ "rd.cant": "Diese Datei kann hier nicht gezeigt werden.",
+ "rd.no_room": "Dieser Browser hat keinen Platz mehr für {name}",
+ "rd.added": "„{file}“ steht jetzt über jeder Arbeit",
+ "rd.added_for": "„{file}“ wird jetzt für {name} gezeigt",
+ "rd.added_n": "{n} Dateien stehen jetzt über jeder Arbeit",
+ "rd.added_n_for": "{n} Dateien werden jetzt für {name} gezeigt",
+ "rd.tr_title": "Transkripte",
+ "rd.tr_count": {
+  "one": "{n} Aufnahme in dieser Aufgabe.",
+  "other": "{n} Aufnahmen in dieser Aufgabe."
+ },
+ "rd.tr_have": {
+  "one": "{n} hat schon ein Transkript.",
+  "other": "{n} haben schon ein Transkript."
+ },
+ "rd.tr_redo": "Vorhandene auch neu erstellen",
+ "rd.tr_about": "Läuft in diesem Browser (nichts wird hochgeladen). Die Spracherkennung wird einmal geladen (etwa 150 MB). Lassen Sie diesen Tab offen, solange sie arbeitet; Sie können weiter korrigieren.",
+ "rd.tr_make": "Transkripte erstellen",
+ "rd.tr_stop": "Stopp",
+ "rd.tr_stopping": "Wird gestoppt…",
+ "rd.tr_close": "Schließen",
+ "rd.tr_at": "Schüler {n} ({k} von {of}) · {file} · {what}",
+ "rd.tr_all_have": "Jede Aufnahme hat schon ein Transkript",
+ "rd.tr_done": {
+  "one": "Fertig. {n} Transkript erstellt.",
+  "other": "Fertig. {n} Transkripte erstellt."
+ },
+ "rd.tr_stopped": {
+  "one": "Gestoppt. {n} Transkript erstellt.",
+  "other": "Gestoppt. {n} Transkripte erstellt."
+ },
+ "rd.tr_failed": {
+  "one": "{n} konnte nicht gelesen werden (Chrome versuchen oder in .mp4 oder .m4a umwandeln).",
+  "other": "{n} konnten nicht gelesen werden (Chrome versuchen oder in .mp4 oder .m4a umwandeln)."
+ }
+}

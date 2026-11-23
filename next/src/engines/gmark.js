@@ -6,6 +6,7 @@ const gpReady = true;
 const fcRun = () => { try { const r = JSON.parse(localStorage.getItem('gsp.focusRun') || 'null'); return r && r.st ? r : null; } catch { return null; } };
 import { batch, cur, setup, lib, tool, selected, pages, undoStack, redoStack, disp, inkColor, hlColor, penW, CHECK_INK, once, tr, saveSoon, toast, renderList, renderTools, renderGrade, openStudent, renderPage, gradeMarksChanged, rescanFile, editText, openNote, openStampMenu, placeScore, stopScorePlace, scanNote, refound, endOnce, setTool, groupJust, scorePlacing, activeEditor, writeWork, tabLive, tabForgot, tabLetGo, tabsBehind, saveBehind, stampWork, store, rowTop, maxPoints, gradeOf, xcSay, fmtNum, COLORS, HL, noScore, ibSetup, set } from './gcore.js';
 import { sideScreen, textLayout, noteRunY, bboxOf, rotOf, vpRot, skewOf, draw, anonOn, anonOrder, hasPress, PRESS_MAX, textGrips, canResize, cornerPt, STICKERS, isSticker, isScoreStamp, stickerAspect, stampBox, impHas, one, stampHidden, marksMine } from './gdraw.js';
+import { PROOF, PUNCT, MARK_KEY, markLabel0 } from './gkey.js';
 
 // src/app/keep.js
 let saveT, saveDue = false;
@@ -601,6 +602,12 @@ function setHlMode(mode, say) {
   if (say) toast(mode === 'free' ? 'Highlight: freehand' : 'Highlight: snaps to typed lines. Freehand where there are none.');
 }
 // src/marking.js
+function hlBarClick(e) {
+  const m = e.target.closest('[data-hlm]'); if (m) { setHlMode(m.dataset.hlm); return true; }
+  if (e.target.closest('[data-hlw]')) { hlW = hlW === 14 ? 22 : hlW === 22 ? 8 : 14; store.set('gs.hlW', hlW); renderTools(); return true; }
+  return false;
+}
+// src/marking.js
 function noteHlBegin(pg, g) {
   const a = lineAt(pg, g.x0, g.y0);
   if (a >= 0) { g.snapA = a; g.m = setRects({ t: 'hl', color: HL[hlColor] }, snapRects(pg.tl, a, g.x0, a, g.x0)); }
@@ -748,44 +755,13 @@ function gripDrag(e, bar, pg, m, fit, ta) {
   bar.addEventListener('pointermove', mv); bar.addEventListener('pointerup', up); bar.addEventListener('pointercancel', up);
 }
 // src/stamps.js
-const PROOF = [
-  ['gr', 'Grammar'], ['cap', 'Capitalize'], ['lower', 'Make lowercase'], ['insert', 'Insert'], ['para', 'New paragraph'],
-  ['delete', 'Delete'], ['swap', 'Swap order'], ['space', 'Add a space'], ['close', 'Close up'],
-  ['sp', 'Spelling'], ['ro', 'Run-on'], ['frag', 'Fragment'],
-  ['wc', 'Word choice'], ['awk', 'Awkward'], ['vt', 'Verb tense'], ['unclear', 'Unclear'],
-];
-// src/stamps.js
-const PUNCT = [
-  ['period', 'Add a period', 'Period'], ['comma', 'Add a comma', 'Comma'], ['apos', 'Add an apostrophe', 'Apostrophe'], ['quote', 'Add quotation marks', 'Quotes'], ['semi', 'Add a semicolon', 'Semicolon'],
-  ['colon', 'Add a colon', 'Colon'], ['qmark', 'Add a question mark', 'Question'], ['excl', 'Add an exclamation mark', 'Exclamation'], ['hyphen', 'Add a hyphen', 'Hyphen'], ['dash', 'Add a dash', 'Dash'],
-];
-// src/stamps.js
 const isProof = k => PROOF.some(p => p[0] === k) || PUNCT.some(p => p[0] === k);
 // src/stamps.js
 const BRAINROT = new Set(['cat', 'skull', 'frog']);
 // src/stamps.js
 const stampName = k => k === 'crit' ? 'Criterion score' : isProof(k) ? markLabel(k) : ((STICKERS.find(p => p[0] === k)) || [k, k])[1];
 // src/stamps.js
-const MARK_MEAN = {
-  gr: 'A grammar mistake here, such as a verb that doesn’t match its subject.',
-  cap: 'Make this letter a capital.', lower: 'Make this letter lowercase.',
-  insert: 'Something is missing here. Add the word or letter written above it.',
-  para: 'Start a new paragraph here.', delete: 'Take this out.', swap: 'Switch the order of these words or letters.',
-  space: 'Put a space here.', close: 'Take out the space and join these together.',
-  sp: 'This word is spelled wrong.', ro: 'Two sentences run together. Split them, or join them with the right punctuation.',
-  frag: 'This isn’t a full sentence. It’s missing a subject or a verb, or the thought isn’t finished.',
-  wc: 'A different word would fit better here.', awk: 'This is hard to read. Try saying it out loud and rewording it.',
-  vt: 'The verb is in the wrong tense. Keep the tense the same.', unclear: 'I’m not sure what you mean here.',
-  period: 'Add a period where the mark points.', comma: 'Add a comma where the mark points.', apos: 'Add an apostrophe here.',
-  quote: 'Add quotation marks here.', semi: 'Add a semicolon here.', colon: 'Add a colon here.', qmark: 'Add a question mark here.',
-  excl: 'Add an exclamation mark here.', hyphen: 'Add a hyphen here.', dash: 'Add a dash here.',
-};
-// src/stamps.js
-const MARK_KEY = 'gs.markKey';
-// src/stamps.js
 const keySet = () => { const v = store.get(MARK_KEY, null); return v && typeof v === 'object' ? v : {}; };
-// src/stamps.js
-const markLabel0 = k => ((PROOF.find(p => p[0] === k) || PUNCT.find(p => p[0] === k)) || [k, k])[1];
 // src/stamps.js
 const markLabel = k => { const v = (keySet().names || {})[k]; return typeof v === 'string' && v.trim() ? v.trim() : markLabel0(k); };
 // src/stamps.js
@@ -1035,5 +1011,5 @@ function gpShortNext(left) {
   batch.students.forEach((st, i) => { if (i === cur || !left(st)) return; const l = gpLen(st) || 1e9; if (l < bl) { bl = l; best = i; } });
   return best;
 }
-export { bindPage, undo, redo, snap, changed, pushUndo, gradeSnap, fieldSnap, commitEditors, stepSize, saveNow, placeStamp, redrawAll, hitMark, moveMark, keepOnPage, deleteSelected, gripDrag, r1, clamp, turnMarks, stepOf, reshape, thumbCache, setRot, circleWord, highlightWord, textBoxHere, scoreTouched, setStatus, touchGrade, nextUnscored, stampName, isSticker, isProof, PROOF, PUNCT, BRAINROT, wordUnder, newCheckSize, stickerAspect, RECENT_STAMPS, canResize, setHlMode, hlMode, critStampOf, scoreStampText, stampOwner, newStampSize, fmNow, markLabel0, MARK_MEAN, MARK_KEY, groupStep, gradeStep };
+export { bindPage, undo, redo, snap, changed, pushUndo, gradeSnap, fieldSnap, commitEditors, stepSize, saveNow, placeStamp, redrawAll, hitMark, moveMark, keepOnPage, deleteSelected, gripDrag, r1, clamp, turnMarks, stepOf, reshape, thumbCache, setRot, circleWord, highlightWord, textBoxHere, scoreTouched, setStatus, touchGrade, nextUnscored, stampName, isSticker, isProof, PROOF, PUNCT, BRAINROT, wordUnder, newCheckSize, stickerAspect, RECENT_STAMPS, canResize, setHlMode, hlMode, hlBarClick, critStampOf, scoreStampText, stampOwner, newStampSize, fmNow, groupStep, gradeStep };
 export { actStep, groupOf, liftStatus, me };

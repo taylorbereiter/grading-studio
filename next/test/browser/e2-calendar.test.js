@@ -1,6 +1,7 @@
 // Stage 8, slice E2: the Calendar's lesson cards (tags, menu by dots or right-click), the class page link on the week, the date
 // jump and the week's units (rows E2-014, E2-018, E2-019, E2-029, E2-064, E2-065, E2-074, E2-075, E2-082, E2-114, E2-115,
-// E2-116 of rebuild/audit/gaps.md). Made-up lessons at the stopped clock (planseed.js, Tuesday 27 October 2026).
+// E2-116 of rebuild/audit/gaps.md; the card menu's comment and box items are E2-072 and E2-073, proved in e2-aibox.test.js).
+// Made-up lessons at the stopped clock (planseed.js, Tuesday 27 October 2026).
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { harness } = require('./e2harness.js');
@@ -36,7 +37,7 @@ test('E2-075 E2-082 E2-019 E2-074 E2-029: the card menu by right-click or from t
   await h.open(p, 'calendar/class');
   // delete, then undo
   await cardMenu(p, 'L5');
-  assert.deepEqual(await p.$$eval('.pop [role="menuitem"]', b => b.map(x => x.querySelector('b').textContent)), ['Present', 'Download slides', 'Copy to another class or day…', 'Add the class page link…', 'Delete lesson']);
+  assert.deepEqual(await p.$$eval('.pop [role="menuitem"]', b => b.map(x => x.querySelector('b').textContent)), ['Present', 'Download slides', 'Copy to another class or day…', 'Add the class page link…', 'Comment for your assistant on this lesson…', 'Add this lesson to your assistant\'s box', 'Delete lesson']);
   await menuItem(p, 'Delete lesson');
   await until(p, () => !document.querySelector('a[data-lesson="L5"]'));
   assert.equal(await h.lessonInDb(p, 'L5'), null, 'deleted');

@@ -1,0 +1,64 @@
+{
+ "top.pg_fb": "{n} de {of} con comentarios completos",
+ "top.pg_off": "{n} sin entregar o justificados",
+ "top.pg_avg": "Media {v}",
+ "top.pg_avg_tip": {
+  "one": "Media del porcentaje de {n} nota terminada: {mean} / {max}. Los trabajos parciales, sin entregar, justificados o excluidos no cuentan. Abre Análisis.",
+  "other": "Media de los porcentajes de {n} notas terminadas: {mean} / {max}. Los trabajos parciales, sin entregar, justificados o excluidos no cuentan. Abre Análisis."
+ },
+ "top.pg_tip": "Todavía no hay notas terminadas. Abre Análisis.",
+ "top.tk_so_far": "{time} hasta ahora",
+ "top.tk_per": {
+  "one": "unos {n} minuto por trabajo",
+  "other": "unos {n} minutos por trabajo"
+ },
+ "top.tk_left": "faltan unos {time}",
+ "top.tk_from": {
+  "one": "según {n} trabajo hasta ahora",
+  "other": "según {n} trabajos hasta ahora"
+ },
+ "top.tk_tip": "Tiempo dedicado a corregir esta tarea, según el registro de tiempo",
+ "top.fs_go": "Pantalla completa",
+ "top.fs_leave": "Salir de pantalla completa",
+ "top.fs_tab": "Mostrar la lista de alumnos",
+ "top.book_tip": "Todas las tareas de esta clase, por periodo, con notas del periodo y gráficos",
+ "top.su_sys_open": "Página de la clase",
+ "top.su_sys_add": "Enlazar con la página de la clase…",
+ "top.su_sys_add_n": "Enlazar con {name}…",
+ "top.su_link_tip": "Se abre en una pestaña nueva",
+ "top.bb_menu": "Traer de vuelta de tu asistente",
+ "top.cmd_sheet": "Hoja de notas",
+ "top.cmd_cons": "Comprobar la coherencia",
+ "top.cmd_ex": "Ejemplos",
+ "top.cmd_late": "Añadir trabajos atrasados",
+ "top.sh_mk_left": {
+  "one": "Quedan fuera: {n} alumno sin marcas, nota ni comentario todavía. El archivo dice cuántos.",
+  "other": "Quedan fuera: {n} alumnos sin marcas, nota ni comentario todavía. El archivo dice cuántos."
+ },
+ "top.pm_more": "Más para este trabajo",
+ "top.pm_details": "Datos del alumno",
+ "top.pm_notes": "Escribir las notas a teclado",
+ "top.pm_export": "Exportar ahora el trabajo de {name}",
+ "top.pm_export_anon": "Exportar ahora este trabajo",
+ "top.pm_sent": "Exportado {when}. Vuelve a exportarlo si cambias algo.",
+ "top.pm_edit": "Editar la rúbrica",
+ "top.pm_edit_pts": "Editar",
+ "top.pm_keys": "Todas las teclas",
+ "top.pm_type": "Cambiar el tipo",
+ "top.pm_page": "Abrir su página en la clase",
+ "top.rd_menu": "Lecturas…",
+ "top.rd_menu_n": {
+  "one": "{n} se muestra con este trabajo",
+  "other": "{n} se muestran con este trabajo"
+ },
+ "top.st_not_on": "Nombre de carpeta · no está en la lista de {cls}",
+ "top.st_no_roster": "Nombre de carpeta · esta descarga no tiene lista",
+ "top.st_looks": "Parece {name}.",
+ "top.st_is": "Es",
+ "top.st_matched": "Ya emparejados",
+ "top.st_link": "Vincular",
+ "top.st_saves": "Al vincular, “{folder}” se guarda como otra forma de escribir su nombre, y las próximas descargas con este nombre irán a ese alumno solas.",
+ "top.st_add": "Añade alumnos a la lista de {cls} para vincular esta carpeta con uno.",
+ "top.st_none": "Esta descarga no tiene lista, así que esta carpeta no se puede vincular con un alumno.",
+ "top.st_linked": "“{folder}” ahora está vinculado con {name}"
+}

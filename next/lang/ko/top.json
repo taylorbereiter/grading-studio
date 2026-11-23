@@ -1,0 +1,64 @@
+{
+ "top.pg_fb": "{of}개 중 {n}개 피드백 완료",
+ "top.pg_off": "미제출 또는 면제 {n}개",
+ "top.pg_avg": "평균 {v}",
+ "top.pg_avg_tip": {
+  "one": "채점을 마친 {n}개 점수의 백분율 평균: {mean} / {max}. 부분 채점, 미제출, 면제, 제외된 과제는 포함하지 않습니다. 분석을 엽니다.",
+  "other": "채점을 마친 {n}개 점수의 백분율 평균: {mean} / {max}. 부분 채점, 미제출, 면제, 제외된 과제는 포함하지 않습니다. 분석을 엽니다."
+ },
+ "top.pg_tip": "아직 채점을 마친 점수가 없습니다. 분석을 엽니다.",
+ "top.tk_so_far": "지금까지 {time}",
+ "top.tk_per": {
+  "one": "과제당 약 {n}분",
+  "other": "과제당 약 {n}분"
+ },
+ "top.tk_left": "약 {time} 남음",
+ "top.tk_from": {
+  "one": "지금까지 {n}개 기준",
+  "other": "지금까지 {n}개 기준"
+ },
+ "top.tk_tip": "이 과제를 채점하는 데 쓴 시간(시간 기록 기준)",
+ "top.fs_go": "전체 화면",
+ "top.fs_leave": "전체 화면 종료",
+ "top.fs_tab": "학생 목록 보기",
+ "top.book_tip": "이 반의 모든 과제를 학기별로, 학기 성적과 차트와 함께",
+ "top.su_sys_open": "반 페이지",
+ "top.su_sys_add": "반 페이지에 연결…",
+ "top.su_sys_add_n": "{name}에 연결…",
+ "top.su_link_tip": "새 탭에서 열립니다",
+ "top.bb_menu": "어시스턴트에서 가져오기",
+ "top.cmd_sheet": "성적표",
+ "top.cmd_cons": "일관성 확인",
+ "top.cmd_ex": "예시",
+ "top.cmd_late": "늦게 낸 과제 추가",
+ "top.sh_mk_left": {
+  "one": "제외: 아직 표시, 점수, 코멘트가 없는 학생 {n}명. 파일에 인원수가 적힙니다.",
+  "other": "제외: 아직 표시, 점수, 코멘트가 없는 학생 {n}명. 파일에 인원수가 적힙니다."
+ },
+ "top.pm_more": "이 과제의 추가 작업",
+ "top.pm_details": "학생 정보",
+ "top.pm_notes": "대신 메모 입력하기",
+ "top.pm_export": "{name}의 과제 지금 내보내기",
+ "top.pm_export_anon": "이 과제 지금 내보내기",
+ "top.pm_sent": "{when}에 내보냄. 바꾼 뒤에는 다시 내보내세요.",
+ "top.pm_edit": "루브릭 편집",
+ "top.pm_edit_pts": "편집",
+ "top.pm_keys": "모든 단축키",
+ "top.pm_type": "유형 바꾸기",
+ "top.pm_page": "반에서 이 학생의 페이지 열기",
+ "top.rd_menu": "읽기 자료…",
+ "top.rd_menu_n": {
+  "one": "이 과제에 {n}개 표시",
+  "other": "이 과제에 {n}개 표시"
+ },
+ "top.st_not_on": "폴더 이름 · {cls} 명단에 없음",
+ "top.st_no_roster": "폴더 이름 · 이 다운로드에 명단이 없음",
+ "top.st_looks": "{name} 같아요.",
+ "top.st_is": "이 학생은",
+ "top.st_matched": "이미 연결됨",
+ "top.st_link": "연결",
+ "top.st_saves": "“{folder}”을(를) 이 학생의 다른 표기로 저장해, 앞으로 이 이름의 다운로드는 저절로 이 학생에게 가요.",
+ "top.st_add": "{cls} 명단에 학생을 넣으면 이 폴더를 연결할 수 있어요.",
+ "top.st_none": "이 다운로드에 명단이 없어 이 폴더를 학생에게 연결할 수 없어요.",
+ "top.st_linked": "“{folder}”을(를) {name}에게 연결했어요"
+}

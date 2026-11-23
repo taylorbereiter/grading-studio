@@ -1,0 +1,70 @@
+{
+ "pc.more": "还有 {n} 位",
+ "pc.who": "计入哪些人",
+ "pc.late": "迟交的作业",
+ "pc.out": "你排除的作业",
+ "pc.part": "部分评分的作业（目前分数）",
+ "pc.mid_h": "全班的中间值",
+ "pc.middle": "中位数",
+ "pc.target": "标出低于此百分比的作业",
+ "pc.target_at": "目标 {n}%",
+ "pc.bands": "区间",
+ "pc.band": "区间",
+ "pc.tens": "每 10",
+ "pc.fives": "每 5",
+ "pc.own": "自定",
+ "pc.cut": "区间的最低百分比",
+ "pc.add": "假如：每人加分",
+ "pc.preview": "只是预览，分数不会改变。",
+ "pc.none": "按这些选择，没有已完成的分数可计入。",
+ "pc.now": "目前 {v}，加 {d}",
+ "pc.counted": {
+  "one": "计入 {n} 份",
+  "other": "计入 {n} 份"
+ },
+ "pc.range": "范围",
+ "pc.gap": "典型差距",
+ "pc.below": "低于 {n}%",
+ "pc.band_below": "低于 {n}",
+ "pc.band_to": "{a} 到 {b}",
+ "pc.band_tip": {
+  "one": "{n} 份，占全班 {p}%",
+  "other": "{n} 份，占全班 {p}%"
+ },
+ "pc.every": "每份作业的百分比",
+ "pc.table": "按百分比排列的作业",
+ "pc.copy": "复制此表格",
+ "pc.copied": {
+  "one": "已按显示顺序复制 {n} 个百分比",
+  "other": "已按显示顺序复制 {n} 个百分比"
+ },
+ "pc.vs_avg": "与平均相比",
+ "pc.vs_mid": "与中位数相比",
+ "pc.tag_out": "已排除",
+ "pc.tag_part": "部分",
+ "pc.score": "分数 {v}",
+ "pc.see": "以表格查看",
+ "pc.who_col": "谁",
+ "pc.row_avg": "平均 {v}",
+ "pc.row_sum": {
+  "one": "{n} 个分数，{low} 个在 {half} 以下",
+  "other": "{n} 个分数，{low} 个在 {half} 以下"
+ },
+ "pc.lv_h": "各行的得分情况",
+ "pc.lv_tip": "{row} 得 {v}",
+ "pc.lv_cap": "按评分量规的顺序，显示每行各分数有几份作业。蓝色越深，分数越高。",
+ "pc.lv_half": "半分算在较低的整数。",
+ "pc.mv_h": "与上次总结性评价相比",
+ "pc.mv_wait": "{name} 在此浏览器中有较早的已评分总结性评价后，这里就会显示。",
+ "pc.mv_none": "还没有学生在这份和 {name} 都有完成的分数。",
+ "pc.mv_this": "这份",
+ "pc.mv_up": "上升（{n}）",
+ "pc.mv_down": "下降（{n}）",
+ "pc.mv_cap": "每位学生上次总结性评价和这次的百分比，进步最多的在前。只算完成的分数。点一行可打开该份作品。",
+ "pc.ax_h": "其他班级的同一份作业",
+ "pc.ax_n": {
+  "one": "{n} 个完成的分数",
+  "other": "{n} 个完成的分数"
+ },
+ "pc.ax_cap": "数字是班级平均，后面是计入的完成分数个数。"
+}

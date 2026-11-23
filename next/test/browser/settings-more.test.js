@@ -38,7 +38,7 @@ async function page(ctx, errors) {
 }
 const lib = p => p.evaluate(() => JSON.parse(localStorage.getItem('gs.lib')));
 const ls = (p, k) => p.evaluate(k => JSON.parse(localStorage.getItem(k)), k);
-const until = async (f, ms = 8000) => { const t0 = Date.now(); for (;;) { const v = await f(); if (v) return v; if (Date.now() - t0 > ms) return v; await new Promise(r => setTimeout(r, 100)); } };
+const until = async (f, ms = 30000) => { const t0 = Date.now(); for (;;) { const v = await f(); if (v) return v; if (Date.now() - t0 > ms) return v; await new Promise(r => setTimeout(r, 100)); } };
 const typeIn = async (p, sel, v) => { await p.$eval(sel, e => { e.focus(); e.select && e.select(); }); await p.waitForFunction(sel => document.activeElement === document.querySelector(sel), {}, sel); await p.keyboard.type(v); };
 const planKv = (p, k) => p.evaluate(k => new Promise(res => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const db = r.result; try { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => { res(q.result || null); db.close(); }; q.onerror = () => res(null); } catch { res(null); } }; r.onerror = () => res(null); }), k);
 

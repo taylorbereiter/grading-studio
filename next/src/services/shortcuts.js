@@ -11,7 +11,9 @@ export function register(s) {
 // Every shortcut as registered, for the command bar (app/help/find.js lists the ones that can run now).
 export const shortcuts = () => [...all.values()];
 export function onShortcutsChange(f) { told.add(f); return () => told.delete(f); }
-function norm(k) { const p = String(k).toLowerCase().split('+'), key = p.pop(); return [...['mod', 'ctrl', 'alt', 'shift'].filter(m => p.includes(m)), key].join('+'); }
+// a combo is split at each +, so the + key itself ('mod++') is the last piece left empty
+const split = k => { const p = String(k).toLowerCase().split('+'); if (p.length > 1 && p[p.length - 1] === '') { p.splice(-2, 2, '+'); } return p; };
+function norm(k) { const p = split(k), key = p.pop(); return [...['mod', 'ctrl', 'alt', 'shift'].filter(m => p.includes(m)), key].join('+'); }
 export function comboOf(e) {
   const k = e.key.length === 1 ? e.key.toLowerCase() : e.key.toLowerCase();
   const mods = []; if (e.metaKey || (e.ctrlKey && !isMac())) mods.push('mod'); else if (e.ctrlKey) mods.push('ctrl');
@@ -34,7 +36,7 @@ let on = false;
 export function start() { if (!on) { on = true; window.addEventListener('keydown', handle); } }
 // The list for Help: [{ group, items: [{ id, label, keys: [['Ctrl','K']] }] }], keys as the pieces to draw, already for this computer.
 const NAMES = { mod: () => (isMac() ? '⌘' : 'Ctrl'), ctrl: () => 'Ctrl', alt: () => (isMac() ? '⌥' : 'Alt'), shift: () => '⇧', arrowright: () => '→', arrowleft: () => '←', arrowup: () => '↑', arrowdown: () => '↓', escape: () => 'Esc', enter: () => '↵', ' ': () => '␣' };   // not-words
-export const pieces = combo => combo.split('+').map(p => (NAMES[p] ? NAMES[p]() : p.length === 1 ? p.toUpperCase() : p[0].toUpperCase() + p.slice(1)));
+export const pieces = combo => split(combo).map(p => (NAMES[p] ? NAMES[p]() : p.length === 1 ? p.toUpperCase() : p[0].toUpperCase() + p.slice(1)));
 export function list() {
   const g = new Map();
   for (const s of all.values()) { if (s.hidden) continue; if (!g.has(s.group)) g.set(s.group, []); g.get(s.group).push({ id: s.id, label: s.label, keys: s.keys.map(pieces) }); }

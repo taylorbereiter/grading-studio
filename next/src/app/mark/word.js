@@ -5,13 +5,14 @@
 // through students/write.js keepEdit, and a score goes through the marking code (mark/marking.js wordGrade), one undo step each.
 // Loaded as a part of its own (router.js PARTS.word) the first time a Word paper opens.
 import * as W from '../../engines/gword.js';
-import { state, maxPoints, fmtNum } from '../../engines/gcore.js';
+import { state, maxPoints, fmtNum, kget } from '../../engines/gcore.js';
 import { t } from '../../i18n/t.js';
 import { toast, copyButton } from '../../ui/index.js';
 import { PARTS } from '../router.js';
 import { keepBank, loadBank } from './editors.js';
 import './lines.js';
 import './setup-lines.js';
+import './paper-lines.js';
 import { micFor } from './dictate.js';
 
 const el = (tag, cls, attrs = {}) => { const e = document.createElement(tag); if (cls) e.className = cls; for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
@@ -62,16 +63,22 @@ export function wordCard(st, f, M, { readOnly = false } = {}) {
   const dirty = new Set();
   const flush = () => { for (const p of dirty) if (p.isConnected) W.wApplyPara(w, p); dirty.clear(); };
   // the file's bytes written from its XML, kept in this browser, and the score it gives read again
+  // A save under way stays in the marking screen's flush list (as wait) until its write is done, so saving before a reload or for
+  // leaving waits for it: taken off as it began, a reload in that moment showed the paper without the words just typed (CI, PR #267).
   const saveNow = async () => {
     clearTimeout(saveT); saveT = null; saves.delete(saveNow); if (M) M.flushers.delete(saveNow);
     if (!w) return;
-    flush();
-    if (!f.orig) f.orig = f.data;
-    f.data = W.wordBytes(w); f.edited = Date.now(); f.size2 = f.data.length;
-    W.wordScore(f);
-    editedPill.hidden = false;
-    try { const Wr = await PARTS.write(); await Wr.keepEdit(b0.id, f.path, { data: f.data, orig: f.orig, t: f.edited }); M && M.changedNow(); }
-    catch (e) { console.error(e); toast(t('setup.wd_not_kept')); }
+    let end; const writing = new Promise(r => { end = r; }), wait = () => writing;
+    saves.add(wait); if (M) M.flushers.add(wait);
+    try {
+      flush();
+      if (!f.orig) f.orig = f.data;
+      f.data = W.wordBytes(w); f.edited = Date.now(); f.size2 = f.data.length;
+      W.wordScore(f);
+      editedPill.hidden = false;
+      try { const Wr = await PARTS.write(); await Wr.keepEdit(b0.id, f.path, { data: f.data, orig: f.orig, t: f.edited }); M && M.changedNow(); }
+      catch (e) { console.error(e); toast(t('setup.wd_not_kept')); }
+    } finally { saves.delete(wait); if (M) M.flushers.delete(wait); end(); }
   };
   const soon = () => { clearTimeout(saveT); saveT = setTimeout(saveNow, 700); saves.add(saveNow); if (M) M.flushers.add(saveNow); };
 
@@ -115,7 +122,7 @@ export function wordCard(st, f, M, { readOnly = false } = {}) {
       const was = last; last = s;
       if (M) M.wordGrade(st, () => {
         if (s.total == null) W.wordScoreGone(st, was); else W.rubricToGrade(st, s, m.max, m.crits.length);
-        if (write && s.total != null && W.ownGrade(st).total != null) W.liftStatus(st);
+        if (write && s.total != null && W.ownGrade(st).total != null) { const was = st.grade.status; W.liftStatus(st); if ((was === 'missing' || was === 'excused') && !st.grade.status) toast(t(was === 'missing' ? 'paper.gs_lift_missing' : 'paper.gs_lift_excused')); }
       });
       if (write && W.fillTotalBlank(w, page, m, s)) soon();
     };
@@ -279,7 +286,8 @@ export function wordCard(st, f, M, { readOnly = false } = {}) {
     if (e.target.closest('[data-wpdf]')) { if (editing) setEditing(false); if (saveT || dirty.size) await saveNow(); return root.dispatchEvent(new CustomEvent('wordpdf', { bubbles: true })); }
     if (e.target.closest('[data-wreset]')) {
       if (saveT) await saveNow();
-      const orig = f.orig; if (!orig) return toast(t('setup.wd_no_orig'));
+      // the original as kept in this browser when this copy has none (an edit made in another window, src/app/word.js origBytes)
+      const orig = f.orig || await kget('edits', state().batch.id + '|' + f.path).then(r => r && r.orig, () => null); if (!orig) return toast(t('setup.wd_no_orig'));
       const was = W.wordScore(f), b = state().batch;
       f.data = orig; f.orig = null; f.edited = 0;
       try { const Wr = await PARTS.write(); await Wr.dropEdit(b.id, f.path); } catch (er) { console.error(er); }

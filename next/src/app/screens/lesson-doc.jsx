@@ -1,4 +1,4 @@
-// A material written here, and a strong example put in Materials, loaded when first wanted (router.js PARTS.doc).
+// A material written here (a lesson's, or a unit's: then its file chip names the unit, t: 'unit'), and a strong example put in Materials, loaded when first wanted (router.js PARTS.doc).
 //   DocEditor      an A4 page with headings, lists, boxes, tables and lines, printed or saved as .docx, with dictation
 //                  (src/planner/materials.js docOpen, docTool, docSave, docPrint)
 //   ExampleToMats  a strong example into Materials by reference (src/planner/plexamples.js plxToMats): the picture stays on the
@@ -19,6 +19,7 @@ import '../plan/tool-lines.js';
 import '../plan/les-lines.js';
 import { boxAdd } from '../plan/cbox.js';
 import { assistant } from '../../services/assistant.js';
+import { planCtx } from '../plan/ctx-on.js';
 
 const copy = x => JSON.parse(JSON.stringify(x));
 const DOC_TYPE = 'text/html';
@@ -74,8 +75,8 @@ export function DocEditor({ p, l, id, save, onClose }) {
   if (!f) return null;
   return <Sheet open wide title={t('tool.doc_title')} icon={<Icon name="note" />} onClose={onClose}
     footer={<><small class="mute" role="status">{state === 'saving' ? t('tool.saving') : state === 'saved' ? t('tool.saved') : ''}</small><span class="grow" />
-      <Button icon="assist" variant="quiet" onClick={async () => { if (timer.current) { clearTimeout(timer.current); await keep(); } boxAdd({ kind: 'file', t: 'lesson', owner: l.id, id, label: name || (f && f.name) || '' }); }} data-focus="doc-to-box">{t('les.to_box', { name: assistant().name || t('assistant.generic') })}</Button><Button icon="file" onClick={print} data-focus="doc-print">{t('tool.print')}</Button><Button icon="download" onClick={docx} data-focus="doc-docx">{t('tool.save_docx')}</Button><Button variant="primary" onClick={onClose}>{t('common.close')}</Button></>}>
-    <div class={'docwrap' + (bes ? ' with-beside' : '')}>
+      <Button icon="assist" variant="quiet" onClick={async () => { if (timer.current) { clearTimeout(timer.current); await keep(); } boxAdd({ kind: 'file', t: Array.isArray(l.weeks) ? 'unit' : 'lesson', owner: l.id, id, label: name || (f && f.name) || '' }); }} data-focus="doc-to-box">{t('les.to_box', { name: assistant().name || t('assistant.generic') })}</Button><Button icon="file" onClick={print} data-focus="doc-print">{t('tool.print')}</Button><Button icon="download" onClick={docx} data-focus="doc-docx">{t('tool.save_docx')}</Button><Button variant="primary" onClick={onClose}>{t('common.close')}</Button></>}>
+    <div class={'docwrap' + (bes ? ' with-beside' : '')} onContextMenu={e => planCtx(e, { p, where: { k: 'doc', v: name } })}>
       {/* the Beside drawer, beside the document too (src/planner/materials.js: the side panel from a document) */}
       {bes && Bs && <Bs.default p={p} l={l} save={save} onClose={() => setBes(false)} />}
       <TextInput label={t('tool.doc_name')} value={name} onInput={rename} data-focus="doc-name" />

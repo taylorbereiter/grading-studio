@@ -44,6 +44,10 @@
 .mk-sbody{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:18px;padding:20px 22px}
 .mk-side .who{display:flex;gap:12px;align-items:center}
 .mk-side .who p{margin:2px 0 0;font-size:var(--t2)}
+.mk-side .who>div{flex:1;min-width:0}
+.mk-side .who .mk-sent{color:var(--ok)}
+.mk-side .mk-shead{display:flex;align-items:baseline;gap:10px}
+.mk-side .mk-shead .link{text-transform:none;letter-spacing:0;font-size:var(--t2)}
 .mk-side .total{display:flex;align-items:baseline;gap:6px;border-top:1px solid var(--line);padding-top:16px}
 .mk-side .total.none b{color:var(--mute);font-weight:400}
 .mk-side .total .mute{font-size:var(--t4)}
@@ -355,7 +359,7 @@ dialog.dlg:has(.mk-cc) footer .cc-hint{font-size:var(--t2);max-width:46%}
 .wbar .sw{width:24px;height:24px;border:1px solid var(--line-2);border-radius:6px;line-height:1;color:var(--mute);cursor:pointer}
 @media (max-width:760px){.wdoc{flex-direction:column}.wnotes{flex:none;width:100%}.dpage{padding:24px 20px}}
 /* What opened (src/intake.js #openRep) */
-.mk-opened{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:30;display:flex;gap:10px;align-items:center;max-width:min(720px,calc(100vw - 32px));padding:10px 12px 10px 16px;background:var(--s);color:var(--ink);border:1px solid var(--line-2);border-radius:var(--r3);box-shadow:var(--sh-r2);font-size:var(--t2)}
+.mk-opened{position:fixed;left:50%;bottom:72px;transform:translateX(-50%);z-index:30;display:flex;gap:10px;align-items:center;max-width:min(720px,calc(100vw - 32px));padding:10px 12px 10px 16px;background:var(--s);color:var(--ink);border:1px solid var(--line-2);border-radius:var(--r3);box-shadow:var(--sh-r2);font-size:var(--t2)}
 .mk-opened .grow{flex:1}
 .mk-oplist details{margin-top:10px}.mk-oplist summary{cursor:pointer;font-weight:600}.mk-oplist ul{margin:4px 0;padding-left:20px}.mk-oplist .xchk{margin:0}
 .mk-lhead .link{margin-left:auto}
@@ -650,6 +654,7 @@ dialog.dlg.mk-split[open]{display:flex}
 .mk-tn .tnbar,.mk-tn .tnfoot{position:static}
 .mk-grp{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;max-width:var(--pgw,720px);margin:0 auto 10px;padding:8px 12px;border-radius:var(--r2);background:var(--acc-soft);color:var(--ink);font-size:var(--t2)}
 .mk-grp b{color:var(--acc-ink)}
+.mk-grpadj{flex-basis:100%;margin:0;padding:0;list-style:none}.mk-grpadj li{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .mk-grpmode{width:auto;min-width:0;height:30px;padding:0 8px;font-size:var(--t2)}
 .mk-swsay{margin:-4px 0 10px;font-size:var(--t1)}
 .classwork .whead{display:flex;align-items:center;gap:6px;margin:0 0 8px}
@@ -722,13 +727,11 @@ dialog.dlg:has(.mk-su)>.body{max-height:calc(88vh - 120px);overflow:auto}
 .mk-lfmenu button:hover,.mk-lfmenu button:focus-visible{background:var(--g100)}
 .mk-lfmenu button[aria-checked=true]{color:var(--acc-ink);font-weight:600}
 .mk-lfmenu p,.mk-lfmenu .link{padding:7px 10px;font-size:var(--t2)}
-.mk-way{display:inline-flex;border-radius:var(--rf);box-shadow:inset 0 0 0 1px var(--line-2);overflow:hidden}
-.mk-way button{border:0;background:none;padding:3px 9px;font:inherit;font-size:var(--t1);color:var(--mute);cursor:pointer}
-.mk-way button[aria-pressed=true]{background:var(--acc-soft);color:var(--acc-ink);font-weight:600}
+.mk-lfmenu b.sep{border-top:1px solid var(--line);margin-top:4px;padding:8px 10px 2px;font-size:var(--t1);font-weight:600}
 .mk-row .pill{font-size:var(--t1);padding:1px 7px;border-radius:var(--rf);background:var(--g100);color:var(--mute)}
 .mk-lfnone{padding:10px;font-size:var(--t2)}
 .mk-body:has(.mk-list.fold){grid-template-columns:76px minmax(0,1fr) 380px}
-.mk-list.fold .mk-lhead,.mk-list.fold .mk-find,.mk-list.fold .mk-lf,.mk-list.fold .mk-way,.mk-list.fold .grow,.mk-list.fold .mk-row .nm,.mk-list.fold .mk-row .pill,.mk-list.fold .mk-lfnone{display:none}
+.mk-list.fold .mk-lhead,.mk-list.fold .mk-find,.mk-list.fold .mk-lf,.mk-list.fold .grow,.mk-list.fold .mk-row .nm,.mk-list.fold .mk-row .pill,.mk-list.fold .mk-lfnone{display:none}
 .mk-list.fold .mk-lbar{justify-content:center;padding-top:10px}
 .mk-list.fold .mk-row{flex-direction:column;gap:2px;padding:6px 2px}
 .markscreen.nor .mk-body{grid-template-columns:280px minmax(0,1fr)}
@@ -750,6 +753,12 @@ dialog.dlg:has(.mk-su)>.body{max-height:calc(88vh - 120px);overflow:auto}
 /* Only this student */
 .mk-solo{display:flex;align-items:center;gap:10px;padding:8px 18px;background:var(--acc-soft);color:var(--acc-ink);border-bottom:1px solid var(--line);flex:none}
 .mk-solo .mute{color:var(--mute)}
+.mk-solow{position:relative}
+.mk-swbox{position:absolute;right:0;top:calc(100% + 8px);z-index:30;width:min(420px,calc(100vw - 32px));max-height:60vh;overflow:auto;padding:10px;background:var(--sf);color:var(--ink);border:1px solid var(--line);border-radius:var(--r3);box-shadow:var(--sh-r2)}
+.mk-swbox h3{font-size:var(--t2);margin:0 0 6px}
+.mk-swrow{display:flex;justify-content:space-between;gap:10px;width:100%;padding:6px 8px;border:0;border-radius:var(--r1);background:none;color:inherit;font:inherit;font-size:var(--t2);text-align:left}
+button.mk-swrow{cursor:pointer}button.mk-swrow:hover,.mk-swrow.on{background:var(--acc-soft)}
+.mk-swrow .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mk-hold{position:relative;overflow:hidden;border:1px solid var(--line-2);background:var(--sf);color:var(--ink);border-radius:var(--rf);padding:5px 12px;font:inherit;font-size:var(--t2);cursor:pointer;user-select:none;touch-action:none}
 .mk-hold .fill{position:absolute;inset:0;transform:scaleX(0);transform-origin:left;background:var(--acc-soft)}
 .mk-hold.holding .fill{transform:scaleX(1);transition:transform 1.5s linear}
@@ -1078,3 +1087,133 @@ dialog.dlg.mk-qr{width:min(880px,calc(100vw - 32px))}
 .classwork .wname{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:none;cursor:pointer;text-align:left}
 .classwork .wname:hover b{text-decoration:underline}
 .classwork .wnm .tag{margin-left:6px;font-size:10.5px;color:var(--mute);background:var(--g100);border-radius:var(--rf);padding:1px 6px}
+/* the zoom's percent goes back to 100%; the highlight's widths; the highlight colours in the right-click menu; a score pointed at */
+.mk-z0{border:0;background:none;color:inherit;font:inherit;min-width:44px;padding:4px 6px;border-radius:var(--r2);cursor:pointer}
+.mk-z0:hover{background:var(--acc-soft)}
+.mk-menu .st-sw.sq{border-radius:4px}
+.mk-crit .lvl.peek{color:var(--ink);font-style:italic}
+/* Readings (mark/readings.jsx): the box, and each reading's card above the paper */
+dialog.dlg:has(.mk-rd){width:min(640px,calc(100vw - 32px))}
+.mk-rd{display:flex;flex-direction:column;gap:8px}
+.mk-rd p{margin:0}.mk-rd h3{margin:10px 0 0;font-size:var(--t3)}
+.mk-rd .rd-list{display:flex;flex-direction:column;gap:4px}
+.mk-rd .rd-row{display:flex;align-items:center;gap:8px;min-height:32px}.mk-rd .rd-row .grow{flex:1}
+.mk-rd .rd-btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.mk-rd .rd-hint{font-size:var(--t1)}
+.mk-paper .rd-cards{max-width:900px;min-width:0;width:100%;margin:0 auto 14px;display:flex;flex-direction:column;gap:10px}
+.mk-paper .rd-card{min-width:0;overflow:hidden;border-radius:var(--r3);background:var(--s);box-shadow:var(--sh-r);padding:10px 14px}
+.mk-paper .rd-card summary{cursor:pointer;font-weight:600}
+.mk-paper .rd-card summary .mute,.mk-paper .rd-card summary .link{font-weight:400;font-size:var(--t1)}
+.mk-paper .rd-card summary .link{margin-left:6px}
+.mk-paper .rd-body{margin-top:8px}
+.mk-paper .rd-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:var(--t1);margin-bottom:6px}
+.mk-paper .rd-bar .seg{display:inline-flex;border-radius:var(--r2);box-shadow:0 0 0 1px var(--line);overflow:hidden}
+.mk-paper .rd-bar .seg button{border:0;background:none;color:inherit;font:inherit;min-width:32px;min-height:28px;padding:0 8px;cursor:pointer}
+.mk-paper .rd-bar .seg button:hover{background:var(--line)}
+.mk-paper .rd-scroll{max-height:70vh;overflow:auto;border-radius:var(--r2);box-shadow:inset 0 0 0 1px var(--line)}
+.mk-paper .rd-pages{display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px}
+.mk-paper .rd-pages canvas{background:#fff;box-shadow:var(--sh-r)}
+.mk-paper .rd-grip{height:10px;cursor:ns-resize;border-radius:0 0 var(--r2) var(--r2);background:linear-gradient(var(--line),var(--line)) center/40px 3px no-repeat}
+.mk-paper .rd-grip:focus-visible{outline:2px solid var(--acc)}
+.mk-paper .rd-wait{visibility:hidden}.mk-paper .rd-scroll.rd-tall{height:70vh}
+/* Transcripts for every recording (mark/transcripts.jsx) */
+.mk-trall{display:flex;flex-direction:column;gap:8px}.mk-trall p{margin:0}
+/* The top bar's This assignment set (mark/topbar.jsx): marked so far, missing or excused and the average, one button to Insights;
+   the time tracker's line beside it (src/app/panels.js renderProg). */
+.mk-acts{display:flex;align-items:center;gap:10px;min-width:0}
+.mk-prog .pg{display:inline-flex;align-items:baseline;gap:8px;border:0;background:none;color:inherit;font:inherit;padding:4px 8px;border-radius:var(--r2);cursor:pointer;white-space:nowrap}
+.mk-prog .pg:hover{background:var(--acc-soft)}
+.mk-prog .pg-avg{font-weight:600;color:var(--ink)}
+.mk-prog .pg-avg.none{font-weight:400;color:var(--mute)}
+.mk-prog .pg-tk{font-size:var(--t1);white-space:nowrap}
+@media (max-width:1100px){.mk-prog .pg-tk,.mk-prog .pg [data-progoff]{display:none}}
+@media (max-width:760px){.mk-acts{gap:6px}.mk-prog .pg{padding:4px}}
+/* Full screen (mark/topbar.jsx; src/app/wiring.js): data-mkfs on the page while the list is away. It comes out over the paper's edge
+   (data-mkpeek) from the left edge, the tab, / or a click into it; with 'all' the tool dock shows only near the pointer (data-mktools). */
+.mk-fsedge,.mk-fstab{display:none}
+:root[data-mkfs] .markscreen[data-tab=mark]:not(.solo) .mk-fsedge{display:block;position:fixed;left:0;top:0;bottom:0;width:10px;z-index:7}
+:root[data-mkfs] .markscreen[data-tab=mark]:not(.solo) .mk-fstab{display:flex;align-items:center;justify-content:center;position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:7;width:22px;height:56px;padding:0;border:1px solid var(--line);border-left:0;border-radius:0 var(--r2) var(--r2) 0;background:var(--s);color:var(--mute);font:inherit;cursor:pointer;box-shadow:var(--sh-r)}
+@media (pointer:fine){:root[data-mkfs] .markscreen[data-tab=mark]:not(.solo) .mk-fstab{opacity:.55}}
+:root[data-mkpeek] .markscreen .mk-fstab{display:none}
+:root[data-mkfs] .mk-body{position:relative;grid-template-columns:minmax(0,1fr) 380px}
+:root[data-mkfs] .markscreen.nor .mk-body{grid-template-columns:minmax(0,1fr)}
+:root[data-mkfs] .mk-body .mk-list{position:absolute;left:0;top:0;bottom:0;width:280px;z-index:8;box-shadow:var(--sh-f);transform:translateX(-100%);visibility:hidden;transition:transform .16s ease,visibility 0s .16s}
+:root[data-mkfs][data-mkpeek] .mk-body .mk-list{transform:none;visibility:visible;transition:transform .16s ease}
+:root[data-mkfs] .mk-list.fold .mk-lhead{display:flex}
+:root[data-mkfs] .mk-list.fold .mk-find{display:block}
+:root[data-mkfs] .mk-list.fold .mk-lf,:root[data-mkfs] .mk-list.fold .mk-row .pill{display:inline}
+:root[data-mkfs] .mk-list.fold .grow{display:block}
+:root[data-mkfs] .mk-list.fold .mk-row .nm{display:-webkit-box}
+:root[data-mkfs] .mk-list.fold .mk-lbar{justify-content:flex-start;padding-top:0}
+:root[data-mkfs] .mk-list.fold .mk-row{flex-direction:row;gap:10px;padding:7px 10px}
+:root[data-mkfs=all] .markscreen .mk-tools{opacity:0;pointer-events:none;transition:opacity .15s}
+:root[data-mkfs=all][data-mktools] .markscreen .mk-tools{opacity:1;pointer-events:auto}
+@media (prefers-reduced-motion:reduce){:root[data-mkfs] .mk-body .mk-list,:root[data-mkfs=all] .markscreen .mk-tools{transition:none}}
+/* files dragged over the marking screen (mark/fileui.jsx dropWire): where they would go, and the folded list opened to its names */
+.mk-row.drop-on,.mk-paper.drop-on{outline:2px dashed var(--acc);outline-offset:-4px}
+.mk-list.fold.peek{position:relative;z-index:6;width:260px;box-shadow:var(--sh-f)}
+.mk-list.fold.peek .mk-row{flex-direction:row;gap:8px;padding:6px 10px}
+.mk-list.fold.peek .mk-row .nm{display:inline}
+/* nothing turned in yet: what she can do, and Add their file… first */
+.mk-ffoot.none>[data-nofile]{flex-basis:100%;text-align:center;margin:0 0 4px}
+/* Replace: a new link and its Next on one line */
+.mk-rplink{display:flex;gap:8px;align-items:flex-end}.mk-rplink>:first-child{flex:1}
+/* Insights' Percents (mark/percents.jsx): the choices in one row, the five tiles, the bands, a dot for each paper, the table */
+.mk-ins .pc{display:flex;flex-direction:column;gap:14px}
+.mk-ins .pc-opts{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end}
+.mk-ins .pc-num{display:flex;flex-direction:column;gap:2px;font-size:var(--t2);color:var(--mute)}
+.mk-ins .pc-num input{width:7.5em}
+.mk-ins .pc-cuts{display:flex;flex-wrap:wrap;gap:6px}.mk-ins .pc-cuts input{width:5em}
+.mk-ins .pc-tiles{grid-template-columns:repeat(5,minmax(0,1fr))}
+.mk-ins .pc-bands{display:flex;flex-direction:column;gap:6px}
+.mk-ins .pc-band{display:grid;grid-template-columns:7em 1fr 6em;gap:10px;align-items:center;font-size:var(--t2);border-radius:var(--r1)}
+.mk-ins .pc-bt{height:10px;border-radius:var(--rf);background:var(--s2);overflow:hidden}.mk-ins .pc-bt i{display:block;height:100%;background:var(--acc)}
+.mk-ins .pc-strip{position:relative;margin:8px 14px 4px}
+.mk-ins .pc-ax{position:absolute;left:0;right:0;bottom:18px;border-top:1px solid var(--line)}
+.mk-ins .pc-tk{position:absolute;bottom:0;transform:translateX(-50%);font-size:11px;color:var(--mute)}
+.mk-ins .pc-ln{position:absolute;top:0;bottom:18px;border-left:2px solid var(--ink2)}
+.mk-ins .pc-ln.tg{border-left:2px dashed var(--warn)}
+.mk-ins .pc-ln span{position:absolute;top:0;left:4px;white-space:nowrap;font-size:11px;color:var(--ink2)}
+.mk-ins .pc-ln.l span{left:auto;right:4px}
+.mk-ins .pc-dot{position:absolute;width:11px;height:11px;margin-left:-5.5px;border-radius:50%;border:2px solid var(--s);background:var(--acc);padding:0;cursor:pointer}
+.mk-ins .pc-dot.lo{background:var(--warn)}
+.mk-ins .pc-th{display:flex;align-items:center;gap:10px}.mk-ins .pc-th .btn{margin-left:auto}
+.mk-ins .pc-tab{width:100%;border-collapse:collapse;font-size:var(--t2)}
+.mk-ins .pc-tab th,.mk-ins .pc-tab td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+.mk-ins .pc-tab .r{text-align:right}
+.mk-ins .pc-tab th button{all:unset;cursor:pointer;font-weight:600}
+.mk-ins .pc-tab tr.lo td{background:var(--warn-soft)}
+.mk-ins .pc-see summary{cursor:pointer;color:var(--acc-ink);margin-top:8px}
+.mk-ins .bar[tabindex]:focus-visible,.mk-ins .rb[tabindex]:focus-visible,.mk-ins .pc-band[tabindex]:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+/* how each row was scored */
+.mk-ins .pc-lv{display:flex;flex-direction:column;gap:8px}
+.mk-ins .pc-lvr{display:grid;grid-template-columns:minmax(0,1fr) 2fr;gap:10px;align-items:center;font-size:var(--t2)}
+.mk-ins .pc-lvn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mk-ins .pc-lvt{display:flex;height:18px;border-radius:var(--r1);overflow:hidden;background:var(--s2)}
+.mk-ins .pc-seg{display:flex;align-items:center;justify-content:center;font-style:normal;font-size:11px;color:var(--acc-ink)}
+.mk-ins .pc-leg{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--mute);margin-top:8px}
+.mk-ins .pc-sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.mk-ins .b1{background:color-mix(in srgb,var(--acc) 15%,var(--s))}.mk-ins .b2{background:color-mix(in srgb,var(--acc) 35%,var(--s))}
+.mk-ins .b3{background:color-mix(in srgb,var(--acc) 55%,var(--s))}.mk-ins .b4{background:color-mix(in srgb,var(--acc) 75%,var(--s))}
+.mk-ins .b5{background:var(--acc)}.mk-ins .pc-seg.b4,.mk-ins .pc-seg.b5{color:var(--s)}
+@media (max-width:760px){.mk-ins .pc-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.mk-ins .pc-mv{display:flex;flex-direction:column}
+.mk-ins .pc-mvr{display:grid;grid-template-columns:minmax(80px,28%) 1fr 40px;align-items:center;gap:8px;height:24px;border:0;background:none;padding:0 4px;text-align:left;font:inherit;cursor:pointer;border-radius:4px}
+.mk-ins .pc-mvr:hover,.mk-ins .pc-mvr:focus-visible{background:var(--s2)}
+.mk-ins .pc-mvn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.mk-ins .pc-mvt,.mk-ins .pc-axt{position:relative;height:14px}
+.mk-ins .pc-mvt i{position:absolute;top:50%}
+.mk-ins .pc-mvt .ln{height:2px;margin-top:-1px;background:var(--line)}
+.mk-ins .pc-mvr.up .ln{background:var(--ok)}.mk-ins .pc-mvr.down .ln{background:var(--warn)}
+.mk-ins .pc-mvt .was,.mk-ins .pc-mvt .now{width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%}
+.mk-ins .pc-mvt .was,.mk-ins .pc-sw.was{background:var(--s);border:2px solid var(--mute)}.mk-ins .pc-mvt .now,.mk-ins .pc-sw.now{background:var(--acc)}
+.mk-ins .pc-sw.up{background:var(--ok)}.mk-ins .pc-sw.down{background:var(--warn)}
+.mk-ins .pc-mvr .num{text-align:right;font-size:12px}
+.mk-ins .pc-axr{display:grid;grid-template-columns:minmax(80px,24%) 1fr 70px;align-items:center;gap:8px;min-height:26px;border-radius:4px}
+.mk-ins .pc-axr.me .pc-axn{font-weight:600}.mk-ins .pc-axn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.mk-ins .pc-axt i{position:absolute;top:3px;height:8px;border-radius:4px}.mk-ins .pc-axt .a{background:color-mix(in srgb,var(--acc) 25%,transparent)}
+.mk-ins .pc-axt .q{background:color-mix(in srgb,var(--acc) 60%,transparent)}.mk-ins .pc-axt .m{width:2px;top:0;height:14px;background:var(--ink);border-radius:0}
+.mk-ins .pc-axk .pc-axt span{position:absolute;transform:translateX(-50%);font-size:10px;color:var(--mute)}
+.mk-ins .pc-axr .num{text-align:right;font-size:12px}
+.mk-grades button.pill{border:0;cursor:pointer;font:inherit;font-size:11px}
+.mk-grades .nm .btn.icon{vertical-align:middle;margin-left:2px}

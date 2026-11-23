@@ -13,6 +13,7 @@ import { editText, openNote } from './editors.js';
 import { renderPage } from './paper.js';
 import * as undoList from '../../services/undo.js';
 import { t } from '../../i18n/t.js';
+import { toast as uiToast } from '../../ui/index.js';
 import './lines.js';
 import '../engine-lines.js';   // the engines' own words (feedback page, typed notes' bar, Quick mark) in the language
 import { setOpenFlush } from '../openwork.js';
@@ -46,7 +47,9 @@ export const commit = () => K.commitEditors();
 // the app's list whose undo and redo run the lifted undo and redo, so the two lists move together.
 let stepping = false;
 const entries = [];
-const LABEL = u => (u.grade ? t('mark.step_score') : u.file || u.group ? t('mark.step_marks') : t('mark.step_change'));
+// a setting may not show where it is, so its step is named for what comes back (src/app/paper.js swapStep: "Undone: lighting")
+const WHAT = { lighting: 'mark.l_title', setup: 'mark.su_title', 'marked as returned': 'mark.r_marked', 'marked as not returned': 'mark.r_unmarked', 'typed notes': 'mark.tn_title', 'rescan flag': 'mark.rs_title', 'video turn': 'mark.v_turn', clips: 'mark.cl_menu' };
+const LABEL = u => (WHAT[u.what] ? t(WHAT[u.what]) : u.grade ? t('mark.step_score') : u.file || u.group ? t('mark.step_marks') : t('mark.step_change'));
 function steps() {
   const a = [];
   const own = (fn) => () => { stepping = true; try { fn(); } finally { stepping = false; } tell(); };
@@ -164,7 +167,7 @@ export function endOnce() { const o = state().once; if (!o) return; use({ once: 
 // groupSync comes with the group engine (mark/group.jsx), loaded with the file tools; until then there are no group changes to share
 let groupSync = () => {};
 export const useGroupSync = f => { groupSync = f; };
-function saveSoon() { groupSync(); clearTimeout(saveT); saveT = setTimeout(() => K.saveNow(), 500); saveState = 'saving'; tell(); }
+function saveSoon() { groupSync(); clearTimeout(saveT); saveT = setTimeout(() => { saveT = null; K.saveNow(); }, 500); saveState = 'saving'; tell(); }
 let W0 = null, leaving = false;
 // What goes on each save before it is stamped (src/folder.js stampWork): a Word paper edited in the app, and what was taken off, so a
 // copy elsewhere doesn't bring it back. The stamps themselves, and the merge with another window's save, are students/write.js saveWork's.
@@ -173,18 +176,20 @@ function stampWork(b, data) {
   if (b.goneNow) data.gone = b.goneNow;
 }
 async function writeWork(b, data) {
-  const seq = ++saveSeq;
+  // 'saving' from the moment a write starts until the last one ends with no other due: an earlier write that ends while a change
+  // waits its half second, or while a later write is under way, doesn't say saved (saveNowDone waits on it)
+  const seq = ++saveSeq; saveState = 'saving';
   if (leaving && W0) { try { W0.saveWorkLeaving(b.id, d => Object.assign(d, JSON.parse(JSON.stringify(data))), { hold: b }); } catch (e) { console.error(e); } return; }
   try {
     // the save layer (students/write.js) loads with the first save, so it isn't part of the tools' first load
     const W = W0 = await PARTS.write();
     const r = await W.saveWork(b.id, d => Object.assign(d, JSON.parse(JSON.stringify(data))), { fresh: !!b.fresh, hold: b });
     if (r.full || r.quick) delete b.fresh;
-    if (seq === saveSeq) saveState = r.full ? 'saved' : r.quick ? 'partly' : 'not';
+    if (seq === saveSeq && !saveT) saveState = r.full ? 'saved' : r.quick ? 'partly' : 'not';
     if (r.full) saveWorked(b.id); else if (seq === saveSeq || b !== state().batch) saveFailed(b.id, again(b, data), r.quick);   // the red bar (saving/trouble.js)
   } catch (e) {
     console.error(e);
-    if (seq === saveSeq) saveState = e && e.name === 'CannotSave' ? 'cannot:' + e.why : 'not';
+    if (seq === saveSeq && !saveT) saveState = e && e.name === 'CannotSave' ? 'cannot:' + e.why : 'not';
     if (!(e && e.name === 'CannotSave')) saveFailed(b.id, again(b, data), false);
   }
   tell();
@@ -229,8 +234,13 @@ function reach(pg) {
 
 // The hooks: called by the lifted code when it would, in the current app, redraw a panel, open an editor or say something.
 // The page closing or reloading with a save still waiting (or a box still being typed in): saved at once, as the current app does.
-function onLeave() { if (!saveT && !state().activeEditor) return; leaving = true; try { K.commitEditors(); clearTimeout(saveT); saveT = null; K.saveNow(true); } finally { leaving = false; } }
+function onLeave() { if (!saveT && saveState !== 'saving' && !state().activeEditor) return;   // a change waiting, or a write under way: written as she leaves
+  leaving = true; try { K.commitEditors(); clearTimeout(saveT); saveT = null; K.saveNow(true); } finally { leaving = false; } }
 let leaveOn = false;
+// The engines' own notes, said in the language (they write English): only the ones the screen has a line for. The rest stay quiet,
+// since the screen says those things itself. gopen loadEdits: highlights kept on a rubric replaced under a new name (audit H-036).
+const ENGINE_SAY = [[/^A highlighted copy of an older rubric is kept for (\d+) student/, m => t('mark.hl_lost', { n: +m[1] })]];
+const engineSay = (s, ms) => { for (const [rx, say] of ENGINE_SAY) { const m = rx.exec(String(s)); if (m) { uiToast(say(m), { ms }); return; } } };
 export function startMarking({ toast, openStudent }) {
   if (!leaveOn) { leaveOn = true; addEventListener('pagehide', onLeave); addFlush(saveNowDone); }   // and saved before an update reloads the window
   // the save layer and its merge engine, ready before anything needs saving on the way out
@@ -241,7 +251,7 @@ export function startMarking({ toast, openStudent }) {
     undoStack: steps(), redoStack: [],
     saveSoon, writeWork, stampWork,
     renderTools: tell, renderList: tell, renderGrade: tell,
-    toast: () => {},   // the lifted code's own words are the current app's; the screen says what it needs in its own lines
+    toast: engineSay,   // the lifted code's own words are the current app's; the screen says what it needs in its own lines
     openStudent: i => openStudent && openStudent(i),
     renderPage: pg => pg.canvas && renderPage(pg, pg.s),
     editText, openNote,
@@ -312,6 +322,10 @@ export function letGo() { if (!state().selected) return false; use({ selected: n
 // The highlighter snaps to typed lines (where a page has them) or goes freehand; H with the highlighter in hand switches.
 export const hlFree = () => K.hlMode === 'free';
 export function setHlFree(free) { K.setHlMode(free ? 'free' : 'auto'); tell(); }
+// How wide a freehand highlight is (src/marking.js hlBarClick): 8, 14 or 22, kept in gs.hlW; the current app's button steps round them.
+export const HL_WIDTHS = [8, 14, 22];
+export const hlWidth = () => prefs.get('gs.hlW', 14);
+export function setHlWidth(w) { const hit = { target: { closest: s => (s === '[data-hlw]' ? {} : null) } }; for (let n = 0; n < 3 && hlWidth() !== w; n++) K.hlBarClick(hit); tell(); }
 
 // The score, or one rubric row's score, put on the paper where she clicks next (src/app/calc.js startScorePlace, placeScore): a picture
 // of it follows the pointer, Esc or a click off the paper stops. It is the same stamp the current app places, and it keeps up with the score.

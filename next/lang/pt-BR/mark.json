@@ -180,7 +180,6 @@
  "mark.fb_done": "Comentários completos",
  "mark.fb_next": "Completo, próximo aluno",
  "mark.fb_key": "Comentários completos sim ou não (Shift: sim, e vai para o próximo aluno)",
- "mark.stamp": "Carimbo",
  "mark.stamp_tip": "Colocar a nota no trabalho",
  "mark.stamp_row": "Colocar a nota de {c} no trabalho",
  "mark.stamp_open": "Abra o trabalho primeiro e depois carimbe a nota nele.",
@@ -258,6 +257,15 @@
  "mark.cw_ul_change_n": "Alterar o link: {name}",
  "mark.cw_ul_open": "Plano de unidade",
  "mark.cw_ul_open_n": "Abrir no {name}",
+ "mark.hl_width": "Largura do realce",
+ "mark.hlw_s": "Realce fino",
+ "mark.hlw_m": "Realce médio",
+ "mark.hlw_l": "Realce largo",
+ "mark.zoom_100": "Voltar a 100%",
+ "mark.zoom_reset": "Voltar a 100% ({key})",
+ "mark.next_fb": "Próximo sem feedback",
+ "mark.cmd_book": "Diário de notas",
+ "mark.tr_menu": "Transcrições…",
  "mark.cw_typed": "Digitadas",
  "mark.cw_ud_q": "Excluir “{name}”?",
  "mark.cw_ud_say": {
@@ -266,5 +274,28 @@
  },
  "mark.cw_loose_say": "Tarefas sem turma. Arraste uma para uma turma na barra lateral ou use “Mover para…” no menu ⋯.",
  "mark.examples": "Exemplos",
+ "mark.tn_title": "Anotações digitadas",
+ "mark.su_title": "Configurar rubrica",
+ "mark.r_marked": "Marcado como devolvido",
+ "mark.r_unmarked": "Marcado como não devolvido",
+ "mark.rs_title": "Escanear de novo",
+ "mark.v_turn": "Girar",
+ "mark.picked_up": {
+  "one": "Continuando de onde parou ({n} aluno começado)",
+  "other": "Continuando de onde parou ({n} alunos começados)"
+ },
+ "mark.hl_lost": {
+  "one": "Uma cópia destacada de uma rubrica antiga está guardada para {n} aluno, mas esta rubrica não a mostra. As notas ficam; confira-as com esta rubrica.",
+  "other": "Uma cópia destacada de uma rubrica antiga está guardada para {n} alunos, mas esta rubrica não a mostra. As notas ficam; confira-as com esta rubrica."
+ },
+ "mark.sp_show": "Mostrar ao lado",
+ "mark.sw_btn": "Outros trabalhos",
+ "mark.sw_in": "{done} de {n} entregues",
+ "mark.sw_avg": "média {pct}",
+ "mark.sw_none": "Ainda não há downloads desta turma.",
+ "mark.sw_looking": "Procurando no trabalho salvo…",
+ "mark.sw_dl": "Um download",
+ "mark.sw_unscored": "ainda sem nota",
+ "mark.sw_nothing": "nada entregue",
  "mark.not_papers": "É um arquivo para levar, não trabalhos. Para trazê-lo, use Trazer trabalho em Configurações, Salvamento e sincronização."
 }

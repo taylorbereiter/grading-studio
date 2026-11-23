@@ -235,5 +235,20 @@
  "focus.wk_next": "À rendre la semaine prochaine",
  "focus.wk_hide": "Le ranger pour cette semaine",
  "focus.wk_day": "Changer le jour",
- "focus.wk_work": "Travaux d’élèves"
+ "focus.wk_work": "Travaux d’élèves",
+ "focus.sg_own": "Que voulez-vous terminer ?",
+ "focus.sg_fewer": "Moins de copies",
+ "focus.sg_more": "Plus de copies",
+ "focus.len_or": "Ou",
+ "focus.sg_met": "Objectif de la séance atteint",
+ "focus.sg_rest": "Le reste passe à votre prochaine séance.",
+ "focus.sg_it": "Il passe à votre prochaine séance.",
+ "focus.sg_nocarry": "Ne pas le reporter",
+ "focus.sg_did": "C’est fait",
+ "focus.wk_papers": {
+  "one": "Cette semaine {n} copie",
+  "other": "Cette semaine {n} copies"
+ },
+ "focus.nav_tip": "Un minuteur pour corriger, et votre objectif du jour",
+ "focus.k_snip": "Capture : copier une image d’une partie de l’écran"
 }

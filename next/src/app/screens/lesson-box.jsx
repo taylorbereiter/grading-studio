@@ -11,7 +11,7 @@ import { lessonBlob } from '../../planning/plan.js';
 import { PARTS as LAZY } from '../router.js';
 import { assistant } from '../../services/assistant.js';
 import { copyText } from '../../services/clipboard.js';
-import { readBox, changeBox, takeChips, onBox } from '../plan/cbox.js';
+import { readBox, changeBox, takeChips, onBox, chipName } from '../plan/cbox.js';
 import { saveFailed } from '../plan/save.js';
 import '../plan/les-lines.js';
 import '../plan/tool-lines.js';
@@ -20,16 +20,6 @@ import '../plan/tool-lines.js';
 const aiName = () => assistant().name || t('assistant.generic');
 const EXTRA = ['tag', 'foot', 'h1', 'h2', 'body2', 'cite', 'word', 'pos'];
 const CHIP_ICON = { notebook: 'note', slide: 'slides', page: 'book', video: 'play', week: 'cal', file: 'file', lesson: 'slides', quote: 'text', note: 'comment' };
-// The chip's name in her language, from what it points at; the stored English label when the new app can't name it.
-function chipName(p, c) {
-  const L = (p && p.lessons) || [];
-  if (c.kind === 'slide') { const l = L.find(x => x.id === c.lesson), sl = l && l.slides[c.i]; if (!sl) return c.label || ''; return t('les.chip_slide', { lesson: l.title || '', n: c.i + 1 }) + (sl.title ? ': ' + sl.title : ''); }
-  if (c.kind === 'page') return t('les.chip_page', { book: c.bookName || (c.label || '').split(', ')[0], n: c.page });
-  if (c.kind === 'video') return t('les.chip_video', { url: c.url });
-  if (c.kind === 'week' && c.unit) return t('les.chip_week', { unit: c.unit, n: c.n, of: c.of });
-  if (c.kind === 'notebook') { const o = c.t === 'lesson' ? L.find(x => x.id === c.id) : c.t === 'unit' ? ((p && p.units) || []).find(x => x.id === c.id) : null; return t('les.chip_nb', { name: o ? o.title : t('tool.nb_general') }); }
-  return c.label || '';
-}
 async function pageText(book, page) {
   const b = await kv.get('pdf:' + book); if (!b) return '';
   const L = await (await LAZY.pdf()).pdfjs(), doc = await L.getDocument({ data: new Uint8Array(await b.arrayBuffer()), isEvalSupported: false }).promise;

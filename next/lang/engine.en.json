@@ -13,7 +13,10 @@
  "engine.how_scored": "How it was scored",
  "engine.score_of": "{score} of {top}",
  "engine.from_teacher": "From your teacher",
- "engine.comments_on_paper": { "one": "Comment on your paper", "other": "Comments on your paper" },
+ "engine.comments_on_paper": {
+  "one": "Comment on your paper",
+  "other": "Comments on your paper"
+ },
  "engine.page_short": "p. {n}",
  "engine.paper_next": "Your marked paper starts on the next page.",
  "engine.feedback_next": "Your feedback continues on the next page.",
@@ -34,7 +37,10 @@
  "engine.full": "Full",
  "engine.question_n": "Question {label}",
  "engine.scored_to": "scored 0 to {pts}",
- "engine.points_rw": { "one": "{n} point, right or wrong", "other": "{n} points, right or wrong" },
+ "engine.points_rw": {
+  "one": "{n} point, right or wrong",
+  "other": "{n} points, right or wrong"
+ },
  "engine.answer_key": "Answer key: {key}",
  "engine.scale": "Scale: {steps}",
  "engine.qf_questions": "{n} questions",

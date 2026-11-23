@@ -60,7 +60,7 @@ function TimeSec() {
         <span class="tkcol"><i class="l" style={{ height: Math.round(d.l / top * 100) + '%' }} /><i class="g" style={{ height: Math.round(d.g / top * 100) + '%' }} /></span>
         <span class="tkd">{date(new Date(d.k + 'T12:00:00'), { weekday: 'narrow' })}</span></span>)}
     </div>
-    <p class="tkleg"><span><i class="g" />{t('focus.legend', { what: t('focus.grading'), time: E.tkDur(g) })}</span><span><i class="l" />{t('focus.legend', { what: t('focus.planning'), time: E.tkDur(s.l) })}</span></p>
+    <p class="tkleg"><span data-tk-papers={E.fcWeekPapersNow()}>{t('focus.wk_papers', { n: E.fcWeekPapersNow() })}</span><span><i class="g" />{t('focus.legend', { what: t('focus.grading'), time: E.tkDur(g) })}</span><span><i class="l" />{t('focus.legend', { what: t('focus.planning'), time: E.tkDur(s.l) })}</span></p>
     <a class="link" href={href('time')} data-tk-open>{t('focus.see_tracker')}</a>
   </section>;
 }

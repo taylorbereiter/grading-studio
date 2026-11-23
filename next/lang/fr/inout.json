@@ -84,5 +84,29 @@
  "inout.f_marks_kept": "Vos annotations dessus sont toujours enregistrées.",
  "inout.f_goes_back": "Il repart avec l’export parce que vous l’avez ajouté.",
  "inout.op_later": "Quand leur travail arrive, utilisez {bring} dans {setup}, ou {add} sur leur copie.",
- "inout.heic_reading": "Lecture d’une photo d’iPhone…"
+ "inout.heic_reading": "Lecture d’une photo d’iPhone…",
+ "inout.nf_say": "Ajoutez son travail ici, ou déposez le fichier sur la page ou sur son nom. Vous pouvez noter sans copie.",
+ "inout.nf_add": "Ajouter son fichier…",
+ "inout.tr_add": "Ajouter la copie de rattrapage…",
+ "inout.rp_t": "Remplacer {name}",
+ "inout.rp_comp": "Depuis cet ordinateur…",
+ "inout.rp_drive": "Depuis Google Drive…",
+ "inout.rp_or_drop": "ou déposez le nouveau fichier ici",
+ "inout.rp_say": "Vous comparez les deux fichiers côte à côte avant tout changement.",
+ "inout.rp_link": "Un nouveau lien",
+ "inout.rp_next": "Suivant",
+ "inout.rp_or": "Ou",
+ "inout.rp_vfile": "Un fichier vidéo…",
+ "inout.rp_vdrive": "Google Drive…",
+ "inout.rp_vsay": "Les partenaires ayant la même vidéo reçoivent aussi la nouvelle, sauf si vous le refusez à l’étape suivante.",
+ "inout.rp_vq": "Remplacer cette vidéo ?",
+ "inout.rp_vtext": "La nouvelle vidéo prend la place de l’ancienne. La note et les notes restent telles quelles. L’ancien lien attend dans Fichiers retirés, pour le rétablir.",
+ "inout.rp_vk_file": "fichier vidéo",
+ "inout.rp_vk_drive": "depuis Google Drive",
+ "inout.rp_also": "Aussi pour {names}",
+ "inout.rp_grp": {
+  "one": "{names} partage cette copie, donc la sienne change aussi.",
+  "other": "{names} partagent cette copie, donc la leur change aussi."
+ },
+ "inout.rp_for": "{name} remplacé pour {names}"
 }

@@ -1,0 +1,62 @@
+{
+ "rd.title": "閱讀資料",
+ "rd.done": "完成",
+ "rd.about": "批改時顯示在作業上方的檔案，例如閱讀文章或題目。這些檔案只存在這個瀏覽器中，絕不會發回給學生。",
+ "rd.everyone": "給所有學生",
+ "rd.your_doc": "你的文件",
+ "rd.remove": "移除",
+ "rd.remove_all": "從所有學生移除",
+ "rd.none": "目前還沒有。",
+ "rd.add_all": "新增給所有學生的檔案…",
+ "rd.for": "給 {name}",
+ "rd.show": "顯示 {file}",
+ "rd.only": "只給 {name}",
+ "rd.add_one": "新增只給 {name} 的檔案…",
+ "rd.hint": "如果某位學生的閱讀資料不同：取消勾選上面給所有學生的檔案，再新增他的檔案。",
+ "rd.doc_card": "你的文件：{name}",
+ "rd.card_all": "每份作業都會顯示，不會發回",
+ "rd.card_one": "只給這位學生，不會發回",
+ "rd.hide": "對這位學生隱藏",
+ "rd.hidden": "已對這位學生隱藏。在「閱讀資料…」可以恢復，或新增其他檔案。",
+ "rd.zoom": "縮放閱讀資料",
+ "rd.zoom_out": "縮小",
+ "rd.zoom_in": "放大",
+ "rd.zoom_fit": "回到符合寬度",
+ "rd.zoom_how": "在閱讀資料上用雙指或 Ctrl + 捲動來縮放。拖曳底邊可以拉高。",
+ "rd.grip": "拖曳以調整閱讀資料的高度",
+ "rd.cant": "這個檔案無法在這裡顯示。",
+ "rd.no_room": "這個瀏覽器已沒有空間保存 {name}",
+ "rd.added": "「{file}」現在會顯示在每份作業上方",
+ "rd.added_for": "「{file}」現在會為 {name} 顯示",
+ "rd.added_n": "{n} 個檔案現在會顯示在每份作業上方",
+ "rd.added_n_for": "{n} 個檔案現在會為 {name} 顯示",
+ "rd.tr_title": "逐字稿",
+ "rd.tr_count": {
+  "one": "這份作業有 {n} 個錄音。",
+  "other": "這份作業有 {n} 個錄音。"
+ },
+ "rd.tr_have": {
+  "one": "其中 {n} 個已有逐字稿。",
+  "other": "其中 {n} 個已有逐字稿。"
+ },
+ "rd.tr_redo": "已有的也重新製作",
+ "rd.tr_about": "在這個瀏覽器中執行（不會上傳任何內容）。語音引擎只需下載一次（約 150 MB）。處理期間請保持這個分頁開啟，同時可以繼續批改。",
+ "rd.tr_make": "製作逐字稿",
+ "rd.tr_stop": "停止",
+ "rd.tr_stopping": "正在停止…",
+ "rd.tr_close": "關閉",
+ "rd.tr_at": "第 {n} 位學生（{of} 個中的第 {k} 個）· {file} · {what}",
+ "rd.tr_all_have": "每個錄音都已有逐字稿",
+ "rd.tr_done": {
+  "one": "完成。已製作 {n} 份逐字稿。",
+  "other": "完成。已製作 {n} 份逐字稿。"
+ },
+ "rd.tr_stopped": {
+  "one": "已停止。已製作 {n} 份逐字稿。",
+  "other": "已停止。已製作 {n} 份逐字稿。"
+ },
+ "rd.tr_failed": {
+  "one": "{n} 個無法讀取（請試試 Chrome，或轉成 .mp4 或 .m4a）。",
+  "other": "{n} 個無法讀取（請試試 Chrome，或轉成 .mp4 或 .m4a）。"
+ }
+}
