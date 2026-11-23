@@ -1,11 +1,11 @@
 {
- "version": "1.28.75",
- "build": "c705da6c39cf",
+ "version": "1.28.76",
+ "build": "bc956b5d79b2",
  "notes": [
-  "In another language, the grade sheet (Grades, Grade sheet) is now translated once it finishes reading the papers: its columns, its notes, Box it by hand, and the Is this the grade? question with Use it and Not a grade. Your students’ names and files stay as they are."
+  "With two tabs open, coming back to one and typing straight away in the comment or points box no longer loses what you type while that tab brings in the other tab’s newer work: the box keeps your place and everything you typed."
  ],
  "files": {
-  "index.html": "8a67d30d316b39845cba9a823ca212012aa29933ec0ba794374a06f73c6501b2",
+  "index.html": "6aff4ba259c2505936825c4da0527c1a2c1cd09e5abc6444a74b083021a1e979",
   "planner.html": "88ed70d685c3779b5436a7772f0d9c161f9db6b152a212fac312689ba56d65a6"
  },
  "langs": {
