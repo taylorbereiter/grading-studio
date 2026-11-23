@@ -1,23 +1,23 @@
 {
  "version": "2.0.0",
- "build": "1eaf4dd052ad",
+ "build": "10434fd1858c",
  "notes": [
   "The new Grading Studio now opens at this address. Your classes, papers, marks, lessons and settings are the same: nothing is moved or copied.",
   "The previous version stays one click away, in Settings, About and updates: Open the previous version. Both use the same saved work, and Open the new version brings you back.",
   "Bookmarks to the old screens and to the Planner open the matching screen in the new version. The installed app and the phone’s home screen icon open the new version with no reinstall."
  ],
  "files": {
-  "index.html": "77c482b3eb690edf589d19a82ccfef52e2acd1126c382eefe5eee6b340ef7090",
-  "planner.html": "82c5d76f759f373f86cda49efda73457c32dd2f47ace1a6f5aa6ea40624e41d8"
+  "index.html": "22ef6c429294ef406802dbf94c32aaf9b45d5f89b302fe7037cd9180e80936ae",
+  "planner.html": "d24dcdbf83cc835baf8fc4056509734e398d39b377b05c94705fb51db4843239"
  },
  "langs": {
-  "lang/zh-Hant.js": "1b0b98d4171dc2e98442c6097c3b849c439b34f780297fe4ea0f286c87a69d29",
-  "lang/zh-Hans.js": "a3d8e279cbcbcdbd2b06e25b7ca8503d4cc82ac5f03b4e29c493fbe3b7b23e30",
-  "lang/es.js": "b5ff4dbe8c9e06f0a53723d1ba084d369f44bd9aee500ab32b35332a691aeaad",
-  "lang/fr.js": "e3b03d918ec580f39e53ad4071e5cf3112382eced6d80921960c5d705f41ae3c",
-  "lang/de.js": "d28ef935ecac77d5f31e30cbb9679d25ebd5c6288096f9d9c976024f20506daf",
-  "lang/pt-BR.js": "f0cd43bcff570fe8af9836daabb4bb11bb172d3e3b1d9d3ac6c03918fb6724fd",
-  "lang/ja.js": "bec3d92e0664ef84db861ad861543740dd35cf947de916a710027e9d2d5e7e0f",
-  "lang/ko.js": "7daa45860f296bde5f9130d3150af89b91684377a7e0abe70fb99f1050ec0b7d"
+  "lang/zh-Hant.js": "3ba605f6878bcf91f449c4ea9b965b6317c10e8bde61e8811b5075fcc8769227",
+  "lang/zh-Hans.js": "d969575785d07b81da685b69d6f875cba1e5a487b9b722bd1425947be0350ec8",
+  "lang/es.js": "cb140143ec7aa5a96f2e06cc256c40bae396f95cecea036fb4874d6098b57cb0",
+  "lang/fr.js": "48129f3a12ea0e2b77113c9f0ee65002552cae29f8eb5cd33dd7e965fb2fe96d",
+  "lang/de.js": "1053b22bd1d16b652eec2d783aaf9cd64b760f3e58a2dcb24eef77d826922014",
+  "lang/pt-BR.js": "b72e94d6a7413e4e62f1f9051bfc453c6fb3fc4a7578dc26ec350f60396451b5",
+  "lang/ja.js": "db10ec7d20f5c36330d8dabe61b07a57f49aaf13d8848c9f4fa182b56b4739c4",
+  "lang/ko.js": "4bfebd5b072a7ed8504cc20e0479cf5f72f27ac50f2b29a9a389b8a9dad0f1bb"
  }
 }
