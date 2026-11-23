@@ -1,11 +1,11 @@
 {
- "version": "1.28.79",
- "build": "d20289363f72",
+ "version": "1.28.80",
+ "build": "c0e47eb39c29",
  "notes": [
-  "With the highlighter on Box or Free, the pointer is now a crosshair everywhere, even over typed words. The text pointer shows only on Snap, where the highlight really follows the words."
+  "Only this student is no longer copied between computers by Google Drive sync, so an old one can’t keep taking over your screen. One left over from before, or from more than three hours ago, is let go by itself."
  ],
  "files": {
-  "index.html": "fab4a81dd6ba1a3468801853a4018fa42fd98a46df349fc0f50e45eaae2fc5fc",
+  "index.html": "a0d89871fd40da5ee37c993a49fd7fbab9ce8172158e8ae6cb1615a33b0584a6",
   "planner.html": "01d1e77793068616c172796c249b3ffb162df3ac94d099ab8b46fd2d473474a5"
  },
  "langs": {

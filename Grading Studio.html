@@ -5286,7 +5286,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.79";
+  const APP_VERSION = "1.28.80";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -21364,6 +21364,7 @@ if (Object.keys(gone).some(id => gone[id] !== ga[id])) set['gs.rubricsGone'] = J
 if (!(b || {})['gs.rubrics'] && (a || {})['gs.rubrics']) { const x = parse(a['gs.rubrics'], []); if (Array.isArray(x) && !x.every(alive)) set['gs.rubrics'] = JSON.stringify(x.filter(alive)); }
 for (const [k, v] of Object.entries(b || {})) {
 if (k === 'gs.lib' || k === 'gs.rubricsGone' || skip(k)) continue;
+if (k === 'gs.solo') continue;
 if (k === 'gs.bank') {
 let x = [], y = [];
 try { x = JSON.parse(a[k] || '[]'); y = JSON.parse(v); } catch {}
@@ -21474,7 +21475,7 @@ let setLibFrom, libNews;
   };
 }
 const browserFull = () => Object.assign(new DOMException('The small store is full', 'QuotaExceededError'), { small: true });
-const LS_LOCAL = /^gs\.(b\..+|batches|syncT|syncAt|cloudP|planCopy|planSeen|planBig|phone|phCls|dataV|lastBackup|gcid|gEmail|tomb|rolls|setupUndo|focusRun|wlCodes|refOpen\..*)$/;
+const LS_LOCAL = /^gs\.(b\..+|batches|syncT|syncAt|cloudP|planCopy|planSeen|planBig|phone|phCls|dataV|lastBackup|gcid|gEmail|tomb|rolls|setupUndo|focusRun|wlCodes|solo|refOpen\..*)$/;
 function carryLs() {
   const o = {};
   for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('gs.') && !LS_LOCAL.test(k)) o[k] = localStorage.getItem(k); }
@@ -33891,7 +33892,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.79":["With the highlighter on Box or Free, the pointer is now a crosshair everywhere, even over typed words. The text pointer shows only on Snap, where the highlight really follows the words."]};
+const WHATS_NEW = {"1.28.80":["Only this student is no longer copied between computers by Google Drive sync, so an old one can’t keep taking over your screen. One left over from before, or from more than three hours ago, is let go by itself."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -36368,7 +36369,13 @@ if (PHONE) phSignRender();
 
 /* ---------------- Only this student: when a student comes to the desk, the screen shows them and nobody else ---------------- */
 var soloTry = '', soloUndo = null, soloOpen = false, soloHoldT = 0;
-function soloNow() { const s = store.get('gs.solo', null); return s && s.id && s.key != null ? s : null; }
+const SOLO_MAX = 3 * 3600e3;
+function soloNow() {
+const s = store.get('gs.solo', null);
+if (!(s && s.id && s.key != null)) return null;
+if (!(s.at > 0) || Date.now() - s.at > SOLO_MAX || s.at > Date.now() + 6e4) { store.del('gs.solo'); return null; }
+return s;
+}
 function soloOn() { return !!soloNow(); }
 function soloIdx() {
 const s = soloNow(); if (!s || !batch || batch.id !== s.id) return -1;
@@ -36379,7 +36386,7 @@ if (!batch || PHONE || !batch.students[i]) return;
 commitEditors(); saveNow();
 if (dlgPage) dlgShut();
 if (typeof closeCard === 'function') closeCard();
-store.set('gs.solo', { id: batch.id, key: batch.students[i].key });
+store.set('gs.solo', { id: batch.id, key: batch.students[i].key, at: Date.now() });
 soloTry = ''; soloOpen = false;
 if (!soloUndo) { soloUndo = undoStack; undoStack = []; redoStack = []; }
 document.documentElement.classList.add('solo');
@@ -36396,7 +36403,8 @@ if (batch) { renderList(); renderGrade(); renderTools(); }
 if (!quiet) applyRoute();
 }
 function soloRoute(r) {
-const s = soloNow(); if (!s) return false;
+const s = soloNow();
+if (!s) { if (document.documentElement.classList.contains('solo')) soloEnd(true); return false; }
 if (r.v === 'a' && batch && batch.id === r.id && r.id !== s.id) { soloEnd(true); return false; }
 if (batch && batch.id === s.id && soloIdx() < 0) { soloEnd(true); return false; }
 if (r.v === 'a' && r.id === s.id && !r.tab) {
@@ -36452,7 +36460,7 @@ function soloGo(id, key) {
 if (!soloOn()) return;
 if (batch && batch.id === id) { soloOpen = false; return soloBar(); }
 commitEditors(); saveNow();
-store.set('gs.solo', { id, key }); soloTry = ''; soloOpen = false;
+store.set('gs.solo', { id, key, at: (soloNow() || {}).at || Date.now() }); soloTry = ''; soloOpen = false;
 soloUndo = [];
 go(batchHash(id), true);
 soloBar();
@@ -36474,6 +36482,7 @@ bar.addEventListener('pointerout', e => { if (e.target.closest('#soloExit') && !
 bar.addEventListener('keydown', e => { if (e.target.closest('#soloExit') && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); if (!e.repeat) soloHold(true); } });
 bar.addEventListener('keyup', e => { if (e.target.closest('#soloExit') && (e.key === ' ' || e.key === 'Enter')) soloHold(false); });
 bar.addEventListener('contextmenu', e => e.preventDefault());
+window.addEventListener('focus', () => { if (document.documentElement.classList.contains('solo') && !soloNow()) soloEnd(); });
 window.addEventListener('storage', e => { if (e.key === 'gs.solo' && !e.newValue && document.documentElement.classList.contains('solo')) soloEnd(); });
 const s = soloNow();
 if (s && !PHONE) {

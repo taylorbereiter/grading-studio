@@ -133,7 +133,7 @@ The current app's own legs (web address and double-clicked copy, main against th
 | `gs.refOpen.<id>` | students | pref | json | a grading screen setting | app/readings.js |
 | `gs.refZoom.<id>` | students | pref | json | a grading screen setting | app/readings.js |
 | `gs.sheetall` | students | pref | json | a grading screen setting | app/gradesheet.js |
-| `gs.solo` | students | pref | json | a grading screen setting | solo.js |
+| `gs.solo` | students | pref | json | a grading screen setting | merge.js, solo.js |
 | `gs.sp` | students | pref | json | a grading screen setting | sidepane.js |
 | `gs.spsize` | students | pref | json | a grading screen setting | app/scansplit.js |
 | `gs.tdBy` | students | pref | json | a grading screen setting | todo.js |

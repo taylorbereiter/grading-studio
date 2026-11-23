@@ -378,7 +378,12 @@ function CommentChips({ text, onAdd }) {
 
 // Only this student (src/solo.js): when a student comes to the desk, the screen shows them and nobody else. Only a flag in this
 // browser (gs.solo); the list, the tabs and the way to anyone else step aside, and it ends only by holding the button for 1.5 s.
-const soloOf = b => { const s = prefs.get('gs.solo', null); return s && b && s.id === b.id && s.key != null ? s : null; };
+// A flag with no time (from before, or come in through sync) or older than three hours is let go (11/23: an old one kept taking over).
+const soloOf = b => {
+  const s = prefs.get('gs.solo', null);
+  if (s && !(s.at > 0 && Date.now() - s.at <= 3 * 3600e3 && s.at <= Date.now() + 6e4)) { prefs.del('gs.solo'); return null; }
+  return s && b && s.id === b.id && s.key != null ? s : null;
+};
 function SoloBar({ st, name, asg, onEnd }) {
   const [hold, setHold] = useState(false), tm = useRef(0), [SW, setSW] = useState(null);
   useEffect(() => { let live = true; PARTS.solowork().then(m => live && setSW(() => m.OtherWork), e => console.error(e)); return () => { live = false; }; }, []);
@@ -453,7 +458,7 @@ export default function MarkScreen({ route, classes }) {
   const fm = !!(MK && MK.M.fmNow());
   const order = w ? shownOrder(w.batch, lf, cur, fm) : [], at = order.indexOf(cur);
   const step = d => { const n = order[at + d]; if (n != null) pick(n); };
-  const soloStart = () => { if (!w || !w.batch.students[cur]) return; if (MK) MK.M.commit(); prefs.set('gs.solo', { id: w.batch.id, key: w.batch.students[cur].key }); setSoloK(k => k + 1); };
+  const soloStart = () => { if (!w || !w.batch.students[cur]) return; if (MK) MK.M.commit(); prefs.set('gs.solo', { id: w.batch.id, key: w.batch.students[cur].key, at: Date.now() }); setSoloK(k => k + 1); };
   const soloEnd = () => { prefs.del('gs.solo'); setSoloK(k => k + 1); };
   // Grades, Insights and Return load as a part of their own, with the export engine and its libraries, the first time one opens.
   const [out, setOut] = useState(null);
