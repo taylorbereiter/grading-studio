@@ -5,7 +5,15 @@
 // It stays through a reload. It ends only by holding "Hold to show everyone" for a moment and a half, so a click can't end it.
 // var and function, not let and const: toast, openStudent and applyRoute can ask before this file has run (a boot note, say).
 var soloTry = '', soloUndo = null, soloOpen = false, soloHoldT = 0;
-function soloNow() { const s = store.get('gs.solo', null); return s && s.id && s.key != null ? s : null; }
+// A flag from before 1.28.78 has no time and may have come in through sync from another computer: it is let go, as is one
+// older than three hours (a student at the desk is there for minutes). 11/23: an old one kept taking a teacher's screen.
+const SOLO_MAX = 3 * 3600e3;
+function soloNow() {
+  const s = store.get('gs.solo', null);
+  if (!(s && s.id && s.key != null)) return null;
+  if (!(s.at > 0) || Date.now() - s.at > SOLO_MAX || s.at > Date.now() + 6e4) { store.del('gs.solo'); return null; }
+  return s;
+}
 function soloOn() { return !!soloNow(); }
 // The student's place in the open download, or -1 while another one is open (on the way to theirs).
 function soloIdx() {
@@ -17,7 +25,7 @@ function soloStart(i) {
   commitEditors(); saveNow();
   if (dlgPage) dlgShut();
   if (typeof closeCard === 'function') closeCard();
-  store.set('gs.solo', { id: batch.id, key: batch.students[i].key });
+  store.set('gs.solo', { id: batch.id, key: batch.students[i].key, at: Date.now() });
   soloTry = ''; soloOpen = false;
   // Ctrl Z in here takes back only what was done in here: an earlier step could open, or change, someone else.
   if (!soloUndo) { soloUndo = undoStack; undoStack = []; redoStack = []; }
@@ -36,7 +44,9 @@ function soloEnd(quiet) {
 }
 // applyRoute asks first: true when it took care of the address itself.
 function soloRoute(r) {
-  const s = soloNow(); if (!s) return false;
+  const s = soloNow();
+  // gone (let go as too old, or ended in another window) while the screen still hides everyone: give it all back
+  if (!s) { if (document.documentElement.classList.contains('solo')) soloEnd(true); return false; }
   // Another download is open now: she dropped papers in or opened one herself, which a student at the desk doesn't do.
   // Sending her back would close what she just brought in (11/23: stuck after bringing in some students' work), so it ends here.
   if (r.v === 'a' && batch && batch.id === r.id && r.id !== s.id) { soloEnd(true); return false; }
@@ -100,7 +110,7 @@ function soloGo(id, key) {
   if (!soloOn()) return;
   if (batch && batch.id === id) { soloOpen = false; return soloBar(); }
   commitEditors(); saveNow();
-  store.set('gs.solo', { id, key }); soloTry = ''; soloOpen = false;
+  store.set('gs.solo', { id, key, at: (soloNow() || {}).at || Date.now() }); soloTry = ''; soloOpen = false;
   soloUndo = [];   // a new download starts its own steps
   go(batchHash(id), true);
   soloBar();
@@ -123,6 +133,7 @@ function soloHold(on) {
   bar.addEventListener('keydown', e => { if (e.target.closest('#soloExit') && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); if (!e.repeat) soloHold(true); } });
   bar.addEventListener('keyup', e => { if (e.target.closest('#soloExit') && (e.key === ' ' || e.key === 'Enter')) soloHold(false); });
   bar.addEventListener('contextmenu', e => e.preventDefault());
+  window.addEventListener('focus', () => { if (document.documentElement.classList.contains('solo') && !soloNow()) soloEnd(); });
   // Ended in another window of the app: end here too, or this one would keep sending her back.
   window.addEventListener('storage', e => { if (e.key === 'gs.solo' && !e.newValue && document.documentElement.classList.contains('solo')) soloEnd(); });
   // After a reload: straight back to their paper, before Home is ever drawn.
