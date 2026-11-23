@@ -134,12 +134,16 @@ export function MarkingSettings() {
 }
 
 // Her saved comments (gs.bank, students/comments.js): changed in place, moved up, or removed with Undo. The comment box offers the same list.
+// The list part once it is here: a change and what the list shows happen in the same turn, so she never types into a row that is
+// about to move (a second import() of a loaded part still waits a turn).
+let CB = null;
+const cbank = () => (CB ? Promise.resolve(CB) : PARTS.cbank().then(m => (CB = m)));
 function SavedComments() {
   const [bank, setBank] = useState(null), [add, setAdd] = useState('');
-  useEffect(() => { let live = true; const read = () => PARTS.cbank().then(m => m.readBank()).then(b => { if (live) setBank(b); });
+  useEffect(() => { let live = true; const read = () => cbank().then(m => m.readBank()).then(b => { if (live) setBank(b); });
     read(); const off = onSaved(e => { if (e.kind === 'setting' && e.id === 'gs.bank') read(); }); return () => { live = false; off(); }; }, []);
   if (!bank) return null;
-  const change = (label, fn, said) => PARTS.cbank().then(m => { m.changeBank(label, fn); if (said) toast(said, { undo: () => undoList.undo() }); });
+  const change = (label, fn, said) => cbank().then(m => { setBank(m.changeBank(label, fn)); if (said) toast(said, { undo: () => undoList.undo() }); });
   const edit = (i, v) => { v = String(v || '').trim(); if (v === bank[i]) return; if (!v) return remove(i); change(t('setup.sg_cb_step_edit'), l => { l[i] = v; return l.filter((c, k) => k === i || c !== v); }); };
   const remove = i => change(t('setup.sg_cb_step_remove'), l => { l.splice(i, 1); return l; }, t('setup.sg_cb_removed'));
   const up = i => change(t('setup.sg_cb_step_move'), l => { [l[i - 1], l[i]] = [l[i], l[i - 1]]; return l; });

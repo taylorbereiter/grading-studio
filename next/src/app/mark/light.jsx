@@ -4,7 +4,7 @@
 // file, or the same page on every paper. The student's file isn't changed. Every choice is one undo step, a slider drag one step (the
 // current app's lightSnap). Drawing is the current app's (engines/gdraw.js lightBmp). Loaded with the file tools (mark/fileui.jsx).
 import { h, Fragment } from 'preact';
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState, useEffect, useLayoutEffect, useRef } from 'preact/hooks';
 import { Button, IconButton, Checkbox, Segmented, toast } from '../../ui/index.js';
 import { state } from '../../engines/gcore.js';
 import * as D from '../../engines/gdraw.js';
@@ -35,11 +35,13 @@ function Sliders({ L, onSet, tag }) {
 export function LightPanel({ onClose }) {
   useLight();
   const box = useRef(null), bb = b(), st = st0();
-  useEffect(() => { if (box.current) box.current.focus({ preventScroll: true }); }, []);
+  // The focus and the Escape listener are set as the panel goes into the page (a layout effect), not after it is drawn: an Escape
+  // pressed the moment it appeared came before either and did nothing (CI, PR #267).
+  useLayoutEffect(() => { if (box.current) box.current.focus({ preventScroll: true }); }, []);
   // Escape closes it also when nothing else would take it (src/polish.js): the keyboard on nothing, no mark picked, no box open (A-108).
   // The paper counts as nothing: here it takes the focus when clicked, or back after a tool closes, where the current app's page has none.
   const shut = useRef(onClose); shut.current = onClose;
-  useEffect(() => { const k = e => { const a = document.activeElement, free = !a || a === document.body || a.classList.contains('mk-paper');
+  useLayoutEffect(() => { const k = e => { const a = document.activeElement, free = !a || a === document.body || a.classList.contains('mk-paper');
     if (e.key !== 'Escape' || !free || state().selected || document.querySelector('dialog[open]')) return; e.preventDefault(); e.stopPropagation(); shut.current(); };
     addEventListener('keydown', k, true); return () => removeEventListener('keydown', k, true); }, []);
   if (!bb || !st) return null;

@@ -4,7 +4,7 @@
 // + − × ÷ ( ) type straight into it, even after a click on the paper. Use as score puts the answer in the points box; Score sticker
 // puts it on the paper where she clicks next. Loaded on its own (router.js PARTS.calc).
 import { h, Fragment } from 'preact';
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState, useEffect, useLayoutEffect, useRef } from 'preact/hooks';
 import { IconButton, toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { calcEval, calcFmt, calcKeyOf, stickerText } from '../../engines/gcalc.js';
@@ -31,7 +31,8 @@ export function Calculator({ M, onClose }) {
   // numbers and signs go into it while it is open, wherever the focus is (not / which finds a student, and not a box she is typing in)
   // the key listener stays put and reads the newest render through this, so a key right after another never sees the sum before it
   const now = useRef(null); now.current = { done, typeIn, onClose };
-  useEffect(() => {
+  // listening from the moment it goes into the page (a layout effect), so a key pressed as it appears is not lost
+  useLayoutEffect(() => {
     const key = e => { const { done, typeIn, onClose } = now.current;
       if (e.metaKey || e.ctrlKey || e.altKey || e.key === '/') return;
       const a = document.activeElement, mine = box.current && box.current.contains(a);

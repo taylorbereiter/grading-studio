@@ -167,7 +167,7 @@ export function endOnce() { const o = state().once; if (!o) return; use({ once: 
 // groupSync comes with the group engine (mark/group.jsx), loaded with the file tools; until then there are no group changes to share
 let groupSync = () => {};
 export const useGroupSync = f => { groupSync = f; };
-function saveSoon() { groupSync(); clearTimeout(saveT); saveT = setTimeout(() => K.saveNow(), 500); saveState = 'saving'; tell(); }
+function saveSoon() { groupSync(); clearTimeout(saveT); saveT = setTimeout(() => { saveT = null; K.saveNow(); }, 500); saveState = 'saving'; tell(); }
 let W0 = null, leaving = false;
 // What goes on each save before it is stamped (src/folder.js stampWork): a Word paper edited in the app, and what was taken off, so a
 // copy elsewhere doesn't bring it back. The stamps themselves, and the merge with another window's save, are students/write.js saveWork's.
@@ -176,18 +176,20 @@ function stampWork(b, data) {
   if (b.goneNow) data.gone = b.goneNow;
 }
 async function writeWork(b, data) {
-  const seq = ++saveSeq;
+  // 'saving' from the moment a write starts until the last one ends with no other due: an earlier write that ends while a change
+  // waits its half second, or while a later write is under way, doesn't say saved (saveNowDone waits on it)
+  const seq = ++saveSeq; saveState = 'saving';
   if (leaving && W0) { try { W0.saveWorkLeaving(b.id, d => Object.assign(d, JSON.parse(JSON.stringify(data))), { hold: b }); } catch (e) { console.error(e); } return; }
   try {
     // the save layer (students/write.js) loads with the first save, so it isn't part of the tools' first load
     const W = W0 = await PARTS.write();
     const r = await W.saveWork(b.id, d => Object.assign(d, JSON.parse(JSON.stringify(data))), { fresh: !!b.fresh, hold: b });
     if (r.full || r.quick) delete b.fresh;
-    if (seq === saveSeq) saveState = r.full ? 'saved' : r.quick ? 'partly' : 'not';
+    if (seq === saveSeq && !saveT) saveState = r.full ? 'saved' : r.quick ? 'partly' : 'not';
     if (r.full) saveWorked(b.id); else if (seq === saveSeq || b !== state().batch) saveFailed(b.id, again(b, data), r.quick);   // the red bar (saving/trouble.js)
   } catch (e) {
     console.error(e);
-    if (seq === saveSeq) saveState = e && e.name === 'CannotSave' ? 'cannot:' + e.why : 'not';
+    if (seq === saveSeq && !saveT) saveState = e && e.name === 'CannotSave' ? 'cannot:' + e.why : 'not';
     if (!(e && e.name === 'CannotSave')) saveFailed(b.id, again(b, data), false);
   }
   tell();
@@ -232,7 +234,8 @@ function reach(pg) {
 
 // The hooks: called by the lifted code when it would, in the current app, redraw a panel, open an editor or say something.
 // The page closing or reloading with a save still waiting (or a box still being typed in): saved at once, as the current app does.
-function onLeave() { if (!saveT && !state().activeEditor) return; leaving = true; try { K.commitEditors(); clearTimeout(saveT); saveT = null; K.saveNow(true); } finally { leaving = false; } }
+function onLeave() { if (!saveT && saveState !== 'saving' && !state().activeEditor) return;   // a change waiting, or a write under way: written as she leaves
+  leaving = true; try { K.commitEditors(); clearTimeout(saveT); saveT = null; K.saveNow(true); } finally { leaving = false; } }
 let leaveOn = false;
 // The engines' own notes, said in the language (they write English): only the ones the screen has a line for. The rest stay quiet,
 // since the screen says those things itself. gopen loadEdits: highlights kept on a rubric replaced under a new name (audit H-036).
