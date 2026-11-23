@@ -101,6 +101,7 @@ export const LOCAL = [
 export const SESSION = [
   ['gs.gTok', 'planning', 'coord', 'json', 'the Google sign-in token'],
   ['gs.gState', 'shared', 'coord', 'json', 'the Google sign-in step under way'],
+  ['gs.gBack', 'shared', 'coord', 'text', 'a Google sign-in started in the previous version (classic/): the root page sends the key on there'],
   ['gs.gQuiet', 'shared', 'coord', 'json', 'Google sign-in: renew without asking'],
   ['gs.goHome', 'shared', 'coord', 'json', 'open Home after the reload'],
   ['gs.pickedUp', 'students', 'coord', 'json', 'a download picked up after the reload'],

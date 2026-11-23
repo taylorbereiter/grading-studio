@@ -20,7 +20,9 @@
 //
 // Every student, class and lesson here is made up.
 const fs = require('fs'), os = require('os'), path = require('path'), net = require('net');
-const ROOT = path.join(__dirname, '..', '..');
+// --base <folder>: where the current app's built pages are (classic/ since the switch, test/helpers/base.js).
+{ const i = process.argv.indexOf('--base'); if (i > 0 && process.argv[i + 1]) process.env.GS_BASE = process.argv[i + 1]; }
+const ROOT = path.join(__dirname, '..', '..'), BASE = require('../helpers/base');
 const { launch } = require('../helpers/chrome');
 const { plant, appReady, openZip, goToStudent, score, markPage, settle, builtHtml } = require('../helpers/app');
 const { standardFiles, zipOf } = require('../helpers/fixtures');
@@ -220,7 +222,7 @@ const allowed = ref => ref === 'itself' ? [] : changedList('test/screens-changed
     if (!old) { console.log('Can’t read the pages of ' + ref + ' (try: git fetch origin main). Taking pictures of this build only.'); ref = null; }
   }
   builtHtml();
-  const cur = { index: fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8'), planner: fs.readFileSync(path.join(ROOT, 'planner.html'), 'utf8') };
+  const cur = { index: fs.readFileSync(path.join(BASE, 'index.html'), 'utf8'), planner: fs.readFileSync(path.join(BASE, 'planner.html'), 'utf8') };
   fs.rmSync(OUT, { recursive: true, force: true });
   for (const d of ['new', 'old', 'diff']) fs.mkdirSync(path.join(OUT, d), { recursive: true });
   if (steady) { old = cur; ref = 'itself'; }

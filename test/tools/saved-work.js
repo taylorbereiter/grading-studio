@@ -23,7 +23,9 @@
 //
 // Every student, class and lesson here is made up.
 const fs = require('fs'), os = require('os'), path = require('path');
-const ROOT = path.join(__dirname, '..', '..');
+// --base <folder>: where the current app's built pages are (classic/ since the switch, test/helpers/base.js).
+{ const i = process.argv.indexOf('--base'); if (i > 0 && process.argv[i + 1]) process.env.GS_BASE = process.argv[i + 1]; }
+const ROOT = path.join(__dirname, '..', '..'), BASE = require('../helpers/base');
 const { launch } = require('../helpers/chrome');
 const { plant, appReady, openZip, goToStudent, score, markPage, settle, goTo, builtHtml } = require('../helpers/app');
 const { standardFiles, zipOf } = require('../helpers/fixtures');
@@ -427,7 +429,7 @@ function differ(a, b) {
   const old = pagesAt(ref);
   if (!old) { console.error('Can’t read the pages of ' + ref + '. Try: git fetch origin main'); process.exit(1); }
   builtHtml();
-  const cur = { index: fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8'), planner: fs.readFileSync(path.join(ROOT, 'planner.html'), 'utf8') };
+  const cur = { index: fs.readFileSync(path.join(BASE, 'index.html'), 'utf8'), planner: fs.readFileSync(path.join(BASE, 'planner.html'), 'utf8') };
   const t0 = Date.now(), ok = changedList('test/saved-work-changed.txt', ref);
   let failed = false, report = '';
   if (old.index === cur.index && old.planner === cur.planner) report += 'The pages are the same as ' + ref + '’s, byte for byte, so saved work is read by the same code.\n';

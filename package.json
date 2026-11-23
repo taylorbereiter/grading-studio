@@ -1,6 +1,6 @@
 {
   "name": "grading-studio",
-  "version": "1.28.81",
+  "version": "2.0.0",
   "private": true,
   "license": "MIT",
   "description": "Mark papers, plan lessons and hand work back, in the browser. Student work stays on the teacher's computer.",
@@ -10,6 +10,7 @@
     "check": "npm run build && npm test",
     "screens": "node test/tools/screens.js",
     "saved-work": "node test/tools/saved-work.js",
+    "rehearsal": "node test/tools/rehearsal.js",
     "speed": "node test/tools/speed.js",
     "preview": "npm run build && node test/preview.js",
     "next:build": "node next/build.js",

@@ -7,6 +7,7 @@ const fs = require('fs'), path = require('path'), http = require('http');
 const { launch } = require('./helpers/chrome');
 const { langFile } = require('./helpers/serve');
 const { ROOT, builtHtml, openApp, appReady, goTo } = require('./helpers/app');
+const BASE = require('./helpers/base');   // the current app's pages: classic/ since the switch
 
 let browser;
 before(async () => { builtHtml(); browser = await launch(); });
@@ -19,7 +20,7 @@ function serveBoth() {
     if (langFile(res, p)) return;
     if (!file && p !== '/blank') { res.writeHead(404); return res.end(); }
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
-    res.end(file ? fs.readFileSync(path.join(ROOT, file), 'utf8') : '<!doctype html><title>blank</title>');
+    res.end(file ? fs.readFileSync(path.join(BASE, file), 'utf8') : '<!doctype html><title>blank</title>');
   });
   return new Promise(r => srv.listen(0, '127.0.0.1', () => { srv.unref(); r({ url: 'http://localhost:' + srv.address().port + '/', close: () => new Promise(d => { srv.closeAllConnections(); srv.close(d); }) }); }));
 }

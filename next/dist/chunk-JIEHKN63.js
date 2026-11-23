@@ -1,1 +1,0 @@
-import{k as n}from"./chunk-IQBJLKT6.js";var s=t=>String(t||"").toLowerCase().replace(/[^a-z0-9]/g,""),r=t=>(t=String(t||"").trim(),/^[\w.-]+\.[a-z]{2,}\//i.test(t)&&(t="https://"+t),/^https?:\/\/[^\s"<>]+$/i.test(t)?t:"");function o(t){if(!t)return"";let e=n.json(null)||{};return r(t.mb)||r(e[s(t.name)])||""}export{s as a,r as b,o as c};

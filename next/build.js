@@ -1,5 +1,7 @@
-// Builds the new app into next/: the pages (next/index.html, next/proof.html) and their code (next/dist/). The current app's build
-// (build.js) is not touched, and nothing here goes into its pages or its size budgets.
+// Builds the new app at the main address (the switch): the pages (index.html, planner.html, gallery.html, proof.html), their code
+// (dist/), the root's service worker (sw.js, from next/src/sw.js), version.json and the install card (manifest.webmanifest). The
+// previous version's build (build.js) writes classic/ and is not touched; nothing here goes into its pages or its size budgets.
+// next/ keeps only a page that sends old bookmarks to the root (next/index.html) and a worker that retires itself (next/sw.js).
 //
 //   node next/build.js          (npm run next:build)
 //
@@ -7,7 +9,9 @@
 // as the current app's (src/samplemode.js), so the sample keeps its own names here too. The output is committed, since the
 // site is served from the repository, and CI checks it is what next/src builds.
 const fs = require('fs'), path = require('path'), esbuild = require('esbuild');
-const ROOT = path.join(__dirname, '..'), NEXT = __dirname, DIST = path.join(NEXT, 'dist');
+const ROOT = path.join(__dirname, '..'), NEXT = __dirname, OUT = ROOT, DIST = path.join(OUT, 'dist');
+// The version number, shared with the previous version (package.json).
+const VERSION = require(path.join(ROOT, 'package.json')).version;
 
 // The current app's languages, each by its code and its own name (the same list as build.js LANGS), for the Language setting.
 function langList() {
@@ -24,15 +28,39 @@ function dataVersion() {
   if (!m) throw new Error('src/migrate.js: MIGRATIONS not found');
   return Math.max(1, ...[...m[1].matchAll(/^\s*\{\s*to:\s*(\d+)/gm)].map(x => +x[1]));
 }
-// next/version.json: every file the new app's worker (next/sw.js) keeps, with its SHA-256, so a version is only ever taken whole.
+// version.json: every file the root's worker (next/src/sw.js) keeps, with its SHA-256, so a version is only ever taken whole. Its
+// notes are what a page of the previous version still open shows beside Update now (src/whatsnew.json). The list is called sums, not
+// files as the previous version's was: that version's worker, still at the root until the browser fetches this sw.js, takes a
+// version.json without files as no version at all, so it can never keep this index.html for itself without the dist/ it needs.
 function writeVersion() {
-  const crypto = require('crypto'), sum = f => crypto.createHash('sha256').update(fs.readFileSync(path.join(NEXT, f))).digest('hex');
-  const files = { 'index.html': sum('index.html') };
+  const crypto = require('crypto'), sum = f => crypto.createHash('sha256').update(fs.readFileSync(path.join(OUT, f))).digest('hex');
+  const files = {};
+  for (const f of ['index.html', 'planner.html', 'manifest.webmanifest', ...fs.readdirSync(path.join(ROOT, 'icons')).filter(f => f.endsWith('.png')).sort().map(f => 'icons/' + f)]) files[f] = sum(f);
   for (const f of fs.readdirSync(DIST).sort()) if (!/^(meta\.json|gallery|proof)/.test(f)) files['dist/' + f] = sum('dist/' + f);
   const build = crypto.createHash('sha256').update(JSON.stringify(files)).digest('hex').slice(0, 12);
-  const version = JSON.parse(fs.readFileSync(path.join(ROOT, 'version.json'), 'utf8')).version;
-  fs.writeFileSync(path.join(NEXT, 'version.json'), JSON.stringify({ version: version + '-next', build, files }, null, 1) + '\n');
+  const notes = require(path.join(ROOT, 'src/whatsnew.json'))[VERSION] || [];
+  fs.writeFileSync(path.join(OUT, 'version.json'), JSON.stringify({ version: VERSION, build, notes, sums: files }, null, 1) + '\n');
 }
+// What only the root page carries: the install card and the icon, the daily count of browsers (src/visits.js, as the previous
+// version's pages at the web address do), and Google's sign-in coming back for the previous version. Google returns only to the
+// root; classic/ leaves a note in the tab (gs.gBack, src/app/drive.js), and the key in the address goes straight on to classic/.
+function rootHead() {
+  const site = require(path.join(ROOT, 'site.json')), src = fs.readFileSync(path.join(ROOT, 'src/visits.js'), 'utf8').replace(/\/\*[\s\S]*?\*\/\s*/, '');
+  if (src.split("'/*@@HOME@@*/'").length !== 2) throw new Error('src/visits.js: the address is not in it once');
+  const visits = '<script>' + src.replace("'/*@@HOME@@*/'", () => JSON.stringify([site.address, site.movingTo].filter(Boolean))).trim() + '</script>';
+  // The note carries the sign-in's state (classic:<state>), so only the sign-in that left it is sent on.
+  const back = '<script>try{var gsS=sessionStorage,gsH=location.hash,gsM=/(?:^#|&)state=([^&]*)/.exec(gsH);if(/(^#|&)(access_token|error)=/.test(gsH)&&gsM&&[gsS.getItem("gs.gBack"),gsS.getItem("sample:gs.gBack")].indexOf("classic:"+decodeURIComponent(gsM[1]))>=0){gsS.removeItem("gs.gBack");gsS.removeItem("sample:gs.gBack");location.replace("classic/"+gsH)}}catch(e){}</script>';
+  return back + '<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF">' + visits;
+}
+// planner.html: the Planner's own page is the previous version's (classic/planner.html). Its addresses, kept in bookmarks and in the
+// installed app's history (src/planner/rail.js arriveAt: week, lesson/<id>, plan/<class>/<day>, present/<id>/<class>, rubrics,
+// timetable), go on to the root as they are: the router knows week, lesson/<id> and plan/<class>/<day>, and app/old-routes.js
+// sends the rest to the matching screen, so the Planner's addresses are mapped in one place.
+const PLANNER_PAGE = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Grading Studio</title>\n' +
+  '<script>(function(){var h=location.hash.replace(/^#\\/?/,"");location.replace("./"+location.search+"#/"+(h||"week"))})()</script>\n</head><body><p><a href="./#/week">Grading Studio</a></p></body></html>\n';
+const MANIFEST = { name: 'Grading Studio', short_name: 'Grading Studio', description: 'Mark papers, plan lessons and hand work back. Everything stays on this computer.',
+  start_url: './', scope: './', display: 'standalone', background_color: '#F4F5F7', theme_color: '#FFFFFF',
+  icons: [{ src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }, { src: 'icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }] };
 
 // next/src/engines/merge.js: the current app's merge code (src/merge.js, which touches neither the page nor storage), made into a
 // module so the new app stamps and merges saved work with the very same functions. Made here, never edited by hand.
@@ -729,7 +757,7 @@ async function build() {
     outdir: DIST, bundle: true, splitting: true, format: 'esm', target: ['chrome109', 'safari16'], minify: !process.env.GS_NEXT_DEBUG,
     chunkNames: 'chunk-[hash]', entryNames: '[name]', metafile: true, absWorkingDir: ROOT, legalComments: 'none', logLevel: 'warning',
     // An array-valued define injects its initializer into every chunk. Only the language picker needs the list.
-    jsxFactory: 'h', jsxFragment: 'Fragment', define: { __GS_LANGS_JSON__: JSON.stringify(JSON.stringify(langList())), __GS_DATA_V__: String(dataVersion()), __GS_APP_VERSION__: JSON.stringify(JSON.parse(fs.readFileSync(path.join(ROOT, 'version.json'), 'utf8')).version), __GS_GCID__: JSON.stringify(process.env.GCID || require('../site.json').googleClientId || ''),
+    jsxFactory: 'h', jsxFragment: 'Fragment', define: { __GS_LANGS_JSON__: JSON.stringify(JSON.stringify(langList())), __GS_DATA_V__: String(dataVersion()), __GS_APP_VERSION__: JSON.stringify(VERSION), __GS_GCID__: JSON.stringify(process.env.GCID || require('../site.json').googleClientId || ''),
       // where this copy lives and where it is moving to (site.json), only while a move is on, as build.js writes it for the current app
       __GS_MOVE__: (site => JSON.stringify(site.movingTo ? { address: site.address || '', movingTo: site.movingTo } : null))(require('../site.json')) },
   });
@@ -759,12 +787,15 @@ async function build() {
     '<script>' + sample + '</script>\n' + look + (entry === 'main' ? PHONE_VIEW : '') +
     '<link rel="stylesheet" href="dist/tokens.css"><link rel="stylesheet" href="dist/parts-css.css">' + css.map(c => '<link rel="stylesheet" href="dist/' + c + '.css">').join('') + (style ? '<style>' + style + '</style>' : '') + '\n' +
     '<script type="module" src="dist/' + entry + '.js"></script></head><body>' + body + '</body></html>\n';
-  fs.writeFileSync(path.join(NEXT, 'index.html'), partsPage('Grading Studio (new)', 'main', ['shell-css', 'plan-css', 'mark-css', 'class-css', 'todo-css', 'focus-css', 'pages-css'], '.wrap{max-width:640px;margin:0 auto;padding:48px 16px}h1{font-size:var(--t5);margin:0 0 12px}.wrap p{color:var(--mute)}.state{color:var(--ink);border-top:1px solid var(--line);padding-top:12px}', '<div id="app"></div>'));
-  fs.writeFileSync(path.join(NEXT, 'gallery.html'), partsPage('Parts gallery', 'gallery', ['gallery-css'], '', '<div id="app"></div>'));
-  fs.writeFileSync(path.join(NEXT, 'proof.html'), page('Saved-work proof', 'proof', '<p>Saved-work proof page. Used by the checks, not by teachers.</p>'));
+  fs.writeFileSync(path.join(OUT, 'index.html'), partsPage('Grading Studio', 'main', ['shell-css', 'plan-css', 'mark-css', 'class-css', 'todo-css', 'focus-css', 'pages-css'], '.wrap{max-width:640px;margin:0 auto;padding:48px 16px}h1{font-size:var(--t5);margin:0 0 12px}.wrap p{color:var(--mute)}.state{color:var(--ink);border-top:1px solid var(--line);padding-top:12px}', '<div id="app"></div>').replace('<link rel="icon" href="data:,">', () => rootHead()));
+  fs.writeFileSync(path.join(OUT, 'gallery.html'), partsPage('Parts gallery', 'gallery', ['gallery-css'], '', '<div id="app"></div>'));
+  fs.writeFileSync(path.join(OUT, 'proof.html'), page('Saved-work proof', 'proof', '<p>Saved-work proof page. Used by the checks, not by teachers.</p>'));
+  fs.writeFileSync(path.join(OUT, 'planner.html'), PLANNER_PAGE);
+  fs.writeFileSync(path.join(OUT, 'manifest.webmanifest'), JSON.stringify(MANIFEST, null, 1) + '\n');
+  fs.writeFileSync(path.join(OUT, 'sw.js'), fs.readFileSync(path.join(NEXT, 'src/sw.js'), 'utf8'));
   writeVersion();
   const sizes = Object.entries(r.metafile.outputs).map(([f, o]) => path.basename(f) + ' ' + (o.bytes / 1024).toFixed(1) + ' KB').join(', ');
-  console.log('next/: ' + sizes);
+  console.log('new app: ' + sizes);
 }
 module.exports = { writeEngines };
 if (require.main === module) build().catch(e => { console.error(e); process.exit(1); });

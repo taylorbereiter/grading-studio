@@ -5,11 +5,12 @@ const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path'), http = require('http');
 const { launch } = require('./helpers/chrome');
 const { builtHtml } = require('./helpers/app');
+const BASE = require('./helpers/base');   // the current app's pages: classic/ since the switch
 const ROOT = path.join(__dirname, '..');
 
 function serve() {
   builtHtml();
-  const srv = http.createServer((req, res) => { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(fs.readFileSync(path.join(ROOT, 'planner.html'), 'utf8')); });
+  const srv = http.createServer((req, res) => { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(fs.readFileSync(path.join(BASE, 'planner.html'), 'utf8')); });
   return new Promise(r => srv.listen(0, '127.0.0.1', () => { srv.unref(); r({ url: 'http://localhost:' + srv.address().port + '/planner.html', close: () => new Promise(d => { srv.closeAllConnections(); srv.close(d); }) }); }));
 }
 // One class that meets every day of the week, all day, so there is always a meeting ahead whatever day and hour the test runs.

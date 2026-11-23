@@ -7,6 +7,7 @@ const { launch } = require('./helpers/chrome');
 const { ROOT, builtHtml, openApp, openZip, goTo, appReady, pickFile, settle, score, closeBox, waitPaper } = require('./helpers/app');
 const { standardFiles, zipOf } = require('./helpers/fixtures');
 const { gradingSeed } = require('./helpers/steady');
+const BASE = require('./helpers/base');   // the current app's pages: classic/ since the switch
 
 let browser, zip;
 before(async () => { browser = await launch(); zip = zipOf(await standardFiles()); });
@@ -18,7 +19,7 @@ function serveBoth() {
     const p = req.url.split('?')[0], file = p === '/' || p === '/index.html' ? 'index.html' : p === '/planner.html' ? 'planner.html' : null;
     if (!file && p !== '/blank') { res.writeHead(404); return res.end(); }
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
-    res.end(file ? fs.readFileSync(path.join(ROOT, file), 'utf8') : '<!doctype html><title>blank</title>');
+    res.end(file ? fs.readFileSync(path.join(BASE, file), 'utf8') : '<!doctype html><title>blank</title>');
   });
   return new Promise(r => srv.listen(0, '127.0.0.1', () => { srv.unref(); r({ url: 'http://localhost:' + srv.address().port + '/', close: () => new Promise(d => { srv.closeAllConnections(); srv.close(d); }) }); }));
 }

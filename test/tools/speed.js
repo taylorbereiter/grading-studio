@@ -10,6 +10,8 @@
 // and a change that makes the app several times slower does. --strict fails past the targets instead.
 // The numbers go to out/speed.json too. Made-up students only.
 const fs = require('fs'), path = require('path');
+// --base <folder>: where the current app's built pages are (classic/ since the switch, test/helpers/base.js).
+{ const i = process.argv.indexOf('--base'); if (i > 0 && process.argv[i + 1]) process.env.GS_BASE = process.argv[i + 1]; }
 const ROOT = path.join(__dirname, '..', '..');
 const { launch } = require('../helpers/chrome');
 const { openApp, openZip, goToStudent, setTool, toScreen, pickFile, waitPaper } = require('../helpers/app');

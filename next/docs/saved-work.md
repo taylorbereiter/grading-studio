@@ -216,6 +216,7 @@ The current app's own legs (web address and double-clicked copy, main against th
 |---|---|---|---|---|---|
 | `gs.gTok` | planning | coord | json | the Google sign-in token | app/drive.js, planner/pldrive.js |
 | `gs.gState` | shared | coord | json | the Google sign-in step under way | app/drive.js |
+| `gs.gBack` | shared | coord | text | a Google sign-in started in the previous version (classic/): the root page sends the key on there | app/drive.js |
 | `gs.gQuiet` | shared | coord | json | Google sign-in: renew without asking | app/drive.js |
 | `gs.goHome` | shared | coord | json | open Home after the reload | app/screens.js |
 | `gs.pickedUp` | students | coord | json | a download picked up after the reload | app/keep.js |

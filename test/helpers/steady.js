@@ -1,7 +1,7 @@
 // What the screenshot check and the saved-work check share: a stopped clock, made-up saved work, and a server that
 // can show one build's two pages at one address. Every student, class and lesson here is made up.
 const fs = require('fs'), path = require('path'), http = require('http'), { execFileSync } = require('child_process');
-const ROOT = path.join(__dirname, '..', '..');
+const ROOT = path.join(__dirname, '..', '..'), BASE = require('./base');
 const NOW = '2026-10-27T10:20:00';   // a Tuesday, mid-term (the pages are set to UTC)
 
 /* ---------------- made-up saved work: one class with a term of scores, a second class, and a timetable ---------------- */
@@ -68,12 +68,13 @@ function serveBuild(pages, port) {
     const p = req.url.split('?')[0], body = p === '/' || p === '/index.html' ? pages.index : p === '/planner.html' ? pages.planner : p === '/blank' ? '<!doctype html><title>blank</title>' : null;
     // A page set to another language asks for that language's file (lang/<code>.js): the one of the same build as the page.
     if (body == null && /^\/lang\/[A-Za-z-]+\.js$/.test(p)) {
-      const js = pages.lang ? pages.lang(p.slice(1)) : fs.existsSync(path.join(ROOT, p)) ? fs.readFileSync(path.join(ROOT, p), 'utf8') : null;
+      const js = pages.lang ? pages.lang(p.slice(1)) : fs.existsSync(path.join(BASE, p)) ? fs.readFileSync(path.join(BASE, p), 'utf8') : null;
       if (js != null) { res.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-store' }); return res.end(js); }
     }
-    // The new app (next/), as it is on disk: its pages and their code, at the same address so it shares the saved work.
+    // The new app, as it is on disk (at the root of the repository since the switch), served here at next/: the same address, so it
+    // shares the saved work, while the pages above stand at the root.
     if (body == null && /^\/next\/(?:[\w-]+\.html|sw\.js|version\.json|dist\/[\w-]+\.(?:js|css|woff2|webp))?$/.test(p)) {
-      const f = path.join(ROOT, p === '/next/' ? 'next/index.html' : p.slice(1)), ty = { js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', woff2: 'font/woff2', webp: 'image/webp', json: 'application/json', html: 'text/html; charset=utf-8' }[f.split('.').pop()];
+      const f = path.join(ROOT, p === '/next/' ? 'index.html' : p.slice('/next/'.length)), ty = { js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', woff2: 'font/woff2', webp: 'image/webp', json: 'application/json', html: 'text/html; charset=utf-8' }[f.split('.').pop()];
       if (fs.existsSync(f)) { res.writeHead(200, { 'Content-Type': ty, 'Cache-Control': 'no-store' }); return res.end(fs.readFileSync(f)); }
     }
     if (body == null) { res.writeHead(404); return res.end(); }
@@ -100,10 +101,14 @@ const makeLesson = page => page.evaluate(async () => {
 
 const git = (...a) => execFileSync('git', a, { cwd: ROOT, maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] });
 const tryGit = (...a) => { try { return git(...a); } catch { return null; } };
-// The two built pages as a commit has them, or null when that commit can't be read.
+// The current app's two built pages as a commit has them, or null when that commit can't be read: in classic/ since the switch, at the
+// root before it.
 function pagesAt(ref) {
-  const index = tryGit('show', ref + ':index.html'), planner = tryGit('show', ref + ':planner.html');
-  return index && planner ? { index: String(index), planner: String(planner), lang: f => { const js = tryGit('show', ref + ':' + f); return js == null ? null : String(js); } } : null;
+  for (const dir of ['classic/', '']) {
+    const index = tryGit('show', ref + ':' + dir + 'index.html'), planner = tryGit('show', ref + ':' + dir + 'planner.html');
+    if (index && planner) return { index: String(index), planner: String(planner), lang: f => { const js = tryGit('show', ref + ':' + dir + f); return js == null ? null : String(js); } };
+  }
+  return null;
 }
 // The names a change lists in a file like test/screens-changed.txt. The list only counts when the file isn't the same as the
 // earlier commit's, so one left over from an earlier change allows nothing.

@@ -7,6 +7,7 @@ const { launch } = require('./helpers/chrome');
 const { ROOT, openApp, openOwn, closeOwn, openZip } = require('./helpers/app');
 const fs = require('fs'), path = require('path'), http = require('http');
 const { makePaper, zipOf } = require('./helpers/fixtures');
+const BASE = require('./helpers/base');   // the current app's pages: classic/ since the switch
 
 let browser;
 before(async () => { browser = await launch(); });
@@ -188,8 +189,8 @@ async function swSite() {
   const srv = http.createServer((req, res) => {
     const [p0, q = ''] = req.url.split('?'); let p = p0 === '/' ? '/index.html' : p0;
     if (/blank/.test(q) || p === '/blank') { res.writeHead(200, { 'Content-Type': types.html }); return res.end('<!doctype html><title>blank</title>'); }
-    const file = path.join(ROOT, p);
-    if (!file.startsWith(ROOT) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404); return res.end('Not found'); }
+    const file = path.join(BASE, p);   // the current app's pages and worker: classic/ since the switch
+    if (!file.startsWith(BASE) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404); return res.end('Not found'); }
     res.writeHead(200, { 'Content-Type': types[p.split('.').pop()] || 'application/octet-stream' }); res.end(fs.readFileSync(file));
   });
   await new Promise(r => srv.listen(0, '127.0.0.1', r)); srv.unref();

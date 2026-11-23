@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path'), http = require('http');
 const { launch } = require('./helpers/chrome');
 const { ROOT, builtHtml, openApp, goTo } = require('./helpers/app');
+const BASE = require('./helpers/base');   // the current app's pages: classic/ since the switch
 
 let browser;
 before(async () => { builtHtml(); browser = await launch(); });
@@ -118,7 +119,7 @@ test('the Planner has the same Help link, and its Find anything opens an answer 
     const p = req.url.split('?')[0], file = p === '/' || p === '/index.html' ? 'index.html' : p === '/planner.html' ? 'planner.html' : null;
     if (!file && p !== '/blank') { res.writeHead(404); return res.end(); }
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
-    res.end(file ? fs.readFileSync(path.join(ROOT, file), 'utf8') : '<!doctype html><title>blank</title>');
+    res.end(file ? fs.readFileSync(path.join(BASE, file), 'utf8') : '<!doctype html><title>blank</title>');
   });
   await new Promise(r => srv.listen(0, '127.0.0.1', r));
   const url = 'http://localhost:' + srv.address().port + '/', ctx = await browser.createBrowserContext();

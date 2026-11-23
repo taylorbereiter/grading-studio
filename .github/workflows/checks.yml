@@ -88,10 +88,11 @@ jobs:
         run: npm run build
       - name: The pages in this change are the ones its source builds
         run: |
-          git diff --exit-code --stat -- index.html "Grading Studio.html" planner.html Planner.html sw.js version.json manifest.webmanifest || {
-            echo "::error::index.html, Grading Studio.html, planner.html, Planner.html, sw.js, version.json or manifest.webmanifest is not what src/ builds. Run npm run build and commit them."
+          git diff --exit-code --stat -- classic || {
+            echo "::error::classic/ (the previous version's pages, its worker, version.json, lang/ and sample.js) is not what src/ builds. Run npm run build and commit them."
             exit 1
           }
+          test -z "$(git status --porcelain -- classic)" || { echo "::error::classic/ has files the build makes that are not committed."; git status --short -- classic; exit 1; }
       - name: Tests
         run: npm test -- --part ${{ matrix.part }}/2
       - name: Keep the logs of a failed run
@@ -160,7 +161,7 @@ jobs:
         run: node test/tools/speed.js
 
   next:
-    name: New app (next/)
+    name: New app
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -174,11 +175,11 @@ jobs:
         run: npm run next:build
       - name: The new app in this change is the one next/src builds
         run: |
-          git diff --exit-code --stat -- next/index.html next/proof.html next/gallery.html next/dist next/version.json next/src/engines next/docs/saved-work.md || {
-            echo "::error::next/index.html, next/proof.html, next/gallery.html, next/dist, next/version.json, next/src/engines (made from the current app's source) or next/docs/saved-work.md is not what next/src builds. Run npm run next:build and npm run next:docs and commit them."
+          git diff --exit-code --stat -- index.html planner.html proof.html gallery.html sw.js version.json manifest.webmanifest dist next/src/engines next/docs/saved-work.md || {
+            echo "::error::index.html, planner.html, proof.html, gallery.html, sw.js, version.json, manifest.webmanifest, dist, next/src/engines (made from the current app's source) or next/docs/saved-work.md is not what next/src builds. Run npm run next:build and npm run next:docs and commit them."
             exit 1
           }
-          test -z "$(git status --porcelain -- next/dist)" || { echo "::error::next/dist has files the build does not make, or is missing some."; git status --short -- next/dist; exit 1; }
+          test -z "$(git status --porcelain -- dist)" || { echo "::error::dist has files the build does not make, or is missing some."; git status --short -- dist; exit 1; }
           test -z "$(git status --porcelain -- next/src/engines)" || { echo "::error::next/src/engines has files the build makes that are not committed."; git status --short -- next/src/engines; exit 1; }
       - name: Wall, registry, budgets, themes, lines, services
         run: npm run next:test
@@ -195,13 +196,33 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+  rehearsal:
+    name: The switch, rehearsed
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      SINCE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || 'origin/main' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run next:build
+      - name: A teacher's work on the version before the switch, carried into this one
+        run: node test/tools/rehearsal.js --from "$SINCE"
+
   all:
     name: All checks
     if: always()
-    needs: [tests, screens, saved-work, speed, next]
+    needs: [tests, screens, saved-work, speed, next, rehearsal]
     runs-on: ubuntu-24.04
     steps:
       - name: Every check passed
         run: |
-          echo "tests=${{ needs.tests.result }} screens=${{ needs.screens.result }} saved-work=${{ needs.saved-work.result }} speed=${{ needs.speed.result }} next=${{ needs.next.result }}"
-          [ "${{ needs.tests.result }}" = success ] && [ "${{ needs.screens.result }}" = success ] && [ "${{ needs.saved-work.result }}" = success ] && [ "${{ needs.speed.result }}" = success ] && [ "${{ needs.next.result }}" = success ]
+          echo "tests=${{ needs.tests.result }} screens=${{ needs.screens.result }} saved-work=${{ needs.saved-work.result }} speed=${{ needs.speed.result }} next=${{ needs.next.result }} rehearsal=${{ needs.rehearsal.result }}"
+          [ "${{ needs.tests.result }}" = success ] && [ "${{ needs.screens.result }}" = success ] && [ "${{ needs.saved-work.result }}" = success ] && [ "${{ needs.speed.result }}" = success ] && [ "${{ needs.next.result }}" = success ] && [ "${{ needs.rehearsal.result }}" = success ]

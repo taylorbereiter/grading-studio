@@ -28,5 +28,7 @@
  "settings.install_about": "像程序一样在独立窗口中打开，内容和这个标签页相同。在 Chrome 或 Edge 中，请使用地址栏或浏览器菜单里的“安装”。",
  "settings.install_done": "已安装：会在独立窗口中打开，内容和浏览器标签页相同。",
  "settings.install": "安装",
- "settings.lang_miss": "暂时无法载入{name}，所以这次以英文显示。下次联网打开应用时会自动恢复。"
+ "settings.lang_miss": "暂时无法载入{name}，所以这次以英文显示。下次联网打开应用时会自动恢复。",
+ "update.previous": "打开上一版",
+ "update.previous_text": "上一版的 Grading Studio，使用同一份已保存的工作。那里也能回到这一版。"
 }

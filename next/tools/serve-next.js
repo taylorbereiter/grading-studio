@@ -1,15 +1,16 @@
-// A tiny local web server for the new app's pages (next/), for the checks and the gallery pictures. Answers only this computer.
+// A tiny local web server for the new app's pages (at the root since the switch), for the checks and the gallery pictures. Answers
+// only this computer, and only the new app's own files.
 const http = require('http'), fs = require('fs'), path = require('path');
-const NEXT = path.join(__dirname, '..');
-const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.woff2': 'font/woff2', '.json': 'application/json' };
+const NEXT = path.join(__dirname, '..', '..');
+const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.woff2': 'font/woff2', '.json': 'application/json', '.png': 'image/png', '.webp': 'image/webp', '.webmanifest': 'application/manifest+json' };
 function serveNext(port = 0) {
   const srv = http.createServer((req, res) => {
     let p = decodeURIComponent(req.url.split('?')[0]); if (p === '/') p = '/index.html';
     const f = path.join(NEXT, path.normalize(p));
-    if (!f.startsWith(NEXT + path.sep) || !/^\/(index|gallery|proof)\.html$|^\/(sw\.js|version\.json)$|^\/dist\//.test(p) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); return res.end('Not found'); }
+    if (!f.startsWith(NEXT + path.sep) || !/^\/(index|gallery|proof|planner)\.html$|^\/(sw\.js|version\.json|manifest\.webmanifest)$|^\/icons\/[\w-]+\.png$|^\/dist\//.test(p) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); return res.end('Not found'); }
     res.writeHead(200, { 'Content-Type': TYPES[path.extname(f)] || 'application/octet-stream', 'Cache-Control': 'no-store' }); res.end(fs.readFileSync(f));
   });
   return new Promise((resolve, reject) => { srv.once('error', reject); srv.listen(port, '127.0.0.1', () => { srv.unref(); resolve({ url: 'http://localhost:' + srv.address().port + '/', close: () => new Promise(r => { srv.closeAllConnections(); srv.close(r); }) }); }); });
 }
 module.exports = { serveNext };
-if (require.main === module) serveNext(+process.argv[2] || 4174).then(s => console.log('next/ at ' + s.url + 'gallery.html'));
+if (require.main === module) serveNext(+process.argv[2] || 4174).then(s => console.log('the new app at ' + s.url + 'gallery.html'));

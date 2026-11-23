@@ -7,6 +7,7 @@ const fs = require('fs'), path = require('path'), http = require('http');
 const { launch } = require('../../test/helpers/chrome.js');
 const { STEADY } = require('../../test/helpers/steady.js');
 const ROOT = path.join(__dirname, '..', '..');
+const onDisk = require('../test/browser/site-path');
 const OUT = path.resolve(process.argv.includes('--out') ? process.argv[process.argv.indexOf('--out') + 1] : path.join(ROOT, 'out', 'app-shots'));
 const LANG = process.argv.includes('--lang') ? process.argv[process.argv.indexOf('--lang') + 1] : null, CUT = [];
 const ONLY = process.argv.includes('--only') ? process.argv[process.argv.indexOf('--only') + 1].split(',') : null;
@@ -16,8 +17,8 @@ function serveSite() {
     let p = decodeURIComponent(req.url.split('?')[0]);
     if (p === '/blank') { res.writeHead(200, { 'Content-Type': TYPES.html }); return res.end('<!doctype html><title>blank</title>'); }
     if (p === '/') p = '/index.html'; if (p === '/next/') p = '/next/index.html';
-    const ok = /^\/(index|planner)\.html$|^\/(sw\.js|sample\.js|version\.json|manifest\.webmanifest)$|^\/icons\/[\w-]+\.png$|^\/lang\/[\w-]+\.js$|^\/next\/(index\.html|sw\.js|version\.json|dist\/[\w-]+\.(js|css|woff2|webp))$/.test(p);
-    const f = path.join(ROOT, p);
+    const ok = /^\/(index|planner)\.html$|^\/(sw\.js|sample\.js|version\.json|manifest\.webmanifest)$|^\/icons\/[\w-]+\.png$|^\/lang\/[\w-]+\.js$|^\/next\/(index\.html|sw\.js|version\.json|dist\/[\w-]+\.(js|css|woff2|webp))$/.test(p) || onDisk.extra(p);
+    const f = onDisk(p);
     if (!ok || !fs.existsSync(f)) { res.writeHead(404); return res.end(); }
     res.writeHead(200, { 'Content-Type': TYPES[f.split('.').pop()] || 'application/octet-stream', 'Cache-Control': 'no-store' }); res.end(fs.readFileSync(f));
   });

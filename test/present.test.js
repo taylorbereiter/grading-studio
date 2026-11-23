@@ -5,8 +5,9 @@ const assert = require('node:assert');
 const fs = require('fs'), path = require('path');
 const { serve } = require('./helpers/serve');
 const { launch } = require('./helpers/chrome');
+const BASE = require('./helpers/base');   // the current app's pages: classic/ since the switch
 const ROOT = path.join(__dirname, '..');
-const PAGE = () => fs.readFileSync(path.join(ROOT, 'planner.html'), 'utf8');
+const PAGE = () => fs.readFileSync(path.join(BASE, 'planner.html'), 'utf8');
 const wait = ms => new Promise(r => setTimeout(r, ms));
 // Asked from here, not waited for inside the page: a page going in or out of full screen can leave an in-page wait hanging.
 const until = async (page, fn, arg) => { for (let i = 0; i < 160; i++) { if (await page.evaluate(fn, arg)) return; await wait(50); } throw new Error('Waited too long for ' + fn + ' ' + (arg || '')); };

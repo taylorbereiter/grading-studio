@@ -8,6 +8,7 @@ const { builtHtml, openApp, openZip, goTo, score, settle, ROOT } = require('./he
 const { serve } = require('./helpers/serve');
 const { standardFiles, zipOf } = require('./helpers/fixtures');
 const { gradingSeed } = require('./helpers/steady');
+const BASE = require('./helpers/base');   // the current app's pages: classic/ since the switch
 
 let browser, zip;
 before(async () => { builtHtml(); browser = await launch(); zip = zipOf(await standardFiles()); });
@@ -119,7 +120,7 @@ test('the tracker shows grading and planning apart, by week, month and three mon
 });
 
 test('a focus session on a lesson counts as planning; opening a lesson, or presenting it, counts nothing', async () => {
-  const server = await serve(() => fs.readFileSync(path.join(ROOT, 'planner.html'), 'utf8'));
+  const server = await serve(() => fs.readFileSync(path.join(BASE, 'planner.html'), 'utf8'));
   const page = await browser.newPage(); const errors = []; page.on('pageerror', e => errors.push(e.message));
   try {
     await page.goto(server.url, { waitUntil: 'load' });
@@ -158,7 +159,7 @@ test('a focus session on a lesson counts as planning; opening a lesson, or prese
 });
 
 test('steady work in the Planner counts as planning after a few minutes; a quick change, class time and presenting do not', async () => {
-  const server = await serve(() => fs.readFileSync(path.join(ROOT, 'planner.html'), 'utf8'));
+  const server = await serve(() => fs.readFileSync(path.join(BASE, 'planner.html'), 'utf8'));
   const page = await browser.newPage(); const errors = []; page.on('pageerror', e => errors.push(e.message));
   try {
     await page.goto(server.url, { waitUntil: 'load' });

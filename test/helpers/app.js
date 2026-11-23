@@ -3,15 +3,16 @@
 const fs = require('fs'), os = require('os'), path = require('path');
 const { serve } = require('./serve');
 const ROOT = path.join(__dirname, '..', '..');
-const BUILT = path.join(ROOT, 'index.html');
+const BASE = require('./base');   // the current app's pages: classic/ since the switch
+const BUILT = path.join(BASE, 'index.html');
 
 // Tests on a stale build would pass or fail about old code, so stop with a clear message instead.
 function builtHtml() {
-  if (!fs.existsSync(BUILT)) throw new Error('index.html is missing. Run: npm run check');
+  if (!fs.existsSync(BUILT)) throw new Error(path.relative(ROOT, BUILT) + ' is missing. Run: npm run check');
   const walk = d => fs.readdirSync(path.join(ROOT, d), { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(d + '/' + e.name) : [d + '/' + e.name]);   // every file under src, folders within folders too
   const t = fs.statSync(BUILT).mtimeMs, src = ['build.js', 'package.json', ...walk('src')];
   const old = src.filter(f => fs.statSync(path.join(ROOT, f)).mtimeMs > t + 1000);
-  if (old.length) throw new Error('index.html is older than ' + old.join(', ') + '. Run: npm run check');
+  if (old.length) throw new Error(path.relative(ROOT, BUILT) + ' is older than ' + old.join(', ') + '. Run: npm run check');
   return fs.readFileSync(BUILT, 'utf8');
 }
 const tmpDir = pre => fs.mkdtempSync(path.join(os.tmpdir(), 'gs-test-' + pre + '-'));
@@ -96,18 +97,21 @@ async function answerDlg(page, { yes = true, typed } = {}) {
 const appReady = page => page.waitForFunction(() => { if (!window.__gs || !window.__gs.state) return false; const w = document.querySelector('#whereLine'); return !w || !!w.textContent || !window.__gs.folderState; }, { timeout: 60000, polling: 100 });   // ready once the last part has run: the line that says where work is kept is written then   // a tab in the background doesn't animate, so polling by the clock
 
 // Writes saved data the way an earlier copy of the app left it. A value of { __b: name } in idb becomes the bytes of bins[name].
+// A store the apps key inline (next/src/shared/keys.js "inline: id") is made with that keyPath, so the apps' own writes to it work
+// as they do in a real browser; its records are put by their own id (the key given beside each must be that id).
+const INLINE = { 'gs-lessons': { lessons: 'id' } };
 async function plant(page, { ls = {}, idb = {}, bins = {} }) {
   const b64 = {}; for (const [k, v] of Object.entries(bins)) b64[k] = Buffer.from(v).toString('base64');
-  await page.evaluate(async (ls, idb, b64) => {
+  await page.evaluate(async (ls, idb, b64, inline) => {
     for (const [k, v] of Object.entries(ls)) localStorage.setItem(k, v);
     const bytes = s => { const bin = atob(s), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; };
     const un = v => v && typeof v === 'object' && !Array.isArray(v) && typeof v.__b === 'string' && Object.keys(v).length === 1 ? bytes(b64[v.__b]) : Array.isArray(v) ? v.map(un) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, un(x)])) : v;
     for (const [dbName, spec] of Object.entries(idb)) {
-      const db = await new Promise((res, rej) => { const r = indexedDB.open(dbName, spec.version); r.onupgradeneeded = () => { for (const n of Object.keys(spec.stores)) if (!r.result.objectStoreNames.contains(n)) r.result.createObjectStore(n); }; r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
-      for (const [n, recs] of Object.entries(spec.stores)) await new Promise((res, rej) => { const tx = db.transaction(n, 'readwrite'), o = tx.objectStore(n); for (const [k, v] of recs) o.put(un(v), k); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+      const db = await new Promise((res, rej) => { const r = indexedDB.open(dbName, spec.version); r.onupgradeneeded = () => { for (const n of Object.keys(spec.stores)) if (!r.result.objectStoreNames.contains(n)) r.result.createObjectStore(n, inline[dbName]?.[n] ? { keyPath: inline[dbName][n] } : undefined); }; r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+      for (const [n, recs] of Object.entries(spec.stores)) await new Promise((res, rej) => { const tx = db.transaction(n, 'readwrite'), o = tx.objectStore(n); for (const [k, v] of recs) { if (!o.keyPath) o.put(un(v), k); else if (v[o.keyPath] !== k) throw new Error(dbName + '/' + n + ': key ' + k + ' is not the record\'s ' + o.keyPath); else o.put(un(v)); } tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
       db.close();
     }
-  }, ls, idb, b64);
+  }, ls, idb, b64, INLINE);
 }
 // Whole-store read, with bytes shown as their length. Creates nothing if the database isn't there.
 const idbRead = (page, dbName, store) => page.evaluate(async (dbName, store) => {
@@ -301,4 +305,4 @@ function noStamps(lib) {
   }
   return lib;
 }
-module.exports = { noStamps, USED_BEFORE, openOwn, closeOwn, goTo, openClass, classPage, menuPick, press, pick, closeBox, MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, toScreen, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };
+module.exports = { BASE, noStamps, USED_BEFORE, openOwn, closeOwn, goTo, openClass, classPage, menuPick, press, pick, closeBox, MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, toScreen, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };

@@ -6,6 +6,7 @@ const { launch, chromeCandidates, findChrome } = require('./helpers/chrome');
 const { serve } = require('./helpers/serve');
 const { goTo, ROOT, BUILT, builtHtml, tmpDir, openApp, appReady, openZip, waitPaper, setTool, drag, score, settle, workOf } = require('./helpers/app');
 const { standardFiles, zipOf } = require('./helpers/fixtures');
+const BASE = require('./helpers/base');   // the current app's pages: classic/ since the switch
 
 let browser, zip;
 const VERSION = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version;
@@ -49,7 +50,7 @@ test('the app starts cleanly, and the Planner button, Dark mode and the sample p
 test('a double-clicked copy (file://) opens, saves and reopens', async () => {
   builtHtml();
   const dir = tmpDir('offline'), copy = path.join(dir, 'Grading Studio.html');
-  fs.copyFileSync(path.join(ROOT, 'Grading Studio.html'), copy);
+  fs.copyFileSync(path.join(BASE, 'Grading Studio.html'), copy);
   const ctx = await browser.createBrowserContext(), page = await ctx.newPage();
   const errors = []; page.on('pageerror', e => errors.push(String(e)));
   await page.goto('file:///' + copy.replace(/\\/g, '/').replace(/^\/+/, ''));
@@ -77,9 +78,9 @@ test('a double-clicked copy (file://) opens, saves and reopens', async () => {
 });
 
 test('both built copies hold the same app, and the Pages copy stays out of search engines', () => {
-  const a = fs.readFileSync(BUILT, 'utf8'), b = fs.readFileSync(path.join(ROOT, 'Grading Studio.html'), 'utf8');
-  // the Pages copy also names what lets it be installed: the install card, the icon and the window's colour
-  const hosted = '<meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF">';
+  const a = fs.readFileSync(BUILT, 'utf8'), b = fs.readFileSync(path.join(BASE, 'Grading Studio.html'), 'utf8');
+  // the Pages copy also names its icon (shared at the root) and the window's colour. No install card: that is the new app's, at the root.
+  const hosted = '<meta name="robots" content="noindex"><link rel="icon" href="../icons/icon-192.png"><link rel="apple-touch-icon" href="../icons/icon-192.png"><meta name="theme-color" content="#FFFFFF">';
   // and it fetches its language instead of carrying them all: one short script that asks for the chosen one, and an empty LANG_PACKED
   const loader = /<script>try\{var gsLangV=\{.*?\}catch\(e\)\{\}<\/script>/, packed = /const LANG_PACKED = \{[^\n]*\};/;
   assert.ok(loader.test(a) && !loader.test(b), 'only the Pages copy fetches a language');
@@ -92,6 +93,7 @@ test('both built copies hold the same app, and the Pages copy stays out of searc
   assert.ok(visits.test(a) && !visits.test(b), 'only the Pages copy counts visits');
   assert.equal(a.replace(hosted, '').replace(loader, '').replace(visits, '').replace(packed, '').replace(smp, ''), b.replace(packed, '').replace(smp, ''));
   assert.ok(!b.includes('manifest.webmanifest'), 'the double-click copy has no address to install from');
+  assert.ok(!a.includes('manifest.webmanifest'), 'the previous version is not installed on its own');
   assert.ok(a.includes('<meta name="robots" content="noindex">'));
   assert.ok(!a.includes('@@APP@@') && !a.includes('@@VERSION@@'), 'every slot in the page got filled');
 });

@@ -1,4 +1,4 @@
-// Updates for the new app: its own service worker (next/sw.js, scope next/), and the Update now control the sidebar's foot and
+// Updates for the new app: its service worker (next/src/sw.js, copied to sw.js at the root), and the Update now control the sidebar's foot and
 // the phone's More screen show. Nothing here talks to the current app's worker or its messages (gs-state); ours are gsn-*.
 import { useState, useEffect } from 'preact/hooks';
 import { toast } from '../ui/index.js';

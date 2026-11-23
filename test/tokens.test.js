@@ -26,7 +26,7 @@ test('the tokens are defined once, in src/tokens.css, and built into both pages'
   const tokens = read('src/tokens.css');
   for (const [f, css] of Object.entries(styles())) assert.ok(!/(^|[}\s]):root(\[data-theme="dark"\])?\s*\{/.test(css.replace(/\/\*[\s\S]*?\*\//g, '')), f + ' sets values on :root; they belong in src/tokens.css');
   for (const f of ['src/app.html', 'src/planner/planner.html']) assert.equal(read(f).split('/*@@TOKENS@@*/').length, 2, f + ' takes the tokens once');
-  for (const f of ['index.html', 'planner.html']) assert.equal(read(f).split('--text-caption:').length, 2, f + ' has the tokens built in once');
+  for (const f of ['index.html', 'planner.html']) assert.equal(fs.readFileSync(path.join(require('./helpers/base'), f), 'utf8').split('--text-caption:').length, 2, f + ' has the tokens built in once');   // the current app's pages: classic/ since the switch
   // light and dark name the same colours
   const names = block => [...block.matchAll(/(--[a-z0-9-]+)\s*:/g)].map(m => m[1]);
   const light = names(tokens.match(/:root\{([\s\S]*?)\n\}/)[1]), dark = names(tokens.match(/:root\[data-theme="dark"\]\{([\s\S]*?)\n\}/)[1]);
