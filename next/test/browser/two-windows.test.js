@@ -189,6 +189,58 @@ test('the new app hearing the current app’s save only once it is done still ke
   await ctx.close();
 });
 
+// She comes back to the new app and goes straight on typing in the comment box, while the download opens again with the current
+// app's newer work: the box comes back with the focus and the caret where it was, and every key she typed is there and saved.
+test('typing straight away in the new app as it catches up: the box keeps the focus and caret, and nothing typed is dropped', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const { id, keys } = await makeWork(ctx, errors);
+  const nx = await openNew(ctx, errors, id);
+  const at = await nx.evaluate(() => window.__mark.state().cur), other = at === 0 ? 1 : 0;
+  await newComment(nx, at, 'Good start.', id);
+  const old = await openOld(ctx, errors, id);
+  await oldComment(old, other, 'From the current app.', id);
+  // the current app's save has reached this window, so coming back to it opens the download again
+  await nx.waitForFunction(id => { const st = localStorage.getItem('gsc.saved.' + id); return /:full$/.test(st || '') && st !== window.__mark.state().batch.seen; }, { timeout: 20000, polling: 100 }, id);
+  // her caret in the comment, after "Good", and she comes back to the window and types at once
+  const was = await nx.evaluate(() => { const b = window.__mark.state().batch, ta = document.querySelector('.mk-cmt'); ta.focus(); ta.setSelectionRange(4, 4); window.__was = b; return b.id; });
+  await nx.bringToFront(); await nx.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await nx.keyboard.type(' and clear', { delay: 25 });   // typed at once, as the download opens again
+  await nx.waitForFunction(() => window.__mark.ready && window.__mark.state().batch !== window.__was, { timeout: 30000, polling: 100 });
+  assert.equal(was, id);
+  await nx.waitForFunction(() => document.querySelector('.mk-cmt').value === 'Good and clear start.', { timeout: 20000, polling: 100 });
+  assert.equal(await nx.evaluate(() => document.activeElement === document.querySelector('.mk-cmt') && document.activeElement.selectionStart), 14, 'the focus and caret are back, after what she typed');
+  await nx.evaluate(() => window.__mark.saved());
+  const c = await comments(nx, id, keys);
+  assert.deepEqual([c[at], c[other]], ['Good and clear start.', 'From the current app.']);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// The same in the current app (src/saving.js tabsCatchUp): she comes back to it and types at once while it opens the download
+// again with the new app's newer work.
+test('typing straight away in the current app as it catches up: the box keeps the focus and caret, and nothing typed is dropped', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const { id, keys } = await makeWork(ctx, errors);
+  const old = await openOld(ctx, errors, id);
+  const at = await old.evaluate(() => window.__gs.state().cur), other = at === 0 ? 1 : 0;
+  await old.click('#cmtIn'); await old.keyboard.type('Good start.'); await settle(old);   // typed in the box, as she does
+  const nx = await openNew(ctx, errors, id);
+  await newComment(nx, other, 'From the new app.', id);
+  // the new app's save has reached the current app's window, so coming back to it opens the download again
+  await old.waitForFunction((id, k) => { const w = JSON.parse(localStorage.getItem(id) || '{}'); return /:full$/.test(localStorage.getItem('gsc.saved.' + id) || '') && ((((w.s || {})[k] || {}).g || {}).comment === 'From the new app.'); }, { timeout: 20000, polling: 100 }, id, keys[other]);
+  await old.evaluate(() => { const ta = document.querySelector('#cmtIn'); ta.focus(); ta.setSelectionRange(4, 4); window.__was = window.__gs.state().batch; });
+  await old.bringToFront(); await old.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await old.keyboard.type(' and clear', { delay: 25 });   // typed at once, as the download opens again
+  await old.waitForFunction(() => window.__gs.state().batch !== window.__was && !window.__gs.state().batch.catching, { timeout: 30000, polling: 100 });
+  await old.waitForFunction(() => document.querySelector('#cmtIn').value === 'Good and clear start.', { timeout: 20000, polling: 100 });
+  assert.equal(await old.evaluate(() => document.activeElement === document.querySelector('#cmtIn') && document.activeElement.selectionStart), 14, 'the focus and caret are back, after what she typed');
+  await settle(old);
+  const c = await comments(old, id, keys);
+  assert.deepEqual([c[at], c[other]], ['Good and clear start.', 'From the new app.']);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
 test('the library beside the current app: a class renamed in the new app and a to-do added in the current app both stay', async () => {
   const errors = [], ctx = await browser.createBrowserContext();
   const p0 = await page(ctx, errors); await p0.goto(srv.url + 'blank'); await plant(p0, gradingSeed()); await p0.close();
