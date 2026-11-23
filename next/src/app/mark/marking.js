@@ -322,6 +322,9 @@ export function letGo() { if (!state().selected) return false; use({ selected: n
 // The highlighter snaps to typed lines (where a page has them) or goes freehand; H with the highlighter in hand switches.
 export const hlFree = () => K.hlMode === 'free';
 export function setHlFree(free) { K.setHlMode(free ? 'free' : 'auto'); tell(); }
+// or draws a box dragged over anything (scans, tables, odd layouts): 'auto', 'free' or 'box', kept in gs.hlMode
+export const hlHow = () => (K.hlMode === 'free' || K.hlMode === 'box' ? K.hlMode : 'auto');
+export function setHlHow(how) { K.setHlMode(how); tell(); }
 // How wide a freehand highlight is (src/marking.js hlBarClick): 8, 14 or 22, kept in gs.hlW; the current app's button steps round them.
 export const HL_WIDTHS = [8, 14, 22];
 export const hlWidth = () => prefs.get('gs.hlW', 14);
