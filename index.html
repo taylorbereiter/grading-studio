@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"1b0b98d4","zh-Hans":"a3d8e279","es":"b5ff4dbe","fr":"e3b03d91","de":"d28ef935","pt-BR":"f0cd43bc","ja":"bec3d92e","ko":"7daa4586"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"3ba605f6","zh-Hans":"d9695757","es":"cb140143","fr":"48129f3a","de":"1053b22b","pt-BR":"b72e94d6","ja":"db10ec7d","ko":"4bfebd5b"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -2499,6 +2499,9 @@ button.pavg:hover .v{text-decoration:underline}
 .solo-fill{position:absolute;inset:0;background:var(--accent);opacity:.22;transform:scaleX(0);transform-origin:left}
 .solo-x.holding .solo-fill{transform:scaleX(1);transition:transform 1.5s linear}
 .solo-xl{position:relative}
+.solo-hint{color:var(--accent);font-weight:600;white-space:nowrap}
+.solo-hint[hidden]{display:none}
+.solobar.nudge .solo-x{box-shadow:0 0 0 3px var(--accent)}
 .solo-work{position:absolute;right:16px;top:48px;width:min(420px,calc(100vw - 32px));max-height:60vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 14px}
 .solo-work h3{margin:0 0 8px;font-size:var(--text-body);font-weight:650}
 .solo-row{display:block;width:100%;text-align:left;background:none;border:0;border-radius:var(--r-sm);padding:0 6px;font:inherit;color:inherit}
@@ -5299,7 +5302,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.76";
+  const APP_VERSION = "1.28.77";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -7502,8 +7505,8 @@ kmWrap('<span aria-hidden="true">+</span> Add', 'id="addMenuBtn" class="btn sm" 
 '<button class="mitem" id="addVideoBtn">A video…<small>A link to a recording, and who is in it</small></button>' +
 '<button class="mitem" id="addNotesBtn">A notes page…<small>To write on while you watch or listen</small></button>' +
 '<button class="mitem" id="addScanBtn">From a scan…<small>A stack of pages scanned as one PDF</small></button>') +
-'<button class="btn sm solo-go" id="soloBtn" title="Only this student" aria-label="Only this student"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.8 3.6-5.8 7-5.8s6.2 2 7 5.8"/></svg></button>' +
 kmWrap('⋯', 'id="whoMore" class="btn sm kdots" aria-label="More for this paper" title="More for this paper"',
+'<button class="mitem" id="soloBtn">Only this student <kbd>I</kbd><small>For a student at your desk. Hold the button at the top to leave.</small></button>' +
 (st.files.some(viewable) || fileSeq(st).length > 1 ? '<button class="mitem" id="arrangeBtn">Arrange pages<small>Combine files, reorder or take pages out</small></button>' : '') +
 (st.files.some(f => !f.virtual && !f.rubric && (viewable(f) || f.kind === 'docx')) ? '<button class="mitem" data-whodo="example">Use as an example<small>A strong paper or part of a page, with names covered</small></button>' : '') +
 '<button class="mitem" data-whodo="light">Lighting<small>Make a pale or too-bright scan easier to read</small></button>' +
@@ -14697,7 +14700,7 @@ if (e.key === 'Escape' && once) { e.preventDefault(); endOnce(); return; }
 if (e.key === '?') { e.preventDefault(); openKeys(); return; }
 if ((e.key === '+' || e.key === '=' || e.key === '-' || e.key === '_') && selected && !(selected.fresh && selected.mark.t === 'text') && canResize(selected.mark)) { e.preventDefault(); stepSize(e.key === '+' || e.key === '=' ? 1 : -1); return; }
 if (soloOn() && (e.key === '/' || e.key === '[' || e.key === '?')) { e.preventDefault(); return; }
-if (e.key.toLowerCase() === 'i' && !e.shiftKey && !soloOn()) { e.preventDefault(); return soloStart(cur); }
+if (e.key.toLowerCase() === 'i' && !e.shiftKey && !e.repeat && !soloOn() && !kmOn && !$('#askDlg') && !$('#findDlg') && !$('#pcard') && !(document.activeElement && document.activeElement.closest && document.activeElement.closest('button, a, [role="dialog"], .km'))) { e.preventDefault(); return soloStart(cur); }
 if (e.key === '/') { e.preventDefault(); listPeek(true); $('#stuFind').focus(); return; }
 if (selected && tool === 'select' && /^Arrow/.test(e.key)) {
 e.preventDefault();
@@ -33895,7 +33898,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.76":["With two tabs open, coming back to one and typing straight away in the comment or points box no longer loses what you type while that tab brings in the other tab’s newer work: the box keeps your place and everything you typed."]};
+const WHATS_NEW = {"1.28.77":["Only this student is now in the ⋯ beside the student’s name, not a person button, so it doesn’t start when you mean to add partners. Pressing I with a menu or button in hand no longer starts it. A short press on Hold to show everyone now says to keep holding, and papers you bring in while it’s on stay open and end it, so you can’t get stuck."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -36391,16 +36394,18 @@ if (location.hash !== batchHash(batch.id)) go(batchHash(batch.id), true);
 if (cur !== i) openStudent(i); else { renderList(); renderGrade(); }
 soloBar();
 }
-function soloEnd() {
-store.del('gs.solo'); soloTry = ''; soloOpen = false;
+function soloEnd(quiet) {
+store.del('gs.solo'); soloTry = ''; soloOpen = false; soloHintOff();
 document.documentElement.classList.remove('solo');
 if (soloUndo) { undoStack = soloUndo.concat(undoStack).slice(-200); redoStack = []; soloUndo = null; }
 $('#soloBar').hidden = true;
 if (batch) { renderList(); renderGrade(); renderTools(); }
-applyRoute();
+if (!quiet) applyRoute();
 }
 function soloRoute(r) {
 const s = soloNow(); if (!s) return false;
+if (r.v === 'a' && batch && batch.id === r.id && r.id !== s.id) { soloEnd(true); return false; }
+if (batch && batch.id === s.id && soloIdx() < 0) { soloEnd(true); return false; }
 if (r.v === 'a' && r.id === s.id && !r.tab) {
 if (!(batch && batch.id === s.id)) {
 if (soloTry === s.id && routeOpening !== s.id) { soloStuck(); return true; }
@@ -36409,22 +36414,30 @@ soloTry = s.id;
 return false;
 }
 if (soloTry === s.id && routeOpening !== s.id && !(batch && batch.id === s.id)) { soloStuck(); return true; }
-go(batchHash(s.id), true); return true;
+go(batchHash(s.id), true); soloHint(); return true;
 }
 function soloStuck() {
-showScreen({ v: 'opening' });
-const p = $('#vOpening p'); if (p) p.textContent = 'The papers for this one aren’t kept in this browser. Drop the download in again.';
-soloBar();
+soloEnd(true); go('#/', true);
+toast('The papers for that student aren’t kept in this browser, so Only this student ended.', 6000);
 }
+let soloHintT = 0;
+function soloHint() {
+const h = $('#soloHint'); if (!h) return;
+h.hidden = false; $('#soloBar').classList.add('nudge');
+clearTimeout(soloHintT); soloHintT = setTimeout(soloHintOff, 5000);
+}
+function soloHintOff() { clearTimeout(soloHintT); const h = $('#soloHint'); if (h) h.hidden = true; const b = $('#soloBar'); if (b) b.classList.remove('nudge'); }
 function soloBar() {
 const s = soloNow(), el = $('#soloBar'); if (!el) return;
 if (!s) { el.hidden = true; return; }
 const i = soloIdx(), st = i >= 0 ? batch.students[i] : null;
 const p = st && !anonOn() ? personOf(st) : null, other = !!(p && p.c && p.name);
 el.hidden = false; el.dataset.b = st ? batch.id : '';
+document.documentElement.classList.add('solo');
 el.innerHTML = '<span class="solo-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.8 3.6-5.8 7-5.8s6.2 2 7 5.8"/></svg></span>' +
 '<b class="solo-t">Only this student</b><span class="solo-n">' + (st ? esc(shownName(st, i)) : '') + '</span>' + (st ? '<span class="muted solo-a">' + esc(batch.name || '') + '</span>' : '') + '<span class="sp"></span>' +
 (other ? '<button class="btn sm" id="soloOther" aria-expanded="' + soloOpen + '" aria-controls="soloWork">Other work</button>' : '') +
+'<span class="solo-hint" id="soloHint" hidden>Keep holding for 2 seconds to show everyone</span>' +
 '<button class="btn sm solo-x" id="soloExit"><span class="solo-fill" aria-hidden="true"></span><span class="solo-xl">Hold to show everyone</span></button>' +
 (other && soloOpen ? '<div class="solo-work" id="soloWork"><h3 id="soloWorkH">' + workHead(p.c, []) + '</h3><div id="soloRows"><div class="muted pc-sm">Looking through saved work…</div></div></div>' : '');
 if (other && soloOpen) soloRows(p);
@@ -36453,8 +36466,9 @@ soloBar();
 }
 function soloHold(on) {
 const b = $('#soloExit'); if (!b) return;
-clearTimeout(soloHoldT); b.classList.toggle('holding', on);
-if (on) soloHoldT = setTimeout(() => { b.classList.remove('holding'); soloEnd(); }, 1500);
+if (!on && soloHoldT) soloHint();
+clearTimeout(soloHoldT); soloHoldT = 0; b.classList.toggle('holding', on);
+if (on) soloHoldT = setTimeout(() => { soloHoldT = 0; b.classList.remove('holding'); soloEnd(); }, 1500);
 }
 (() => {
 const bar = document.createElement('div');
@@ -36467,6 +36481,7 @@ bar.addEventListener('pointerout', e => { if (e.target.closest('#soloExit') && !
 bar.addEventListener('keydown', e => { if (e.target.closest('#soloExit') && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); if (!e.repeat) soloHold(true); } });
 bar.addEventListener('keyup', e => { if (e.target.closest('#soloExit') && (e.key === ' ' || e.key === 'Enter')) soloHold(false); });
 bar.addEventListener('contextmenu', e => e.preventDefault());
+window.addEventListener('storage', e => { if (e.key === 'gs.solo' && !e.newValue && document.documentElement.classList.contains('solo')) soloEnd(); });
 const s = soloNow();
 if (s && !PHONE) {
 document.documentElement.classList.add('solo');

@@ -135,16 +135,17 @@ async function checkLocalSave(p, prior = []) {
 test('Present distinguishes a committed lesson from a failed lookup of the linked folder', async t => {
   const p = await openSheet(t);
   await p.evaluate(() => {
+    // Every lookup fails until the save is done, not only the first: something else on the page (a sync check on open) can
+    // look the folder up before the save does, and a one-time failure spent there let the save find the folder (1 run in 2).
     const get = IDBObjectStore.prototype.get;
+    window.__restoreGet = () => { IDBObjectStore.prototype.get = get; };
     IDBObjectStore.prototype.get = function (key) {
-      if (this.name === 'kv' && key === 'dir') {
-        IDBObjectStore.prototype.get = get;
-        throw new DOMException('Synthetic folder lookup failed', 'UnknownError');
-      }
+      if (this.name === 'kv' && key === 'dir') throw new DOMException('Synthetic folder lookup failed', 'UnknownError');
       return get.call(this, key);
     };
   });
   await checkLocalSave(p);
+  await p.evaluate(() => window.__restoreGet());
   assert.deepEqual(p.errors.filter(e => !e.includes('Synthetic folder lookup failed')), []);
 });
 

@@ -35,6 +35,9 @@ const LANG_ZH = {
     // Settings, Classes and rosters, when no school system is named
     "Names, students, class links": "名稱、學生與學校系統的連結",
     // only this student (src/solo.js)
+    "For a student at your desk. Hold the button at the top to leave.": "給來到桌前的學生看。按住上方的按鈕即可離開。",
+    "Keep holding for 2 seconds to show everyone": "持續按住 2 秒以顯示所有人",
+    "The papers for that student aren’t kept in this browser, so Only this student ended.": "這位學生的作業沒有保存在這個瀏覽器中，因此已結束「只顯示這位學生」。",
     "Only this student": "只顯示這位學生", "Hold to show everyone": "按住以顯示所有人", "Other work": "其他作業",
     // linked classes (src/linked.js)
     "Link assignments": "連結作業", "Linked with": "已連結：", "Change": "更改", "Your Planner has these classes on the same course:": "你的備課表中，這些班級屬於同一門課：", "Link them, so an assignment and its strong examples can be shared between them?": "要連結它們，讓作業和優秀範例在班級間共用嗎？", "Link them": "連結", "No thanks": "不用了", "Also in": "也在：", "Linked classes…": "連結的班級…", "Link with the copy in": "與此班的副本連結：", "Each keeps its papers and scores": "各自保有作品和分數", "Add to": "加到：", "A copy with the same name, type, due date and rubric": "名稱、類型、截止日期和評分規準都相同的副本", "Unlink from the other classes": "與其他班級取消連結", "This copy keeps everything and stops sharing": "這份副本保留一切，只是不再共用", "Linked classes are ticked. Untick one to keep this assignment out of it.": "已勾選連結的班級。取消勾選即不加入該班。", "Make these changes in the copies too:": "也在副本中做這些更改：", "Linked classes": "連結的班級", "For classes on the same schedule. A new assignment is offered to all of them, and strong examples show in each, with the class they came from. Rosters, papers, scores and comments stay separate.": "適用於課表相同的班級。新作業會提供給所有班級，優秀範例會在各班顯示並標明來源班級。名單、作品、分數和評語各自分開。", "Course": "課程", "No other classes yet": "還沒有其他班級", "e.g. English 12": "例如：英文 12",

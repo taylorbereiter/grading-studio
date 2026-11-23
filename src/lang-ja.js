@@ -35,6 +35,9 @@ const LANG_JA = {
     // Settings, Classes and rosters, when no school system is named
     "Names, students, class links": "名前、生徒、学校のシステムへのリンク",
     // only this student (src/solo.js)
+    "For a student at your desk. Hold the button at the top to leave.": "机に来た生徒に見せるとき。終わるには上のボタンを長押しします。",
+    "Keep holding for 2 seconds to show everyone": "全員を表示するには 2 秒間押し続けてください",
+    "The papers for that student aren’t kept in this browser, so Only this student ended.": "この生徒の課題はこのブラウザに保存されていないため、「この生徒だけ」を終了しました。",
     "Only this student": "この生徒だけ", "Hold to show everyone": "長押しで全員を表示", "Other work": "ほかの課題",
     // linked classes (src/linked.js)
     "Link assignments": "課題をリンク", "Linked with": "リンク先：", "Change": "変更", "Your Planner has these classes on the same course:": "プランナーでは、これらのクラスが同じコースになっています：", "Link them, so an assignment and its strong examples can be shared between them?": "リンクして、課題と優れた例をクラス間で共有しますか？", "Link them": "リンクする", "No thanks": "いいえ", "Also in": "ほかのクラス：", "Linked classes…": "リンクしたクラス…", "Link with the copy in": "このクラスのコピーとリンク：", "Each keeps its papers and scores": "答案と点数はそれぞれ別です", "Add to": "追加先：", "A copy with the same name, type, due date and rubric": "名前、種類、締め切り、ルーブリックが同じコピー", "Unlink from the other classes": "ほかのクラスとのリンクを解除", "This copy keeps everything and stops sharing": "このコピーはすべて残り、共有をやめます", "Linked classes are ticked. Untick one to keep this assignment out of it.": "リンクしたクラスにチェックが入っています。外すとそのクラスには追加されません。", "Make these changes in the copies too:": "コピーにも同じ変更を加える：", "Linked classes": "リンクしたクラス", "For classes on the same schedule. A new assignment is offered to all of them, and strong examples show in each, with the class they came from. Rosters, papers, scores and comments stay separate.": "同じ時間割のクラス向けです。新しい課題はすべてに提案され、優れた例は元のクラス名つきで各クラスに表示されます。名簿、答案、点数、コメントは別々です。", "Course": "コース", "No other classes yet": "ほかのクラスはまだありません", "e.g. English 12": "例：英語 12",

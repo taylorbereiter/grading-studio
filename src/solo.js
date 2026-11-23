@@ -26,17 +26,22 @@ function soloStart(i) {
   if (cur !== i) openStudent(i); else { renderList(); renderGrade(); }
   soloBar();
 }
-function soloEnd() {
-  store.del('gs.solo'); soloTry = ''; soloOpen = false;
+function soloEnd(quiet) {
+  store.del('gs.solo'); soloTry = ''; soloOpen = false; soloHintOff();
   document.documentElement.classList.remove('solo');
   if (soloUndo) { undoStack = soloUndo.concat(undoStack).slice(-200); redoStack = []; soloUndo = null; }
   $('#soloBar').hidden = true;
   if (batch) { renderList(); renderGrade(); renderTools(); }
-  applyRoute();
+  if (!quiet) applyRoute();
 }
 // applyRoute asks first: true when it took care of the address itself.
 function soloRoute(r) {
   const s = soloNow(); if (!s) return false;
+  // Another download is open now: she dropped papers in or opened one herself, which a student at the desk doesn't do.
+  // Sending her back would close what she just brought in (11/23: stuck after bringing in some students' work), so it ends here.
+  if (r.v === 'a' && batch && batch.id === r.id && r.id !== s.id) { soloEnd(true); return false; }
+  // Their student isn't in the open download any more: nobody to show, so it ends instead of leaving her on a paper she can't leave.
+  if (batch && batch.id === s.id && soloIdx() < 0) { soloEnd(true); return false; }
   if (r.v === 'a' && r.id === s.id && !r.tab) {
     if (!(batch && batch.id === s.id)) {
       if (soloTry === s.id && routeOpening !== s.id) { soloStuck(); return true; }   // tried, and the papers didn't open: never fall back to Home
@@ -45,13 +50,21 @@ function soloRoute(r) {
     return false;
   }
   if (soloTry === s.id && routeOpening !== s.id && !(batch && batch.id === s.id)) { soloStuck(); return true; }
-  go(batchHash(s.id), true); return true;
+  go(batchHash(s.id), true); soloHint(); return true;
 }
+// Their papers can't open in this browser: a dead end with no way out, so it ends and she is back on Home. Saved work is untouched.
 function soloStuck() {
-  showScreen({ v: 'opening' });
-  const p = $('#vOpening p'); if (p) p.textContent = 'The papers for this one aren’t kept in this browser. Drop the download in again.';
-  soloBar();
+  soloEnd(true); go('#/', true);
+  toast('The papers for that student aren’t kept in this browser, so Only this student ended.', 6000);
 }
+// A word in the bar when she tries to leave (a short press, or another screen asked for): how to get out.
+let soloHintT = 0;
+function soloHint() {
+  const h = $('#soloHint'); if (!h) return;
+  h.hidden = false; $('#soloBar').classList.add('nudge');
+  clearTimeout(soloHintT); soloHintT = setTimeout(soloHintOff, 5000);
+}
+function soloHintOff() { clearTimeout(soloHintT); const h = $('#soloHint'); if (h) h.hidden = true; const b = $('#soloBar'); if (b) b.classList.remove('nudge'); }
 // The bar across the top: who this is, their other work in this class, and the way out.
 function soloBar() {
   const s = soloNow(), el = $('#soloBar'); if (!el) return;
@@ -59,9 +72,11 @@ function soloBar() {
   const i = soloIdx(), st = i >= 0 ? batch.students[i] : null;
   const p = st && !anonOn() ? personOf(st) : null, other = !!(p && p.c && p.name);
   el.hidden = false; el.dataset.b = st ? batch.id : '';
+  document.documentElement.classList.add('solo');   // the bar and the hiding of everyone else always go together
   el.innerHTML = '<span class="solo-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.8 3.6-5.8 7-5.8s6.2 2 7 5.8"/></svg></span>' +
     '<b class="solo-t">Only this student</b><span class="solo-n">' + (st ? esc(shownName(st, i)) : '') + '</span>' + (st ? '<span class="muted solo-a">' + esc(batch.name || '') + '</span>' : '') + '<span class="sp"></span>' +
     (other ? '<button class="btn sm" id="soloOther" aria-expanded="' + soloOpen + '" aria-controls="soloWork">Other work</button>' : '') +
+    '<span class="solo-hint" id="soloHint" hidden>Keep holding for 2 seconds to show everyone</span>' +
     '<button class="btn sm solo-x" id="soloExit"><span class="solo-fill" aria-hidden="true"></span><span class="solo-xl">Hold to show everyone</span></button>' +
     (other && soloOpen ? '<div class="solo-work" id="soloWork"><h3 id="soloWorkH">' + workHead(p.c, []) + '</h3><div id="soloRows"><div class="muted pc-sm">Looking through saved work…</div></div></div>' : '');
   if (other && soloOpen) soloRows(p);
@@ -93,8 +108,9 @@ function soloGo(id, key) {
 // Holding the button: a pointer held down, or Space or Enter held, for 1.5 s. Letting go sooner does nothing.
 function soloHold(on) {
   const b = $('#soloExit'); if (!b) return;
-  clearTimeout(soloHoldT); b.classList.toggle('holding', on);
-  if (on) soloHoldT = setTimeout(() => { b.classList.remove('holding'); soloEnd(); }, 1500);
+  if (!on && soloHoldT) soloHint();   // let go too soon
+  clearTimeout(soloHoldT); soloHoldT = 0; b.classList.toggle('holding', on);
+  if (on) soloHoldT = setTimeout(() => { soloHoldT = 0; b.classList.remove('holding'); soloEnd(); }, 1500);
 }
 (() => {
   const bar = document.createElement('div');
@@ -107,6 +123,8 @@ function soloHold(on) {
   bar.addEventListener('keydown', e => { if (e.target.closest('#soloExit') && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); if (!e.repeat) soloHold(true); } });
   bar.addEventListener('keyup', e => { if (e.target.closest('#soloExit') && (e.key === ' ' || e.key === 'Enter')) soloHold(false); });
   bar.addEventListener('contextmenu', e => e.preventDefault());
+  // Ended in another window of the app: end here too, or this one would keep sending her back.
+  window.addEventListener('storage', e => { if (e.key === 'gs.solo' && !e.newValue && document.documentElement.classList.contains('solo')) soloEnd(); });
   // After a reload: straight back to their paper, before Home is ever drawn.
   const s = soloNow();
   if (s && !PHONE) {

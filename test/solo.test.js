@@ -21,10 +21,11 @@ let browser, essay, quiz;
 before(async () => { browser = await launch(); essay = await papers('Essay'); quiz = await papers('Quiz'); });
 after(async () => { await browser.close(); });
 
-test('the button on the paper shows only this student; no way round it reaches the others', async () => {
+test('Only this student in ⋯ shows only this student; no way round it reaches the others', async () => {
   const { page, close } = await openApp(browser, { seed: { ls: { 'gs.lib': lib } } });
   await openZip(page, essay);
   await goToStudent(page, 1);
+  await page.click('#whoMore'); await page.waitForSelector('#soloBtn', { visible: true });
   await page.click('#soloBtn');
   await until(page, () => document.documentElement.classList.contains('solo'));
   let l = await look(page);
@@ -109,6 +110,64 @@ test('the student details card starts it, and Other work opens their paper in an
   assert.equal(l.solo, true); assert.equal(l.side, false);
   assert.equal(await page.evaluate(() => window.__gs.state().batch.students[window.__gs.state().cur].key), 'Ann Alpha');
   assert.doesNotMatch(l.text, /Ben Beta|Cy Gamma/);
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+// 11/23: a teacher got stuck. The person button beside + Add read as "partners", and papers brought in while it was on were sent away.
+test('it starts from the ⋯ menu, not a person button; a short press says how to leave', async () => {
+  const { page, close } = await openApp(browser, { seed: { ls: { 'gs.lib': lib } } });
+  await openZip(page, essay);
+  assert.equal(await page.evaluate(() => !!document.querySelector('#paper .who > #soloBtn, #paper .who > .solo-go')), false, 'no person button on the bar');
+  await page.click('#whoMore');
+  await page.waitForSelector('#soloBtn', { visible: true });
+  await page.click('#soloBtn');
+  await until(page, () => document.documentElement.classList.contains('solo'));
+  assert.equal(await page.evaluate(() => document.querySelector('#soloHint').hidden), true);
+  const r = await (await page.$('#soloExit')).boundingBox();
+  await page.mouse.move(r.x + 20, r.y + 10); await page.mouse.down(); await wait(300); await page.mouse.up();
+  await until(page, () => !document.querySelector('#soloHint').hidden);
+  assert.match(await page.$eval('#soloHint', e => e.textContent), /Keep holding/);
+  // trying another screen: back here, with the same word
+  await page.evaluate(() => document.querySelector('#soloHint').hidden = true);
+  await page.evaluate(() => { location.hash = '#/settings'; }); await wait(300);
+  assert.equal(await page.evaluate(() => document.querySelector('#soloHint').hidden), false);
+  assert.equal((await look(page)).solo, true);
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+test('the I key does nothing with a menu open or a button in hand', async () => {
+  const { page, close } = await openApp(browser, { seed: { ls: { 'gs.lib': lib } } });
+  await openZip(page, essay);
+  await page.click('#whoMore'); await wait(150);
+  await page.keyboard.press('i'); await wait(200);
+  assert.equal((await look(page)).solo, false, 'menu open');
+  await page.keyboard.press('Escape'); await wait(100);
+  await page.focus('#readBtn');
+  await page.keyboard.press('i'); await wait(200);
+  assert.equal((await look(page)).solo, false, 'a button in hand');
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+test('papers brought in while it is on stay open, and it ends; a gone student ends it too', async () => {
+  const { page, close } = await openApp(browser, { seed: { ls: { 'gs.lib': lib } } });
+  await openZip(page, essay);
+  await goToStudent(page, 1);
+  await page.evaluate(() => window.__gs.soloStart(1));
+  await until(page, () => document.documentElement.classList.contains('solo'));
+  const essayId = await page.evaluate(() => window.__gs.state().batch.id);
+  await openZip(page, quiz, 'Quiz.zip');
+  await wait(800);
+  const l = await look(page);
+  assert.notEqual(await page.evaluate(() => window.__gs.state().batch.id), essayId, 'the new papers stay open');
+  assert.equal(l.solo, false); assert.equal(l.flag, null); assert.equal(l.bar, false); assert.equal(l.side, true);
+  // a flag naming a student who isn't in the download: no dead end
+  await page.evaluate(id => { localStorage.setItem('gs.solo', JSON.stringify({ id, key: 'Nobody Here' })); }, await page.evaluate(() => window.__gs.state().batch.id));
+  await page.evaluate(() => { location.hash = '#/settings'; }); await wait(400);
+  assert.equal(await page.evaluate(() => localStorage.getItem('gs.solo')), null);
+  assert.equal(await page.evaluate(() => document.documentElement.classList.contains('solo')), false);
   assert.deepEqual(page.errors, []);
   await close();
 });
