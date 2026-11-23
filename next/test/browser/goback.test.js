@@ -57,16 +57,10 @@ function seed() {
   return { s, name };
 }
 
-// Settings, Saving and sync draws its School year card once the year is read (saving/carry.jsx YearCard, a part loaded later), above
-// Go back in time and Safety copies, which move down by its height: a click aimed before then lands where a button was, not on it
-// (the folder was never chosen). The cards are clicked once it is there.
-const savingDrawn = p => p.waitForSelector('[data-svyear]', { timeout: 30000 });
-
 test('A-037 A-038: Look at a safety copy shows how each assignment stood then, and Restore this assignment puts one back, keeping a copy first, with Undo', async () => {
   const errors = [], ctx = await browser.createBrowserContext(), p = await page(ctx, errors), { s, name } = seed();
   await p.goto(srv.url + 'blank'); await plant(p, s);
   await p.goto(srv.url + 'next/#/settings/saving');
-  await savingDrawn(p);
   await p.waitForSelector('[data-svsafe] [data-svcopy] [data-svlook]', { timeout: 30000 });
   await p.click('[data-svsafe] [data-svlook]');
   await p.waitForSelector('[data-svmoment] [data-gbrow]', { timeout: 15000 });
@@ -105,8 +99,12 @@ test('A-036 A-037: with no folder, Go back in time has Choose a folder…; once 
   });
   await plant(p, gradingSeed());
   await p.goto(srv.url + 'next/#/settings/saving');
-  await savingDrawn(p);
   await p.waitForSelector('[data-svhist] [data-svhistpick]', { timeout: 30000 });
+  // the School year card, drawn once the year is read (a part loaded later), comes in below: Choose a folder… stays where it was
+  const spot = () => p.$eval('[data-svhist] [data-svhistpick]', e => { const r = e.getBoundingClientRect(); return [Math.round(r.x), Math.round(r.y)]; });
+  const before = await spot();
+  await p.waitForSelector('[data-svyear]', { timeout: 30000 });
+  assert.deepEqual(await spot(), before, 'Choose a folder… did not move as the School year card came in');
   await p.click('[data-svhist] [data-svhistpick]');
   await p.waitForSelector('[data-svhist] [data-svsnap] [data-svlook]', { timeout: 30000 });
   assert.equal(await p.$('[data-svhistpick]'), null, 'chosen: the button goes');

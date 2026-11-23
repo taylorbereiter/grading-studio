@@ -175,6 +175,8 @@ export function SafetyCard() {
       actions={<><Button onClick={() => setAsk(null)}>{t('common.cancel')}</Button><Button variant="primary" onClick={() => { const id = ask.id; setAsk(null); replaceAll(() => S.putBack(id)); }} data-ok>{t('saving.safe_put')}</Button></>}><p>{t('saving.safe_text')}</p></Dialog>}
   </Card>;
 }
+// School year comes last: it is drawn once the year is read (a part loaded later), and above the others it moved them down under
+// her pointer as it arrived.
 export function SavingSettings() {
-  return <><MoveCard /><FolderCard /><GoogleCard /><CarryCard /><YearCard /><HistoryCard /><SafetyCard /></>;
+  return <><MoveCard /><FolderCard /><GoogleCard /><CarryCard /><HistoryCard /><SafetyCard /><YearCard /></>;
 }
