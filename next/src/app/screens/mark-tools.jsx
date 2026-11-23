@@ -65,15 +65,19 @@ function Pic({ k, color, big }) {
 // The names of the marks are the current app's (and the teacher's own, from the mark key); they are drawn on the paper too.
 function StampMenu() {
   const m = M.menuAt(), [fly, setFly] = useState(null), box = useRef(null), flyBox = useRef(null), into = useRef(false);
-  // placed, focused and listening as it goes into the page (a layout effect), not after it is drawn: a blur or scroll in that moment
-  // left it open, and it showed for a frame where it wasn't yet placed (CI, PR #267)
+  // Placed, and closed by the window losing focus, as it goes into the page (a layout effect): a blur in the moment before it was drawn
+  // left it open (CI, PR #267). Its focus and the tap and scroll listeners wait until it is drawn, as before: the tap that opens it
+  // (the Stamp tool, on pointerdown) goes on to focus the paper, which can scroll it, and that must neither take the focus nor close it.
   useLayoutEffect(() => { setFly(null); if (!m) return; const el = box.current; if (!el) return;
     const r = el.getBoundingClientRect(); el.style.left = Math.max(8, Math.min(m.cx, innerWidth - r.width - 8)) + 'px'; el.style.top = Math.max(8, Math.min(m.cy, innerHeight - r.height - 8)) + 'px';
+    window.addEventListener('blur', M.closeMenu); return () => window.removeEventListener('blur', M.closeMenu);
+  }, [m]);
+  useEffect(() => { if (!m) return; const el = box.current; if (!el) return;
     el.focus({ preventScroll: true });
     const away = e => { if (!el.contains(e.target) && !(e.target.closest && e.target.closest('.mk-fly'))) M.closeMenu(); };
-    // and when the window loses focus, as src/stamps.js closes it on blur and scroll
-    document.addEventListener('pointerdown', away, true); document.addEventListener('scroll', M.closeMenu, true); window.addEventListener('blur', M.closeMenu);
-    return () => { document.removeEventListener('pointerdown', away, true); document.removeEventListener('scroll', M.closeMenu, true); window.removeEventListener('blur', M.closeMenu); };
+    // and on a scroll, as src/stamps.js closes it on blur and scroll
+    document.addEventListener('pointerdown', away, true); document.addEventListener('scroll', M.closeMenu, true);
+    return () => { document.removeEventListener('pointerdown', away, true); document.removeEventListener('scroll', M.closeMenu, true); };
   }, [m]);
   if (!m) return null;
   const s = state(), color = COLORS[s.inkColor], on = m.on, u = m.word;

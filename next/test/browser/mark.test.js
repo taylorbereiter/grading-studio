@@ -898,6 +898,8 @@ test('H-033 H-036 H-060: Picked up where you left off, once a visit; the right-c
   await p.waitForFunction(() => !document.querySelector('.mk-menu'), { timeout: 5000 });
   { const q = await nextAt(p, 0, 450, 700); await p.mouse.click(q.x, q.y, { button: 'right' }); }
   await p.waitForSelector('.mk-menu');
+  // a scroll closes it once it is drawn and listening, which is when it takes the focus (a scroll from the tap that opened it must not)
+  await p.waitForFunction(() => document.activeElement && document.activeElement.closest('.mk-menu'), { timeout: 30000 });
   await p.evaluate(() => document.dispatchEvent(new Event('scroll')));
   await p.waitForFunction(() => !document.querySelector('.mk-menu'), { timeout: 5000 });
   // the engines' note, as loadEdits gives it, in the screen's words; other engine notes stay quiet
