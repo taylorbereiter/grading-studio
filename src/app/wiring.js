@@ -246,7 +246,8 @@ document.addEventListener('keydown', e => {
   // A picked sticker, mark, check, circle or text box: + and − make it bigger or smaller.
   if ((e.key === '+' || e.key === '=' || e.key === '-' || e.key === '_') && selected && !(selected.fresh && selected.mark.t === 'text') && canResize(selected.mark)) { e.preventDefault(); stepSize(e.key === '+' || e.key === '=' ? 1 : -1); return; }
   if (soloOn() && (e.key === '/' || e.key === '[' || e.key === '?')) { e.preventDefault(); return; }   // the list stays away (src/solo.js)
-  if (e.key.toLowerCase() === 'i' && !e.shiftKey && !soloOn()) { e.preventDefault(); return soloStart(cur); }   // only this student
+  // Not with a menu, a card or a popup open, or a button in hand: an I typed there (a partner's name, say) started it by mistake.
+  if (e.key.toLowerCase() === 'i' && !e.shiftKey && !e.repeat && !soloOn() && !kmOn && !$('#askDlg') && !$('#findDlg') && !$('#pcard') && !(document.activeElement && document.activeElement.closest && document.activeElement.closest('button, a, [role="dialog"], .km'))) { e.preventDefault(); return soloStart(cur); }   // only this student
   if (e.key === '/') { e.preventDefault(); listPeek(true); $('#stuFind').focus(); return; }   // open first: a hidden list can't take focus
   // A picked mark moves with the arrow keys (Shift for bigger steps); Esc lets go of it.
   if (selected && tool === 'select' && /^Arrow/.test(e.key)) {

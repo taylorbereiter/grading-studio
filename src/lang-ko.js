@@ -35,6 +35,9 @@ const LANG_KO = {
     // Settings, Classes and rosters, when no school system is named
     "Names, students, class links": "이름, 학생, 학교 시스템 링크",
     // only this student (src/solo.js)
+    "For a student at your desk. Hold the button at the top to leave.": "책상에 온 학생에게 보여 줄 때. 나가려면 위쪽 버튼을 길게 누르세요.",
+    "Keep holding for 2 seconds to show everyone": "모두 보려면 2초 동안 계속 누르세요",
+    "The papers for that student aren’t kept in this browser, so Only this student ended.": "이 학생의 과제가 이 브라우저에 저장되어 있지 않아 '이 학생만'을 끝냈습니다.",
     "Only this student": "이 학생만", "Hold to show everyone": "길게 눌러 모두 보기", "Other work": "다른 과제",
     // linked classes (src/linked.js)
     "Link assignments": "과제 연결", "Linked with": "연결된 반:", "Change": "변경", "Your Planner has these classes on the same course:": "플래너에서 이 반들이 같은 과목입니다:", "Link them, so an assignment and its strong examples can be shared between them?": "연결해서 과제와 좋은 예시를 반끼리 공유할까요?", "Link them": "연결하기", "No thanks": "괜찮아요", "Also in": "다른 반:", "Linked classes…": "연결된 반…", "Link with the copy in": "이 반의 사본과 연결:", "Each keeps its papers and scores": "답안과 점수는 따로 유지됩니다", "Add to": "추가할 반:", "A copy with the same name, type, due date and rubric": "이름, 유형, 마감일, 루브릭이 같은 사본", "Unlink from the other classes": "다른 반과 연결 해제", "This copy keeps everything and stops sharing": "이 사본은 모두 그대로 두고 공유만 멈춥니다", "Linked classes are ticked. Untick one to keep this assignment out of it.": "연결된 반이 체크되어 있습니다. 체크를 해제하면 그 반에는 추가되지 않습니다.", "Make these changes in the copies too:": "사본에도 같은 변경 적용:", "Linked classes": "연결된 반", "For classes on the same schedule. A new assignment is offered to all of them, and strong examples show in each, with the class they came from. Rosters, papers, scores and comments stay separate.": "시간표가 같은 반을 위한 기능입니다. 새 과제는 모든 반에 제안되고, 좋은 예시는 원래 반 이름과 함께 각 반에 보입니다. 명단, 답안, 점수, 코멘트는 따로입니다.", "Course": "과목", "No other classes yet": "아직 다른 반이 없습니다", "e.g. English 12": "예: 영어 12",

@@ -1,21 +1,21 @@
 {
- "version": "1.28.75",
- "build": "c705da6c39cf",
+ "version": "1.28.76",
+ "build": "8dce5f6aafd1",
  "notes": [
-  "In another language, the grade sheet (Grades, Grade sheet) is now translated once it finishes reading the papers: its columns, its notes, Box it by hand, and the Is this the grade? question with Use it and Not a grade. Your students’ names and files stay as they are."
+  "Only this student is now in the ⋯ beside the student’s name, not a person button, so it doesn’t start when you mean to add partners. Pressing I with a menu or button in hand no longer starts it. A short press on Hold to show everyone now says to keep holding, and papers you bring in while it’s on stay open and end it, so you can’t get stuck."
  ],
  "files": {
-  "index.html": "8a67d30d316b39845cba9a823ca212012aa29933ec0ba794374a06f73c6501b2",
-  "planner.html": "88ed70d685c3779b5436a7772f0d9c161f9db6b152a212fac312689ba56d65a6"
+  "index.html": "f0b3c38fbb4c5c62dce126343365f25ba03379fad61498e490e9f8689782e945",
+  "planner.html": "01d1e77793068616c172796c249b3ffb162df3ac94d099ab8b46fd2d473474a5"
  },
  "langs": {
-  "lang/zh-Hant.js": "1b0b98d4171dc2e98442c6097c3b849c439b34f780297fe4ea0f286c87a69d29",
-  "lang/zh-Hans.js": "a3d8e279cbcbcdbd2b06e25b7ca8503d4cc82ac5f03b4e29c493fbe3b7b23e30",
-  "lang/es.js": "b5ff4dbe8c9e06f0a53723d1ba084d369f44bd9aee500ab32b35332a691aeaad",
-  "lang/fr.js": "e3b03d918ec580f39e53ad4071e5cf3112382eced6d80921960c5d705f41ae3c",
-  "lang/de.js": "d28ef935ecac77d5f31e30cbb9679d25ebd5c6288096f9d9c976024f20506daf",
-  "lang/pt-BR.js": "f0cd43bcff570fe8af9836daabb4bb11bb172d3e3b1d9d3ac6c03918fb6724fd",
-  "lang/ja.js": "bec3d92e0664ef84db861ad861543740dd35cf947de916a710027e9d2d5e7e0f",
-  "lang/ko.js": "7daa45860f296bde5f9130d3150af89b91684377a7e0abe70fb99f1050ec0b7d"
+  "lang/zh-Hant.js": "3ba605f6878bcf91f449c4ea9b965b6317c10e8bde61e8811b5075fcc8769227",
+  "lang/zh-Hans.js": "d969575785d07b81da685b69d6f875cba1e5a487b9b722bd1425947be0350ec8",
+  "lang/es.js": "cb140143ec7aa5a96f2e06cc256c40bae396f95cecea036fb4874d6098b57cb0",
+  "lang/fr.js": "48129f3a12ea0e2b77113c9f0ee65002552cae29f8eb5cd33dd7e965fb2fe96d",
+  "lang/de.js": "1053b22bd1d16b652eec2d783aaf9cd64b760f3e58a2dcb24eef77d826922014",
+  "lang/pt-BR.js": "b72e94d6a7413e4e62f1f9051bfc453c6fb3fc4a7578dc26ec350f60396451b5",
+  "lang/ja.js": "db10ec7d20f5c36330d8dabe61b07a57f49aaf13d8848c9f4fa182b56b4739c4",
+  "lang/ko.js": "4bfebd5b072a7ed8504cc20e0479cf5f72f27ac50f2b29a9a389b8a9dad0f1bb"
  }
 }
