@@ -5302,7 +5302,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.78";
+  const APP_VERSION = "1.28.79";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -15422,7 +15422,7 @@ const grip = gripAt(pg, x, y);
 if (tool === 'select') return grip ? 'ew-resize' : hitMark(pg, x, y, 4) ? (x > pg.W ? 'pointer' : 'move') : 'default';
 if (tool === 'text') { const h = hitMark(pg, x, y, 3); return grip ? 'ew-resize' : h && h.t === 'text' ? 'move' : h && x > pg.W ? 'pointer' : 'text'; }
 if (tool === 'note') { const h = hitMark(pg, x, y, 3); return h && h.t === 'note' ? (x > pg.W ? 'pointer' : 'move') : 'crosshair'; }
-if (tool === 'hl') return lineAt(pg, x, y) >= 0 ? 'text' : 'crosshair';
+if (tool === 'hl') return hlMode !== 'box' && lineAt(pg, x, y) >= 0 ? 'text' : 'crosshair';
 return '';
 }
 function gripDrag(e, bar, pg, m, fit, ta) {
@@ -33907,7 +33907,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.78":["The highlighter has a third way to draw, Box: drag a rectangle over anything to highlight it, for scans, tables and layouts that don’t select well. Press H again with the highlighter to go round Snap, Free and Box."]};
+const WHATS_NEW = {"1.28.79":["With the highlighter on Box or Free, the pointer is now a crosshair everywhere, even over typed words. The text pointer shows only on Snap, where the highlight really follows the words."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };

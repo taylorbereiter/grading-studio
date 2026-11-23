@@ -1,4 +1,7 @@
 {
+  "1.28.79": [
+    "With the highlighter on Box or Free, the pointer is now a crosshair everywhere, even over typed words. The text pointer shows only on Snap, where the highlight really follows the words."
+  ],
   "1.28.78": [
     "The highlighter has a third way to draw, Box: drag a rectangle over anything to highlight it, for scans, tables and layouts that don’t select well. Press H again with the highlighter to go round Snap, Free and Box."
   ],
