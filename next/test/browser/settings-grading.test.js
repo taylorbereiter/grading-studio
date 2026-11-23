@@ -39,7 +39,8 @@ async function page(ctx, errors) {
 const lib = p => p.evaluate(() => JSON.parse(localStorage.getItem('gs.lib')));
 const ls = (p, k) => p.evaluate(k => JSON.parse(localStorage.getItem(k)), k);
 const undoToast = async p => { await p.waitForFunction(() => [...document.querySelectorAll('.toast button')].some(b => b.textContent.trim() === 'Undo')); await p.evaluate(() => [...document.querySelectorAll('.toast button')].find(b => b.textContent.trim() === 'Undo').click()); };
-const until = async (f, ms = 8000) => { const t0 = Date.now(); for (;;) { const v = await f(); if (v) return v; if (Date.now() - t0 > ms) return v; await new Promise(r => setTimeout(r, 100)); } };
+// a save through the layer can take more than a few seconds on a slow machine (CI); the assertion after each wait says what is wrong
+const until = async (f, ms = 30000) => { const t0 = Date.now(); for (;;) { const v = await f(); if (v) return v; if (Date.now() - t0 > ms) return v; await new Promise(r => setTimeout(r, 100)); } };
 // What the current app makes of the same saved work: what a new assignment starts with, and the words the Planner reads
 async function current(ctx) {
   const q = await ctx.newPage(); await q.evaluateOnNewDocument(STEADY);
@@ -169,6 +170,30 @@ test('while marking, saved comments and the mark key: the list kept or folded, E
   const q = await ctx.newPage(); await q.evaluateOnNewDocument(STEADY);
   await q.goto(srv.url); await q.waitForFunction(() => window.__gs && window.__gs.state, { timeout: 60000 });
   assert.deepEqual(await q.evaluate(() => JSON.parse(localStorage.getItem('gs.bank'))), ['Good evidence.', 'Check spelling and capitals.']);
+  await q.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// Back to normal (src/app/display.js data-reset): the paper and text settings as they start and the app's text size Normal, how a
+// grade is cropped on the sheet kept; the current app opens the same
+test('A-097: Back to normal puts the paper and text settings and the app text size as they start, keeping the crop; the current app reads the same', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  const seed = gradingSeed(); seed.ls['gs.disp'] = JSON.stringify({ ui: 1.3, tsize: 22, fit: 'page', dfs: 20, dlh: 1.8, trim: false }); seed.ls['gs.zoom'] = '1.6';
+  await p.goto(srv.url + 'blank'); await plant(p, seed);
+  await p.goto(srv.url + 'next/#/settings/marking');
+  await p.waitForSelector('[data-sgdreset]', { timeout: 60000 });
+  assert.equal(await p.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--uz').trim()), '1.3');
+  await p.click('[data-sgdreset]');
+  assert.deepEqual(await ls(p, 'gs.disp'), { trim: false });
+  assert.equal(await ls(p, 'gs.zoom'), null);
+  assert.equal(await p.evaluate(() => document.documentElement.style.getPropertyValue('--uz')), '1');
+  assert.equal(await p.evaluate(() => [...document.querySelectorAll('[role=radio][aria-checked=true], .seg [aria-pressed=true]')].some(b => b.textContent.trim() === 'Fit width')), true);
+  // the current app starts from the same
+  const q = await page(ctx, []);
+  await q.goto(srv.url + 'index.html'); await q.waitForFunction(() => window.__gs, { timeout: 60000 });
+  assert.equal(await q.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--uz').trim()), '1');
   await q.close();
   assert.deepEqual(errors, []);
   await ctx.close();

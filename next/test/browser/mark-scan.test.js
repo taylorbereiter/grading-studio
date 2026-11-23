@@ -222,3 +222,35 @@ test('a makeup scan split into an open download, the flag in a page’s corner a
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+// A-103: Setup > Bring in files has A scan to split… (src/app/wiring.js data-scanin): the scan's page goes onto a name and is added to
+// that student in this download
+test('A-103: Bring in files has A scan to split…, and the page split onto a name is added to that student here', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, withCard());
+  await p.evaluate(() => new Promise(res => { const r = indexedDB.open('grading-studio-added', 1); r.onupgradeneeded = () => r.result.createObjectStore('files'); r.onsuccess = () => { r.result.close(); res(); }; }));
+  const z = path.join(dir, 'Book review b.zip'); fs.writeFileSync(z, zipOf({ 'Aria Testwell/Essay.pdf': await makePaper({ title: 'An essay' }), 'Bram Sample/Essay.pdf': await makePaper({ title: 'Another essay' }) }));
+  const scan = path.join(dir, 'Makeup b.pdf'); fs.writeFileSync(scan, await makePaper({ title: 'Makeup day' }));
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.click('[data-bring-for="i9"]');
+  await p.waitForSelector('.pop [role="menuitem"]');
+  let [chooser] = await Promise.all([p.waitForFileChooser(), p.click('.pop [role="menuitem"]')]);
+  await chooser.accept([z]);
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  await p.click('[data-setupopen]');
+  await p.waitForFunction(() => { const it = [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => e.textContent.includes('Bring in files')); if (it) it.click(); return !!it; }, { timeout: 30000 });
+  await p.waitForSelector('dialog[open] [data-scanin]', { timeout: 30000 });
+  [chooser] = await Promise.all([p.waitForFileChooser(), p.click('dialog[open] [data-scanin]')]);
+  await chooser.accept([scan]);
+  await p.waitForSelector('.mk-split', { timeout: 30000 });
+  await p.waitForFunction(() => window.__split && window.__split().thumbs.filter(Boolean).length === 1, { timeout: 60000 });
+  assert.match(await p.$eval('[data-spgo]', e => e.textContent), /Add to this download/);
+  await p.click('[data-spg="0"] .spf');
+  await p.click('[data-spn="' + await p.evaluate(() => window.__split().names.indexOf('Bram Sample')) + '"]');
+  await p.click('[data-spgo]');
+  await p.waitForFunction(() => !document.querySelector('.mk-split') && window.__mark.ready && window.__mark.state().batch.students.find(s => s.key === 'Bram Sample').files.length === 2, { timeout: 60000 });
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

@@ -84,5 +84,29 @@
  "inout.f_marks_kept": "Your marks on it are still saved.",
  "inout.f_goes_back": "It goes back with the export because you added it.",
  "inout.op_later": "When their work comes in, use {bring} under {setup}, or {add} on their paper.",
- "inout.heic_reading": "Reading an iPhone photo…"
+ "inout.heic_reading": "Reading an iPhone photo…",
+ "inout.nf_say": "Add their paper here, or drop the file on the page or on their name. You can still give a score without one.",
+ "inout.nf_add": "Add their file…",
+ "inout.tr_add": "Add the retake paper…",
+ "inout.rp_t": "Replace {name}",
+ "inout.rp_comp": "From this computer…",
+ "inout.rp_drive": "From Google Drive…",
+ "inout.rp_or_drop": "or drop the new file here",
+ "inout.rp_say": "You check the two files side by side before anything changes.",
+ "inout.rp_link": "A new link",
+ "inout.rp_next": "Next",
+ "inout.rp_or": "Or",
+ "inout.rp_vfile": "A video file…",
+ "inout.rp_vdrive": "Google Drive…",
+ "inout.rp_vsay": "Partners with the same video get the new one too, unless you say not on the next step.",
+ "inout.rp_vq": "Replace this video?",
+ "inout.rp_vtext": "The new video takes the old one’s place. The score and the notes stay as they are. The old link waits under Removed files, so you can bring it back.",
+ "inout.rp_vk_file": "video file",
+ "inout.rp_vk_drive": "from Google Drive",
+ "inout.rp_also": "Also for {names}",
+ "inout.rp_grp": {
+  "one": "{names} shares this paper, so theirs changes too.",
+  "other": "{names} share this paper, so theirs changes too."
+ },
+ "inout.rp_for": "Replaced {name} for {names}"
 }

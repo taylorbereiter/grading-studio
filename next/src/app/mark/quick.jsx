@@ -22,7 +22,7 @@ import { t } from '../../i18n/t.js';
 import * as C from './change.js';
 import { PARTS } from '../router.js';
 import './lines.js';
-import './paper-lines.js';
+import './quick-lines.js';
 
 // What she was looking at last, as the current app keeps it while the page is open (qzView, qzAt, qzStu, qzOnly).
 const KEEP = { view: 'q', at: 0, stu: 0, only: false };
@@ -33,9 +33,9 @@ const qOf = id => state().batch.quiz.qs.find(x => x.id === id);
 // After a step is done or taken back: the open Quick mark draws again (nothing when it is closed).
 let redraw = () => {};
 const again = () => redraw();
-const howSay = q => (Z.qzByPts(q) ? t('paper.qm_scale', { n: fmtNum(ptsOf(q)) }) : t(ptsOf(q) === 1 ? 'paper.qm_rw1' : 'paper.qm_rw', { n: fmtNum(ptsOf(q)) })) + ' · ' +
-  ({ x: t('paper.qb_how_x'), cx: t('paper.qb_how_cx'), pts: t('paper.qb_how_pts') }[q.how] || t('paper.qb_how_cx'));
-const keySay = () => { const a = Z.qzAnsMode(); return t('paper.qm_key') + ' ' + t(a === 'off' ? 'paper.qm_key_off' : a === 'all' ? 'paper.qm_key_all' : 'paper.qm_key_miss'); };
+const howSay = q => (Z.qzByPts(q) ? t('qk.qm_scale', { n: fmtNum(ptsOf(q)) }) : t(ptsOf(q) === 1 ? 'qk.qm_rw1' : 'qk.qm_rw', { n: fmtNum(ptsOf(q)) })) + ' · ' +
+  ({ x: t('qk.qb_how_x'), cx: t('qk.qb_how_cx'), pts: t('qk.qb_how_pts') }[q.how] || t('qk.qb_how_cx'));
+const keySay = () => { const a = Z.qzAnsMode(); return t('qk.qm_key') + ' ' + t(a === 'off' ? 'qk.qm_key_off' : a === 'all' ? 'qk.qm_key_all' : 'qk.qm_key_miss'); };
 const total = (st, n) => (Z.ibQzOn() ? Z.ibQzSay(st) : fmtNum(Z.quizSum(st)) + ' / ' + fmtNum(Z.quizMax()) + (n === state().batch.quiz.qs.length && percentFor(Z.quizSum(st)) != null ? ' = ' + percentFor(Z.quizSum(st)) + '%' : ''));
 
 /* a mark, as the current app gives it (qmMark, qmHalf, qmRest, qmSpotSet, the drag in qmBindDrag) */
@@ -83,7 +83,7 @@ function MarkOver({ st, q, r }) {
     const x = s.right ? s.x - 11 / sz.W : q.x + Z.qzShift(st, q.n)[0] - 6 / sz.W;
     Object.assign(style, { left: (x - r.x) / r.w * 100 + '%', transform: s.right ? 'translate(0,-50%)' : 'translate(-100%,-50%)' });
   }
-  return <span class={'qmmk ' + kind} style={style} title={t(kind === 'pin' ? 'paper.qm_pin_tip' : 'paper.qm_mk_tip')} data-qmmk>{kind === 'txt' ? look.text : kind === 'ok' ? '✓' : kind === 'x' ? '✗' : ''}</span>;
+  return <span class={'qmmk ' + kind} style={style} title={t(kind === 'pin' ? 'qk.qm_pin_tip' : 'qk.qm_mk_tip')} data-qmmk>{kind === 'txt' ? look.text : kind === 'ok' ? '✓' : kind === 'x' ? '✗' : ''}</span>;
 }
 function Card({ i, q, qi, view, ver, focus, onNote, noteOpen, onPeek, onCopy, kept, onStar }) {
   const st = state().batch.students[i], v = Z.quizMarks(st)[q.id], pts = ptsOf(q), scale = Z.qzByPts(q);
@@ -118,31 +118,31 @@ function Card({ i, q, qi, view, ver, focus, onNote, noteOpen, onPeek, onCopy, ke
     return shiftBy(st, q, -(e.clientX - d.x0) / (shown.width || 1) * r.w, -(e.clientY - d.y0) / (shown.height || 1) * r.h);
   };
   let btns;
-  if (!scale) btns = <><button type="button" class="qmb no" aria-pressed={v === 0 ? 'true' : 'false'} title={t('paper.qm_wrong_tip')} onClick={() => mark(st, q, 0)} data-v="0">✗</button>
-    <button type="button" class="qmb ok" aria-pressed={v === pts ? 'true' : 'false'} title={t('paper.qm_right_tip', { n: fmtNum(pts) })} onClick={() => mark(st, q, pts)} data-v={pts}>✓</button></>;
+  if (!scale) btns = <><button type="button" class="qmb no" aria-pressed={v === 0 ? 'true' : 'false'} title={t('qk.qm_wrong_tip')} onClick={() => mark(st, q, 0)} data-v="0">✗</button>
+    <button type="button" class="qmb ok" aria-pressed={v === pts ? 'true' : 'false'} title={t('qk.qm_right_tip', { n: fmtNum(pts) })} onClick={() => mark(st, q, pts)} data-v={pts}>✓</button></>;
   else {
     const steps = Z.qzSteps(pts), words = Z.qzStepWords(pts), half = v != null && v % 1 !== 0 && !steps.includes(v);
     btns = <>{steps.map((s, k) => <button type="button" class={'qmb' + (s >= pts ? ' ok' : s <= 0 ? ' no' : '') + (words[k] ? ' w' : '')} aria-pressed={v != null && (v === s || (half && Math.floor(v) === s && s !== pts)) ? 'true' : 'false'}
       title={words[k] ? fmtNum(s) + ': ' + words[k] : undefined} onClick={() => mark(st, q, s)} data-v={s}>{fmtNum(s)}{words[k] && <small data-raw>{words[k]}</small>}</button>)}
-      <button type="button" class="qmb half" aria-pressed={half ? 'true' : 'false'} title={t('paper.qm_half_tip')} onClick={() => mark(st, q, halfOf(st, q))} data-half>+½</button></>;
+      <button type="button" class="qmb half" aria-pressed={half ? 'true' : 'false'} title={t('qk.qm_half_tip')} onClick={() => mark(st, q, halfOf(st, q))} data-half>+½</button></>;
   }
   const note = Z.qzNoteOf(st, q), ans = Z.qzAnsOf(st, q);
   return <div ref={el} class={'qmc' + state_} tabIndex={0} data-st={i} data-q={q.id}>
     <div class="qmch">{view === 'q' ? <b data-raw>{shownName(st, i)}</b>
-      : <><b data-raw>{Z.quizLabel(q, qi)}</b>{q.key && <span class="qmkey" title={keySay()} data-raw>{q.key}</span>}<span class="mute">{t(pts === 1 ? 'paper.qm_pt' : 'paper.qm_pts', { n: fmtNum(pts) })}</span></>}
-      {v != null && scale && <span class="qmchip">{t('paper.qm_of', { n: fmtNum(v), of: fmtNum(pts) })}</span>}
-      <span class="qmchr">{Z.qzOwn(st, q) && <button type="button" class="link" title={t('paper.qm_reset_tip')} onClick={() => spotSet(st, q, null)} data-reset>{t('paper.qm_reset')}</button>}
-        <Button size="sm" title={t('paper.qm_copy_tip')} onClick={() => onCopy(st, q, qi)} data-qcopy>{t('paper.qm_copy')}</Button>
-        <Button size="sm" title={t('paper.qm_peek_tip')} onClick={() => onPeek(st, q, qi)} data-peek>{t('paper.qm_peek')}</Button>
-        <Button size="sm" icon="spark" variant={kept ? 'primary' : undefined} aria-pressed={kept ? 'true' : 'false'} title={t(kept ? 'paper.qm_ex_on' : 'paper.qm_ex_tip')} onClick={() => onStar(st, q, qi)} data-ex>{t('paper.qm_ex')}</Button></span></div>
-    <div class={'qmimg' + (crop ? ' in' : '')} title={t(scale && Z.qzHow(q) === 'pts' ? 'paper.qm_img_pts' : 'paper.qm_img_tip')} onPointerDown={down} onPointerMove={move} onPointerUp={up} data-qmimg>
-      {crop === undefined ? <span class="mute">…</span> : !crop ? <span class="mute">{t('paper.qm_no_page')}</span>
+      : <><b data-raw>{Z.quizLabel(q, qi)}</b>{q.key && <span class="qmkey" title={keySay()} data-raw>{q.key}</span>}<span class="mute">{t(pts === 1 ? 'qk.qm_pt' : 'qk.qm_pts', { n: fmtNum(pts) })}</span></>}
+      {v != null && scale && <span class="qmchip">{t('qk.qm_of', { n: fmtNum(v), of: fmtNum(pts) })}</span>}
+      <span class="qmchr">{Z.qzOwn(st, q) && <button type="button" class="link" title={t('qk.qm_reset_tip')} onClick={() => spotSet(st, q, null)} data-reset>{t('qk.qm_reset')}</button>}
+        <Button size="sm" title={t('qk.qm_copy_tip')} onClick={() => onCopy(st, q, qi)} data-qcopy>{t('qk.qm_copy')}</Button>
+        <Button size="sm" title={t('qk.qm_peek_tip')} onClick={() => onPeek(st, q, qi)} data-peek>{t('qk.qm_peek')}</Button>
+        <Button size="sm" icon="spark" variant={kept ? 'primary' : undefined} aria-pressed={kept ? 'true' : 'false'} title={t(kept ? 'qk.qm_ex_on' : 'qk.qm_ex_tip')} onClick={() => onStar(st, q, qi)} data-ex>{t('qk.qm_ex')}</Button></span></div>
+    <div class={'qmimg' + (crop ? ' in' : '')} title={t(scale && Z.qzHow(q) === 'pts' ? 'qk.qm_img_pts' : 'qk.qm_img_tip')} onPointerDown={down} onPointerMove={move} onPointerUp={up} data-qmimg>
+      {crop === undefined ? <span class="mute">…</span> : !crop ? <span class="mute">{t('qk.qm_no_page')}</span>
         : <><img ref={img} alt="" draggable={false} src={crop.url} /><MarkOver st={st} q={q} r={crop.r} key={ver} /></>}</div>
-    <div class="qmbtns">{btns}<button type="button" class="qmb cm" title={t('paper.qm_cm_tip')} onClick={() => onNote(i, q)} data-qnote>{t('paper.qm_cm')}</button>
-      {v != null && <button type="button" class="qmb clr" title={t('paper.qm_clear')} onClick={() => mark(st, q, null)} data-v="">{t('paper.qm_clear')}</button>}</div>
+    <div class="qmbtns">{btns}<button type="button" class="qmb cm" title={t('qk.qm_cm_tip')} onClick={() => onNote(i, q)} data-qnote>{t('qk.qm_cm')}</button>
+      {v != null && <button type="button" class="qmb clr" title={t('qk.qm_clear')} onClick={() => mark(st, q, null)} data-v="">{t('qk.qm_clear')}</button>}</div>
     {noteOpen ? <NoteEd st={st} q={q} onDone={() => { onNote(null); el.current && el.current.focus({ preventScroll: true }); }} />
-      : note && <button type="button" class="qmnote" title={t('paper.qm_note_tip')} onClick={() => onNote(i, q)} data-qnoteline><span>{t(note.t === 'note' ? 'paper.qm_note_c' : 'paper.qm_note_t')}</span> <span data-raw>{note.text}</span></button>}
-    {ans && <div class="qmans" title={t('paper.qm_ans_tip')}><span class="qzgold">{t('paper.qm_answer')}</span><span data-raw>{String(q.key).trim()}</span></div>}
+      : note && <button type="button" class="qmnote" title={t('qk.qm_note_tip')} onClick={() => onNote(i, q)} data-qnoteline><span>{t(note.t === 'note' ? 'qk.qm_note_c' : 'qk.qm_note_t')}</span> <span data-raw>{note.text}</span></button>}
+    {ans && <div class="qmans" title={t('qk.qm_ans_tip')}><span class="qzgold">{t('qk.qm_answer')}</span><span data-raw>{String(q.key).trim()}</span></div>}
   </div>;
 }
 
@@ -163,11 +163,11 @@ function NoteEd({ st, q, onDone }) {
     else e.stopPropagation();
   };
   return <div class="qmned" data-qmned>
-    <textarea ref={ta} rows={2} class="input" placeholder={t('paper.qm_note_ph')} aria-label={t('paper.qm_cm')} style={{ color: col }} defaultValue={m ? m.text : ''} onKeyDown={keys} data-raw />
-    <div class="qmnedc"><Mic onText={w => { putWords(ta.current, w); ta.current.focus(); }} /><span class="mute">{t('paper.qm_color')}</span>{Object.entries(NOTE_COLORS).map(([k, v]) => <button type="button" class="sw" style={{ background: v }} aria-pressed={v === col || (k === 'yellow' && col === PTS_AMBER) ? 'true' : 'false'}
-      aria-label={t('paper.qm_note_in', { c: k })} title={k} onClick={() => { setCol(v); ta.current.focus(); }} data-qnc={k} />)}</div>
-    <div class="qmnedb"><Segmented size="sm" label={t('paper.qm_note_as')} value={as} onChange={v => { setAs(v); ta.current.focus(); }} options={[{ value: 'note', label: t('paper.qm_as_note') }, { value: 'text', label: t('paper.qm_as_text') }]} />
-      <span class="mute">{t('paper.qm_note_keys')}</span><Button size="sm" variant="primary" onClick={save} data-nsave>{t('paper.qm_save')}</Button></div>
+    <textarea ref={ta} rows={2} class="input" placeholder={t('qk.qm_note_ph')} aria-label={t('qk.qm_cm')} style={{ color: col }} defaultValue={m ? m.text : ''} onKeyDown={keys} data-raw />
+    <div class="qmnedc"><Mic onText={w => { putWords(ta.current, w); ta.current.focus(); }} /><span class="mute">{t('qk.qm_color')}</span>{Object.entries(NOTE_COLORS).map(([k, v]) => <button type="button" class="sw" style={{ background: v }} aria-pressed={v === col || (k === 'yellow' && col === PTS_AMBER) ? 'true' : 'false'}
+      aria-label={t('qk.qm_note_in', { c: k })} title={k} onClick={() => { setCol(v); ta.current.focus(); }} data-qnc={k} />)}</div>
+    <div class="qmnedb"><Segmented size="sm" label={t('qk.qm_note_as')} value={as} onChange={v => { setAs(v); ta.current.focus(); }} options={[{ value: 'note', label: t('qk.qm_as_note') }, { value: 'text', label: t('qk.qm_as_text') }]} />
+      <span class="mute">{t('qk.qm_note_keys')}</span><Button size="sm" variant="primary" onClick={save} data-nsave>{t('qk.qm_save')}</Button></div>
   </div>;
 }
 
@@ -186,10 +186,10 @@ function Peek({ st, q, qi, onClose }) {
   }, []);
   const [dx, dy] = Z.qzShift(st, q.n), s = dims ? Z.qzSpot(st, q, dims) : null;
   useEffect(() => { const b = box.current && box.current.querySelector('.qmpkbox'); if (b && b.scrollIntoView) b.scrollIntoView({ block: 'center' }); }, [dims]);
-  return <div class="qmpeek" role="dialog" aria-label={t('paper.qm_peek')} data-qmpeek onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-    <div class="qmpkbar"><b data-raw>{shownName(st, state().batch.students.indexOf(st))}</b><span class="mute">{t('paper.qm_peek_at', { q: Z.quizLabel(q, qi), n: q.n + 1 })}</span><span class="grow" />
-      <Button size="sm" onClick={onClose} data-peekx>{t('paper.qm_peek_back')}</Button></div>
-    <div class="qmpkpg">{none ? <span class="mute">{t('paper.qm_no_page')}</span> : <div class="qmpkwrap" ref={box}><div class="qbcv" />{!dims && <span class="mute">{t('paper.qm_drawing')}</span>}
+  return <div class="qmpeek" role="dialog" aria-label={t('qk.qm_peek')} data-qmpeek onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <div class="qmpkbar"><b data-raw>{shownName(st, state().batch.students.indexOf(st))}</b><span class="mute">{t('qk.qm_peek_at', { q: Z.quizLabel(q, qi), n: q.n + 1 })}</span><span class="grow" />
+      <Button size="sm" onClick={onClose} data-peekx>{t('qk.qm_peek_back')}</Button></div>
+    <div class="qmpkpg">{none ? <span class="mute">{t('qk.qm_no_page')}</span> : <div class="qmpkwrap" ref={box}><div class="qbcv" />{!dims && <span class="mute">{t('qk.qm_drawing')}</span>}
       {dims && <><div class="qmpkbox" style={{ left: (q.x + dx) * 100 + '%', top: (q.y + dy) * 100 + '%', width: q.w * 100 + '%', height: q.h * 100 + '%' }} /><div class="qmpkspot" style={{ left: s.x * 100 + '%', top: s.y * 100 + '%' }} /></>}</div>}</div>
   </div>;
 }
@@ -209,14 +209,14 @@ function Colors() {
   const row = (on, say, fn, attr) => <div class="qmirow" data-qmink={attr}><span>{say}</span>{Object.entries(COLORS).map(([k, v]) => sw(k, v, k === on, say, () => fn(k)))}</div>;
   const x = COLORS[s.inkColor] || COLORS.red;
   return <div class="qminkpop" data-qminkpop>
-    {row(s.inkColor, t('paper.qm_ink_x'), k => { use({ inkColor: k }); prefs.set('gs.ink', k); }, 'x')}
-    {row(s.checkInk, t('paper.qm_ink_ok'), k => { setCheckInk(k); prefs.set('gs.checkInk', k); }, 'ok')}
-    <div class="qmirow" data-qmink="pts"><span>{t('paper.qm_ink_pts')}</span><button type="button" class="chip" aria-pressed={s.ptsInk === '' ? 'true' : 'false'} title={t('paper.qm_ink_same_tip')} onClick={() => set(() => { use({ ptsInk: '' }); prefs.set('gs.ptsInk', ''); })} data-qpts="">{t('paper.qm_ink_same')}</button>
-      {Object.entries(COLORS).map(([k, v]) => sw(k, v, k === s.ptsInk, t('paper.qm_ink_pts'), () => { use({ ptsInk: k }); prefs.set('gs.ptsInk', k); }))}</div>
-    <div class="qmirow"><span /><button type="button" class="chip" aria-pressed={s.ptsInk === 'credit' ? 'true' : 'false'} title={t('paper.qm_ink_credit_tip')} onClick={() => set(() => { use({ ptsInk: 'credit' }); prefs.set('gs.ptsInk', 'credit'); })} data-qpts="credit">
-      {t('paper.qm_ink_credit')} <i class="qmcr" style={{ background: s.CHECK_INK }} /><i class="qmcr" style={{ background: PTS_AMBER }} /><i class="qmcr" style={{ background: x }} /></button></div>
-    {s.ptsInk === 'credit' && <p class="mute">{t('paper.qm_ink_credit_say')}</p>}
-    <p class="mute">{t('paper.qm_ink_note')}</p>
+    {row(s.inkColor, t('qk.qm_ink_x'), k => { use({ inkColor: k }); prefs.set('gs.ink', k); }, 'x')}
+    {row(s.checkInk, t('qk.qm_ink_ok'), k => { setCheckInk(k); prefs.set('gs.checkInk', k); }, 'ok')}
+    <div class="qmirow" data-qmink="pts"><span>{t('qk.qm_ink_pts')}</span><button type="button" class="chip" aria-pressed={s.ptsInk === '' ? 'true' : 'false'} title={t('qk.qm_ink_same_tip')} onClick={() => set(() => { use({ ptsInk: '' }); prefs.set('gs.ptsInk', ''); })} data-qpts="">{t('qk.qm_ink_same')}</button>
+      {Object.entries(COLORS).map(([k, v]) => sw(k, v, k === s.ptsInk, t('qk.qm_ink_pts'), () => { use({ ptsInk: k }); prefs.set('gs.ptsInk', k); }))}</div>
+    <div class="qmirow"><span /><button type="button" class="chip" aria-pressed={s.ptsInk === 'credit' ? 'true' : 'false'} title={t('qk.qm_ink_credit_tip')} onClick={() => set(() => { use({ ptsInk: 'credit' }); prefs.set('gs.ptsInk', 'credit'); })} data-qpts="credit">
+      {t('qk.qm_ink_credit')} <i class="qmcr" style={{ background: s.CHECK_INK }} /><i class="qmcr" style={{ background: PTS_AMBER }} /><i class="qmcr" style={{ background: x }} /></button></div>
+    {s.ptsInk === 'credit' && <p class="mute">{t('qk.qm_ink_credit_say')}</p>}
+    <p class="mute">{t('qk.qm_ink_note')}</p>
   </div>;
 }
 
@@ -248,10 +248,10 @@ export function QuickMark({ onClose, onBoxes, onOpen }) {
   };
   const copy = async (s, x, qi) => {
     const blobP = Z.qzAnswerPic(s, x, qi).then(c => { if (!c) throw new Error('no page'); return canvasPng(c); });
-    const say = t('paper.qm_question', { q: Z.quizLabel(x, qi) });
+    const say = t('qk.qm_question', { q: Z.quizLabel(x, qi) });
     const how = await copyPicture(blobP, say + '.png');
-    if (how === 'none') return toast(t('paper.qm_no_page'));
-    toast(how === 'copied' ? t('paper.qm_copied', { q: say, ai: assistant().name || t('paper.qm_ai_any') }) : t('paper.qm_saved_pic', { q: say }), { ms: 4000 });
+    if (how === 'none') return toast(t('qk.qm_no_page'));
+    toast(how === 'copied' ? t('qk.qm_copied', { q: say, ai: assistant().name || t('qk.qm_ai_any') }) : t('qk.qm_saved_pic', { q: say }), { ms: 4000 });
     if (!seen) setCopyNote(true);
   };
   const cardEl = () => document.activeElement && document.activeElement.closest && document.activeElement.closest('.qmc');
@@ -291,38 +291,38 @@ export function QuickMark({ onClose, onBoxes, onOpen }) {
     if (e.key === 'Backspace' || e.key === 'Delete') { stop(); return mark(s, x, null); }
   };
   const nav = view === 'q'
-    ? <><IconButton icon="chl" label={t('paper.qm_q_prev')} disabled={!at} onClick={() => go(-1)} data-qgo="-1" />
-      <select class="input sm" aria-label={t('paper.qm_q_pick')} value={at} onChange={e => { setAt(+e.currentTarget.value); }} data-qmpick>{qs.map((x, i) => <option value={i}>{t('paper.qm_question', { q: Z.quizLabel(x, i) })}</option>)}</select>
-      <IconButton icon="chr" label={t('paper.qm_q_next')} disabled={at >= qs.length - 1} onClick={() => go(1)} data-qgo="1" />
+    ? <><IconButton icon="chl" label={t('qk.qm_q_prev')} disabled={!at} onClick={() => go(-1)} data-qgo="-1" />
+      <select class="input sm" aria-label={t('qk.qm_q_pick')} value={at} onChange={e => { setAt(+e.currentTarget.value); }} data-qmpick>{qs.map((x, i) => <option value={i}>{t('qk.qm_question', { q: Z.quizLabel(x, i) })}</option>)}</select>
+      <IconButton icon="chr" label={t('qk.qm_q_next')} disabled={at >= qs.length - 1} onClick={() => go(1)} data-qgo="1" />
       {q.key && <span class="qmkey big" title={keySay()} data-raw>{q.key}</span>}<span class="mute">{howSay(q)}</span></>
-    : <><IconButton icon="chl" label={t('paper.qm_s_prev')} disabled={who.indexOf(stu) <= 0} onClick={() => go(-1)} data-qgo="-1" />
-      <select class="input sm" aria-label={t('paper.qm_s_pick')} value={stu} onChange={e => setStu(+e.currentTarget.value)} data-qmpick data-raw>{who.map(i => <option value={i}>{shownName(state().batch.students[i], i)}</option>)}</select>
-      <IconButton icon="chr" label={t('paper.qm_s_next')} disabled={who.indexOf(stu) >= who.length - 1} onClick={() => go(1)} data-qgo="1" />
+    : <><IconButton icon="chl" label={t('qk.qm_s_prev')} disabled={who.indexOf(stu) <= 0} onClick={() => go(-1)} data-qgo="-1" />
+      <select class="input sm" aria-label={t('qk.qm_s_pick')} value={stu} onChange={e => setStu(+e.currentTarget.value)} data-qmpick data-raw>{who.map(i => <option value={i}>{shownName(state().batch.students[i], i)}</option>)}</select>
+      <IconButton icon="chr" label={t('qk.qm_s_next')} disabled={who.indexOf(stu) >= who.length - 1} onClick={() => go(1)} data-qgo="1" />
       <span class="qmtot" data-qmtot>{total(st, done)}</span></>;
   const s = state(), inkVars = { '--qm-x': COLORS[s.inkColor] || COLORS.red, '--qm-ok': s.CHECK_INK, '--qm-pts': s.ptsInk === 'credit' ? 'conic-gradient(' + s.CHECK_INK + ' 0 33%, ' + PTS_AMBER + ' 0 66%, ' + (COLORS[s.inkColor] || COLORS.red) + ' 0)' : ptsColor() };
   return <dialog class="dlg mk-qm" aria-labelledby="qmT" {...p} onKeyDown={keys} style={inkVars} data-qm>
-    <header class="qmhd"><h2 id="qmT">{t('paper.qm_title')}</h2>
-      <Segmented size="sm" label={t('paper.qm_view')} value={view} onChange={v => { setView(v); setFocusAt('first'); }} options={[{ value: 'q', label: t('paper.qm_by_q') }, { value: 's', label: t('paper.qm_by_s') }]} />
-      <span class="qmnav">{nav}</span><span class="mute" role="status" data-qmprog>{t('paper.qm_done', { n: done, of: all })}</span>
+    <header class="qmhd"><h2 id="qmT">{t('qk.qm_title')}</h2>
+      <Segmented size="sm" label={t('qk.qm_view')} value={view} onChange={v => { setView(v); setFocusAt('first'); }} options={[{ value: 'q', label: t('qk.qm_by_q') }, { value: 's', label: t('qk.qm_by_s') }]} />
+      <span class="qmnav">{nav}</span><span class="mute" role="status" data-qmprog>{t('qk.qm_done', { n: done, of: all })}</span>
       <span class="grow" />
-      <span class="qmopts"><span class="mute">{t('paper.qm_size')}</span><Segmented size="sm" label={t('paper.qm_size')} value={size} onChange={z => { prefs.set('gs.qmSize', z); setSize(z); }} options={SIZES.map(z => ({ value: z, label: z === 'F' ? t('paper.qm_full') : z }))} />
-        <Segmented size="sm" label={t('paper.qm_show')} value={only ? '1' : '0'} onChange={v => setOnly(v === '1')} options={[{ value: '0', label: t('paper.qm_all') }, { value: '1', label: t('paper.qm_not') }]} />
-        <Button size="sm" aria-expanded={ink ? 'true' : 'false'} title={t('paper.qm_ink_tip')} onClick={() => setInk(v => !v)} data-qminkbtn>{t('paper.qm_ink')} <i class="qmdot x" /><i class="qmdot ok" /><i class="qmdot pts" /></Button>
-        <Button size="sm" onClick={onBoxes} data-boxes>{t('paper.qm_boxes')}</Button></span>
-      <IconButton icon="x" label={t('paper.qm_close')} onClick={close} data-qmclose /></header>
+      <span class="qmopts"><span class="mute">{t('qk.qm_size')}</span><Segmented size="sm" label={t('qk.qm_size')} value={size} onChange={z => { prefs.set('gs.qmSize', z); setSize(z); }} options={SIZES.map(z => ({ value: z, label: z === 'F' ? t('qk.qm_full') : z }))} />
+        <Segmented size="sm" label={t('qk.qm_show')} value={only ? '1' : '0'} onChange={v => setOnly(v === '1')} options={[{ value: '0', label: t('qk.qm_all') }, { value: '1', label: t('qk.qm_not') }]} />
+        <Button size="sm" aria-expanded={ink ? 'true' : 'false'} title={t('qk.qm_ink_tip')} onClick={() => setInk(v => !v)} data-qminkbtn>{t('qk.qm_ink')} <i class="qmdot x" /><i class="qmdot ok" /><i class="qmdot pts" /></Button>
+        <Button size="sm" onClick={onBoxes} data-boxes>{t('qk.qm_boxes')}</Button></span>
+      <IconButton icon="x" label={t('qk.qm_close')} onClick={close} data-qmclose /></header>
     {ink && <Colors />}
-    {copyNote && <div class="qmcopynote" role="status" data-qmcopynote><p><b>{t('paper.qm_cn_h')}</b> {t('paper.qm_cn_1')}</p><p>{t('paper.qm_cn_2')}</p>
-      <Button size="sm" onClick={() => { prefs.set('gs.qmCopySeen', 1); setSeen(true); setCopyNote(false); }} data-copyok>{t('paper.qm_cn_ok')}</Button></div>}
+    {copyNote && <div class="qmcopynote" role="status" data-qmcopynote><p><b>{t('qk.qm_cn_h')}</b> {t('qk.qm_cn_1')}</p><p>{t('qk.qm_cn_2')}</p>
+      <Button size="sm" onClick={() => { prefs.set('gs.qmCopySeen', 1); setSeen(true); setCopyNote(false); }} data-copyok>{t('qk.qm_cn_ok')}</Button></div>}
     <div ref={body} class={'body qmbody qmz-' + size + (view === 'q' ? ' qmgrid' : ' qmcol')} data-qmbody>
-      {!ready ? <div class="loading" aria-busy="true" /> : !who.length ? <p class="mute">{t('paper.qm_none_papers')}</p>
+      {!ready ? <div class="loading" aria-busy="true" /> : !who.length ? <p class="mute">{t('qk.qm_none_papers')}</p>
         : cards.length ? cards.map(([i, x, qi], k) => <Card key={i + '|' + x.id} i={i} q={x} qi={qi} view={view} ver={ver} focus={focusAt === 'first' && k === 0 ? at + '|' + stu + '|' + view : false}
           noteOpen={note === i + '|' + x.id} onNote={(ii, qq) => setNote(ii == null ? null : ii + '|' + qq.id)} onPeek={(a, b2, c) => setPeek({ st: a, q: b2, qi: c })} onCopy={copy}
           kept={kept.has(state().batch.students[i].key + '|' + x.id)} onStar={star} />)
-        : <p class="mute qmnone">{t('paper.qm_all_done')}</p>}
+        : <p class="mute qmnone">{t('qk.qm_all_done')}</p>}
     </div>
-    <footer class="qmfoot"><span class="mute qmhint">{view === 'q' ? (Z.qzByPts(q) ? t('paper.qm_hint_pts') : t('paper.qm_hint_rw')) + ' ' + t('paper.qm_hint_q') : t('paper.qm_hint_s')}</span>
-      {view === 's' && <Button onClick={() => { close(); onOpen(stu); }} data-open>{t('paper.qm_open')}</Button>}
-      <Button variant="primary" disabled={done === all} onClick={rest} data-rest>{view === 'q' && Z.qzByPts(q) ? t('paper.qm_rest_n', { n: fmtNum(ptsOf(q)) }) : t('paper.qm_rest')}</Button></footer>
+    <footer class="qmfoot"><span class="mute qmhint">{view === 'q' ? (Z.qzByPts(q) ? t('qk.qm_hint_pts') : t('qk.qm_hint_rw')) + ' ' + t('qk.qm_hint_q') : t('qk.qm_hint_s')}</span>
+      {view === 's' && <Button onClick={() => { close(); onOpen(stu); }} data-open>{t('qk.qm_open')}</Button>}
+      <Button variant="primary" disabled={done === all} onClick={rest} data-rest>{view === 'q' && Z.qzByPts(q) ? t('qk.qm_rest_n', { n: fmtNum(ptsOf(q)) }) : t('qk.qm_rest')}</Button></footer>
     {peek && <Peek st={peek.st} q={peek.q} qi={peek.qi} onClose={() => setPeek(null)} />}
   </dialog>;
 }

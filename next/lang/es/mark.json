@@ -180,7 +180,6 @@
  "mark.fb_done": "Comentarios completos",
  "mark.fb_next": "Completo, estudiante siguiente",
  "mark.fb_key": "Comentarios completos sí o no (Shift: sí, y pasa al estudiante siguiente)",
- "mark.stamp": "Sello",
  "mark.stamp_tip": "Poner la nota en el trabajo",
  "mark.stamp_row": "Poner la nota de {c} en el trabajo",
  "mark.stamp_open": "Abre primero el trabajo y luego sella la nota en él.",
@@ -258,6 +257,15 @@
  "mark.cw_ul_change_n": "Cambiar el enlace de {name}",
  "mark.cw_ul_open": "Plan de unidad",
  "mark.cw_ul_open_n": "Abrir en {name}",
+ "mark.hl_width": "Grosor del resaltado",
+ "mark.hlw_s": "Resaltado fino",
+ "mark.hlw_m": "Resaltado medio",
+ "mark.hlw_l": "Resaltado grueso",
+ "mark.zoom_100": "Volver al 100 %",
+ "mark.zoom_reset": "Volver al 100 % ({key})",
+ "mark.next_fb": "Siguiente sin comentarios",
+ "mark.cmd_book": "Libro de calificaciones",
+ "mark.tr_menu": "Transcripciones…",
  "mark.cw_typed": "Escritas a mano",
  "mark.cw_ud_q": "¿Eliminar «{name}»?",
  "mark.cw_ud_say": {
@@ -266,5 +274,28 @@
  },
  "mark.cw_loose_say": "Tareas sin clase. Arrastra una a una clase de la barra lateral o usa «Mover a…» en su menú ⋯.",
  "mark.examples": "Ejemplos",
+ "mark.tn_title": "Notas escritas",
+ "mark.su_title": "Configurar rúbrica",
+ "mark.r_marked": "Marcado como devuelto",
+ "mark.r_unmarked": "Marcado como no devuelto",
+ "mark.rs_title": "Reescaneos",
+ "mark.v_turn": "Girar",
+ "mark.picked_up": {
+  "one": "Sigues donde lo dejaste ({n} alumno empezado)",
+  "other": "Sigues donde lo dejaste ({n} alumnos empezados)"
+ },
+ "mark.hl_lost": {
+  "one": "Se guarda una copia resaltada de una rúbrica anterior para {n} alumno, pero esta rúbrica no la muestra. Sus notas se mantienen; revísalas con esta rúbrica.",
+  "other": "Se guarda una copia resaltada de una rúbrica anterior para {n} alumnos, pero esta rúbrica no la muestra. Sus notas se mantienen; revísalas con esta rúbrica."
+ },
+ "mark.sp_show": "Mostrar al lado",
+ "mark.sw_btn": "Otros trabajos",
+ "mark.sw_in": "{done} de {n} entregados",
+ "mark.sw_avg": "media {pct}",
+ "mark.sw_none": "Aún no hay descargas de esta clase.",
+ "mark.sw_looking": "Buscando en el trabajo guardado…",
+ "mark.sw_dl": "Una descarga",
+ "mark.sw_unscored": "sin nota aún",
+ "mark.sw_nothing": "nada entregado",
  "mark.not_papers": "Es un archivo para llevar, no trabajos. Para traerlo, usa Traer trabajo en Ajustes, Guardado y sincronización."
 }

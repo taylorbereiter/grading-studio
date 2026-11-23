@@ -36,6 +36,12 @@ export function LightPanel({ onClose }) {
   useLight();
   const box = useRef(null), bb = b(), st = st0();
   useEffect(() => { if (box.current) box.current.focus({ preventScroll: true }); }, []);
+  // Escape closes it also when nothing else would take it (src/polish.js): the keyboard on nothing, no mark picked, no box open (A-108).
+  // The paper counts as nothing: here it takes the focus when clicked, or back after a tool closes, where the current app's page has none.
+  const shut = useRef(onClose); shut.current = onClose;
+  useEffect(() => { const k = e => { const a = document.activeElement, free = !a || a === document.body || a.classList.contains('mk-paper');
+    if (e.key !== 'Escape' || !free || state().selected || document.querySelector('dialog[open]')) return; e.preventDefault(); e.stopPropagation(); shut.current(); };
+    addEventListener('keydown', k, true); return () => removeEventListener('keydown', k, true); }, []);
   if (!bb || !st) return null;
   const L = D.lightFor(st), o = D.lightOpts(), only = D.lightKey(st) !== '*', name = D.shownName(st, state().cur);
   const set = (v, join) => { snap(join); bb.light ||= {}; if (only) bb.light[st.key] = v; else bb.light['*'] = v; apply(); };

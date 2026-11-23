@@ -125,8 +125,10 @@ test('H-074: a recording and a link added to students: played, the time put in t
   await p.click('.media [data-trcopy]');
   await p.waitForFunction(() => window.__copied.length === 1);
   assert.match(await p.evaluate(() => window.__copied[0]), /0:00\]? ?Good morning, everyone\.[\s\S]*0:02\]? ?Today, the tides\./, 'the transcript copied');
+  // where the line put the recording: the recording plays on from there and is over a second later, so the clock is read as it lands
+  await p.evaluate(() => { window.__seekTo = null; const a = document.querySelector('.media audio, .media video'); a.addEventListener('seeked', () => { window.__seekTo = a.currentTime; }, { once: true }); });
   await p.click('.media .trl[data-t="2"]');
-  await p.waitForFunction(() => Math.abs(document.querySelector('.media audio, .media video').currentTime - 2) < 0.3, { timeout: 10000 });
+  await p.waitForFunction(() => window.__seekTo != null && Math.abs(window.__seekTo - 2) < 0.3, { timeout: 10000 });
   // taken off, with an Undo; then made in this browser, the speech engine stood in for
   await p.click('.media [data-trdel]');
   await p.waitForFunction(() => !document.querySelector('.media .trl'));
@@ -245,8 +247,10 @@ test('D-048 D-050 D-051 D-052 H-037 H-058: a YouTube player driven like a video 
 
   // H-037: typed notes, the time button with nothing playing says what gives the times
   await goTo(p, 'Bram Sample');
-  await p.waitForSelector('[data-tnopen]', { timeout: 60000 });
-  await p.click('[data-tnopen]'); await p.waitForSelector('.mk-tn .tn .tned');
+  // typed notes open from More for this paper (slice C PR 2 took the button off the panel at rest)
+  await p.waitForSelector('[data-pmore]', { timeout: 60000 }); await p.click('[data-pmore]');
+  await p.waitForFunction(() => { const it = [...document.querySelectorAll('.pop [role^="menuitem"]')].find(e => /Typed notes/.test(e.textContent)); if (it) it.click(); return !!it; }, { timeout: 30000 });
+  await p.waitForSelector('.mk-tn .tn .tned');
   await p.click('.mk-tn .tned'); await p.keyboard.type('Strong opening');
   await p.evaluate(() => new Promise(r => setTimeout(r, 400)));
   // the time button on the notes' bar, or under its ⋯ where the bar has no room

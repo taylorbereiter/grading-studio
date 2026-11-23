@@ -44,6 +44,7 @@ async function fresh(width = 1366) {
   await plant(p, seed);
   p.errors = errors; p.ctx = ctx; return p;
 }
+const AI = '[data-shell-nav] a.nav[target="_blank"]';   // her assistant's link in the sidebar
 const shellUp = p => p.waitForSelector('[data-shell-nav], nav.tabbar', { timeout: 20000 });
 const cacheList = p => p.evaluate(async () => { const out = {}; for (const n of (await caches.keys()).sort()) out[n] = (await (await caches.open(n)).keys()).map(r => new URL(r.url).pathname).sort(); return out; });
 
@@ -291,4 +292,49 @@ test('every word on the shell, Home and Settings comes through t() or is the tea
     }
     assert.deepEqual(p.errors, [], 'errors at ' + w + ' px'); await p.ctx.close();
   }
+});
+
+test('C-069 C-070 C-071 C-072 C-001: the assistant in the sidebar lists the others she switches to, Up and Down move, Esc goes back; picking one opens it beside the app and makes it the one in use; Assistants and their links… opens Settings; Alt S takes a screenshot on any screen', async () => {
+  const p = await fresh();
+  await p.evaluate(() => {
+    const l = JSON.parse(localStorage.getItem('gs.lib')); l.me = { ...(l.me || {}), ai: 'Gemini', aiUrls: { 'School Helper': 'https://helper.example.org/x' }, aiOff: ['Copilot'] };
+    localStorage.setItem('gs.lib', JSON.stringify(l)); localStorage.setItem('gs.words', JSON.stringify({ ai: 'Gemini' }));
+  });
+  await p.goto(srv.url + 'next/#/home'); await shellUp(p);
+  await p.evaluate(() => { window.__opened = []; window.open = (u, n, f) => { window.__opened.push(f); return { location: { replace: x => window.__opened.push(x) }, close() {} }; }; });
+  await p.waitForSelector('[data-fc-navbox] [data-fc-nav]', { timeout: 20000 });   // app/focus/side.js is in
+  await p.click(AI);
+  await p.waitForSelector('[data-bsmenu]');
+  assert.deepEqual(await p.$$eval('[data-bsmenu] [data-bsname]', r => r.map(x => x.dataset.bsname + (x.getAttribute('aria-current') ? ' (in use)' : ''))), ['Gemini (in use)', 'Claude', 'ChatGPT', 'School Helper'], 'the one in use first, Copilot left off');
+  assert.match(await p.$eval('[data-bsname="School Helper"]', e => e.textContent), /helper\.example\.org/, 'her own link shows its address');
+  assert.equal(await p.$eval(AI, e => e.getAttribute('aria-expanded')), 'true');
+  // C-071: Up and Down move, Esc closes and goes back to the link
+  assert.equal(await p.evaluate(() => document.activeElement.dataset.bsname), 'Gemini');
+  await p.keyboard.press('ArrowDown');
+  assert.equal(await p.evaluate(() => document.activeElement.dataset.bsname), 'Claude');
+  await p.keyboard.press('ArrowUp'); await p.keyboard.press('ArrowUp');
+  assert.ok(await p.evaluate(() => document.activeElement.hasAttribute('data-bsset')), 'Up from the first goes round to the last');
+  await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('[data-bsmenu]') && document.activeElement.matches('[data-shell-nav] a.nav[target="_blank"]'));
+  // C-069, C-072: picking one opens it in a window on the right and makes it the one in use, with its own link
+  await p.click(AI); await p.waitForSelector('[data-bsmenu]');
+  await p.click('[data-bsname="School Helper"]');
+  await p.waitForFunction(() => window.__opened.length === 2);
+  const [feat, url] = await p.evaluate(() => window.__opened);
+  assert.match(feat, /^popup,left=\d+,top=\d+,width=\d+,height=\d+$/, 'beside the app, not a tab'); assert.equal(url, 'https://helper.example.org/x');
+  await p.waitForFunction(() => { const m = JSON.parse(localStorage.getItem('gs.lib')).me; return m.ai === 'School Helper' && m.aiUrl === 'https://helper.example.org/x' && !(m.aiUrls || {})['School Helper']; }, { timeout: 10000 });
+  // C-070: Assistants and their links… opens Settings > Working with AI
+  await p.waitForSelector(AI);
+  await p.click(AI); await p.waitForSelector('[data-bsmenu] [data-bsset]');
+  await p.click('[data-bsset]');
+  await p.waitForFunction(() => location.hash === '#/settings/ai' && !document.querySelector('[data-bsmenu]'));
+  // C-001: Alt S on a screen that isn't the marking screen
+  await p.goto(srv.url + 'next/#/home'); await shellUp(p);
+  await p.waitForFunction(() => document.querySelector('main h1'));
+  await p.waitForSelector('[data-fc-navbox]', { timeout: 20000 });   // Alt S comes with app/focus/side.js
+  await p.keyboard.down('Alt'); await p.keyboard.press('s'); await p.keyboard.up('Alt');
+  await p.waitForSelector('[data-sniplayer] .snipbar', { timeout: 20000 });
+  await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('[data-sniplayer]'));
+  assert.deepEqual(p.errors, []); await p.ctx.close();
 });

@@ -45,6 +45,33 @@ function SgLine({ r, w }) {
     <b>{g.k === 'note' ? raw(g.x) : g.k === 'papers' && !met ? t('focus.sg_got', { n: E.fcGot(r), of: g.n }) : sgText(g, w)}</b>{met && <span class="ok"><Icon name="check" size="xs" />{t('focus.sg_reached')}</span>}</div>;
 }
 
+// When it ends (src/focus.js fcSgReview): reached, or how far it got, what goes into the next session with a way to let it go, and
+// Mark it done for a to-do's goal or I got it done for one in her own words.
+function SgReview({ r, w, set }) {
+  const g = r.sg; if (!g) return null;
+  if (E.fcSgMet(r, w)) return <p class="fcsgl met" data-fc-sgr="met"><span class="ok"><Icon name="check" size="xs" />{t('focus.sg_met')}</span></p>;
+  const cy = E.fcLog().carry, carried = !!cy && cy.w === (r.w || '');
+  const what = g.k === 'set' ? (w && w.left ? t('focus.say_left', { n: w.left }) : '') : g.k === 'note' ? raw(g.x) : g.k === 'papers' ? t('focus.sg_got', { n: E.fcGot(r), of: g.n }) : sgText(g, w);
+  const done = () => { const x = E.fcRun(); if (!x) return; const L = E.fcLog(); if (L.carry && L.carry.w === (x.w || '')) { delete L.carry; E.fcLogSet(L); } x.sgMet = true; set(x); };
+  return <div class="fcsgr" data-fc-sgr={g.k}><p class="fcsgl"><span class="mute">{t('focus.goal_session')}</span> <b>{what}</b></p>
+    {carried && <p class="mute">{g.k === 'papers' || g.k === 'set' ? t('focus.sg_rest') : t('focus.sg_it')} <button type="button" class="link" data-fc-carryno onClick={() => { const L = E.fcLog(); delete L.carry; E.fcLogSet(L); set(E.fcRun()); }}>{t('focus.sg_nocarry')}</button></p>}
+    {g.k === 'td' && w && !w.done ? <Button size="sm" data-fc-sgdone onClick={() => todoChange(t('focus.mark_done'), T => T.todoTick(w.id)).then(done)}>{t('focus.mark_done')}</Button>
+      : g.k === 'note' ? <Button size="sm" data-fc-sgdone onClick={done}>{t('focus.sg_did')}</Button> : null}</div>;
+}
+// Focus in the sidebar (src/focus.js #railFocus): the time left and the session's ring while one runs; otherwise today against the
+// goal, "6/10". A press folds or unfolds a running session's panel, or opens and closes the start.
+export function FocusNav({ ui, draw }) {
+  const r = E.fcRun(), c = E.fcConf(), on = !!r && (r.st === 'run' || r.st === 'paused' || r.st === 'brk');
+  const gn = c.goal ? E.fcGoalNow(c) : 0, met = !!c.goal && gn >= c.goal.n;
+  const s = on ? E.fcClock(r.st !== 'brk' && r.one ? E.fcElapsed(r) : E.fcLeft(r)) : r && r.st === 'up' ? '0:00' : c.goal ? gn + '/' + c.goal.n : '';
+  const tip = on ? (r.st === 'brk' ? t('focus.break') : r.st === 'paused' ? t('focus.paused') : t('focus.focusing')) + ': ' + s
+    : c.goal ? (c.goal.k === 'min' ? t('focus.goal_of_min', { n: gn, of: c.goal.n }) : t('focus.goal_of', { n: gn, of: c.goal.n })) + ', ' + (c.goal.per === 'week' ? t('focus.goal_week') : t('focus.goal_today')) : t('focus.nav_tip');
+  const press = () => { const x = E.fcRun(); if (x) { x.fold = !x.fold && (x.st === 'run' || x.st === 'paused' || x.st === 'brk'); E.fcRunSet(x); } else ui.open = !ui.open; draw(); };
+  return <button type="button" class={'nav fcnav' + (on && r.st === 'brk' ? ' brk' : '') + (met && !on ? ' met' : '')} title={tip} aria-expanded={String((!!r && !(on && r.fold)) || (!r && ui.open))} onClick={press} data-fc-nav={s}>
+    {on || c.goal ? <Ring frac={on ? E.fcFrac(r) : Math.min(1, gn / c.goal.n)} size={18} w={2} cls={met && !on ? 'met' : ''} /> : <Icon name="timer" />}<span>{t('focus.title')}</span>
+    {s ? <span class={'ct num' + (on ? ' run' : '')} data-raw>{s}</span> : null}</button>;
+}
+
 export function Panel({ ui, close, start, draw }) {
   const r = E.fcRun(), c0 = E.fcConf(), w = r ? E.fcWork(r.w) : null, c = r && r.k === 'l' ? { ...c0, len: c0.llen } : c0;
   const set = r2 => { E.fcRunSet(r2); draw(); };
@@ -77,7 +104,7 @@ export function Panel({ ui, close, start, draw }) {
     return <aside class="fcpanel" aria-label={t('focus.title')} data-fc-panel="up"><Head cap={t('focus.title')} onClose={close} />
       <p class="fcbig ok"><Icon name="check" />{r.one ? (E.fcN(r) > 1 ? t('focus.three_done') : t('focus.one_done')) : t('focus.done_min', { n: mins })}</p>
       {!(w && !w.mark && !got) && r.k !== 'l' && <p>{got ? t('focus.you_finished', { n: got }) : t('focus.nothing_finished')}</p>}
-      <SgLine r={r} w={w} />{r.k !== 'l' && <Goal />}
+      <SgReview r={r} w={w} set={set} />{r.k !== 'l' && <Goal />}
       {r.one ? <div class="fcacts">{w && w.left > 0 && (E.fcN(r) > 1 && w.left >= 3 ? <Button variant="primary" onClick={() => start(r.w, c.len, 3)}>{t('focus.three_more')}</Button> : <Button variant="primary" onClick={() => start(r.w, c.len, 1)}>{t('focus.one_more')}</Button>)}
         <Button onClick={() => start(r.w, c.len)}>{t('focus.keep_going', { n: c.len })}</Button></div>
         : <><div class="fcacts"><Button variant="primary" data-fc-break onClick={() => { E.fcBreak(); draw(); }}>{t('focus.take_break', { n: c.brk })}</Button><Button data-fc-again onClick={() => start(r.w, mins)}>{t('focus.more_min', { n: mins })}</Button></div>
@@ -106,6 +133,7 @@ export function Panel({ ui, close, start, draw }) {
     <p class={'fcbig' + (met ? ' ok' : '')}>{met ? <><Icon name="check" />{c.goal.per === 'week' ? t('focus.week_reached') : t('focus.today_reached')}</> : t('focus.done_for_now')}</p>
     <p>{t('focus.sum_today', { n: p, m: t('focus.minutes', { n: mins }) })}{wk > p ? ' ' + t('focus.sum_week', { n: wk }) : ''}</p>
     {c.goal && <Goal />}
+    {!tdOpen && <SgReview r={r} w={w} set={set} />}
     {tdOpen ? <><p class="mute">{t('focus.todo_done_q')} <b>{raw(w.name)}</b></p><div class="fcacts"><Button size="sm" variant="primary" data-fc-tick onClick={() => todoChange(t('focus.mark_done'), T => T.todoTick(w.id)).then(close)}>{t('focus.mark_done')}</Button><Button size="sm" onClick={close}>{t('focus.not_yet')}</Button></div></>
       : <div class="fcacts"><Button size="sm" data-fc-close onClick={close}>{t('focus.close')}</Button></div>}
   </aside>;

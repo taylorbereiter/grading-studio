@@ -245,5 +245,20 @@
  "focus.wk_next": "下週到期",
  "focus.wk_hide": "本週先收起來",
  "focus.wk_day": "更改日子",
- "focus.wk_work": "學生作業"
+ "focus.wk_work": "學生作業",
+ "focus.sg_own": "你想完成什麼？",
+ "focus.sg_fewer": "減少份數",
+ "focus.sg_more": "增加份數",
+ "focus.len_or": "或",
+ "focus.sg_met": "已達成本次目標",
+ "focus.sg_rest": "剩下的會帶到下一次。",
+ "focus.sg_it": "會帶到下一次。",
+ "focus.sg_nocarry": "不要帶到下一次",
+ "focus.sg_did": "我完成了",
+ "focus.wk_papers": {
+  "one": "本週 {n} 份",
+  "other": "本週 {n} 份"
+ },
+ "focus.nav_tip": "批改用的計時器，以及你的每日目標",
+ "focus.k_snip": "螢幕截圖：複製畫面一部分的圖片"
 }

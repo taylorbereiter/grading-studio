@@ -32,6 +32,8 @@ export function GoogleCard() {
   const S = useSaving(), [busy, setBusy] = useState(false), [how, setHow] = useState(false);
   if (!S) return null;
   const g = S.google();
+  // Sync now stays pressable while a sync runs by itself (as in the current app): pressed then, one more round follows (whole/drive.js
+  // syncNow). Turned off for that sync, a press in the moment it began was lost.
   const go = async f => { setBusy(true); try { await f(); } catch (e) { console.error(e); toast(t(FAIL[e && e.why] || 'prefs.sv_failed')); } finally { setBusy(false); } };
   const inn = () => go(async () => { const r = await S.signIn(); if (r === 'sample') toast(t('prefs.sv_sample')); else if (r && r !== 'setup') toast(t('prefs.sv_signed_toast', { email: r })); });
   const state = g.state ? t(STATE[g.state] || 'prefs.sv_st_synced') : g.at ? t('prefs.sv_st_synced') : '';
@@ -44,7 +46,7 @@ export function GoogleCard() {
         {g.at > 0 && <p class="hint" data-svat>{t('prefs.sv_last', { when: date(new Date(g.at), { dateStyle: 'medium', timeStyle: 'short' }) })}</p>}
         <div class="row gap">
           {g.paused ? <Button variant="primary" disabled={busy} onClick={inn} data-svagain>{t('prefs.sv_again')}</Button>
-            : <Button disabled={busy || g.state === 'syncing'} onClick={() => go(() => S.syncNow())} data-svsync>{t('prefs.sv_sync_now')}</Button>}
+            : <Button disabled={busy} onClick={() => go(() => S.syncNow())} data-svsync>{t('prefs.sv_sync_now')}</Button>}
           <Button variant="quiet" disabled={busy} onClick={() => { S.signOut(); toast(t('prefs.sv_out_toast')); }} data-svout>{t('prefs.sv_sign_out')}</Button>
           {!narrow() && <Button icon="phone" onClick={() => setHow(true)} data-gphone>{t('prefs.ph_use')}</Button>}
         </div>

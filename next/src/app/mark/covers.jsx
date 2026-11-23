@@ -64,7 +64,7 @@ export function AnonDialog({ ctx, onClose, onCheck }) {
 }
 
 // Check the covers: every paper, drawn as the covers leave it. all: every paper (hiding names), not only the ones that go to an assistant.
-export function CheckCovers({ ctx, start = 0, all = true, onDone }) {
+export function CheckCovers({ ctx, start = 0, st, all = true, onDone }) {
   const [list, setList] = useState(null), [pos, setPos] = useState(0), [find, setFind] = useState(''), [only, setOnly] = useState('all'), [, tick] = useState(0);
   const body = useRef(null), undo = useRef([]), last = useRef(null), drawn = useRef(-1), token = useRef(0), now = useRef({});
   const redo = () => tick(n => n + 1);
@@ -72,7 +72,8 @@ export function CheckCovers({ ctx, start = 0, all = true, onDone }) {
     await libs(); await N.ensureCounts(); await X.classCommon();
     const l = N.coverList(all); if (!live) return;
     if (!l.length) { toast(t('paper.cc_none')); return onDone(); }
-    setList(l); setPos(Math.min(start || 0, l.length - 1));
+    const at = st ? l.findIndex(x => x.st === st) : -1;   // st: open at this student's paper (Return's anchor papers)
+    setList(l); setPos(at >= 0 ? at : Math.min(start || 0, l.length - 1));
     N.findNames().then(() => { if (live) redo(); });
   })(); return () => { live = false; }; }, []);
   const save = () => ctx.M.changedNow();
