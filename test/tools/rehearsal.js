@@ -19,7 +19,7 @@
 //      gs-next-1 are gone, gs-app-2 is whole; both marks are there. Still signed in: the computer as the same teacher with the last
 //      sync kept, the iPhone-style tab with the same key, which the new app streams the video with. next/ sends her to the root, and
 //      its worker and caches are gone.
-//   4. Everything kept is read again: nothing is lost or changed. Sync now works from the new app. The previous version opens at
+//   4. Everything kept is read again: nothing is lost or changed. Sync now works from the new app, and its Check for an update answers at once. The previous version opens at
 //      classic/ with the same classes and the same marks; a change made there shows in the new app and one made in the new app shows
 //      there. A sign-in from classic/ goes through the root and is handed back to classic/. Old addresses land on new screens.
 //
@@ -335,6 +335,13 @@ async function main() {
     await page.click('[data-svsync]').catch(() => {});
     step(await until(page, () => !!localStorage.getItem('gs.syncAt'), null, 30000) && (D.reads || 0) > reads, 'Sync now in the new app reads and writes the same Drive file', 'writes before the switch ' + writes0 + ', now ' + D.writes);
     note('Google’s sign-in was asked ' + (await page.evaluate(() => window.__gReq || 0)) + ' time(s) for a fresh key for that sync (by itself: renew by itself is on)');
+    // Check for an update in the new app answers in the card at once, then says it is the newest (the way every later fix reaches her)
+    await page.goto(srv.url + '#/settings/about');
+    await page.waitForSelector('.setbody .card [data-updcheck]:not([disabled])', { timeout: 30000 }).catch(() => {});
+    await page.click('.setbody .card [data-updcheck]').catch(() => {});
+    const asked = await until(page, () => /Checking for an update…|Getting version|You have the newest version/.test((document.querySelector('[data-updsays]') || {}).textContent || ''), null, 1500);
+    const newest = await until(page, () => /You have the newest version/.test((document.querySelector('[data-updsays]') || {}).textContent || ''), null, 30000);
+    step(asked && newest, 'Check for an update in the new app answers at once and then says this is the newest version', await page.evaluate(() => (document.querySelector('[data-updsays]') || {}).textContent || '(no line)'));
     // the mark in the new app's own screen
     await page.bringToFront();
     await page.goto(srv.url + '#/a/' + encodeURIComponent(id));   // by the previous version's own address for it
