@@ -25,7 +25,8 @@ function serveSite() {
   return new Promise(r => srv.listen(0, '127.0.0.1', () => { srv.unref(); r({ url: 'http://localhost:' + srv.address().port + '/', close: () => new Promise(d => { srv.closeAllConnections(); srv.close(d); }) }); }));
 }
 
-let browser, srv;
+let browser, srv, pages = 0;
+const START = Date.now();
 before(async () => { srv = await serveSite(); browser = await launch(); });
 after(async () => { await browser.close(); await srv.close(); });
 
@@ -34,6 +35,11 @@ async function page(ctx, errors) {
   p.on('pageerror', e => errors.push(e.message)); p.on('dialog', d => { errors.push('dialog: ' + d.message()); d.dismiss(); });
   p.on('console', m => { if (m.type() === 'error' && !/favicon/.test(m.location().url || '')) errors.push(m.text()); });
   await p.evaluateOnNewDocument(STEADY);
+  // Windows as a teacher's are: the clock moves on from the stopped time, the same clock in every window, and each window has its
+  // own random numbers, so its own id (shared/tabs.js TAB, src/saving.js TAB). With the clock stopped, a window's save stamp
+  // ("<window>:<time>:full") came out the same as its stamp before, and the other window could only tell it had saved by catching
+  // the stamp between its two writes: a window that heard it late took the save for one it had seen and wrote over it.
+  await p.evaluateOnNewDocument((start, n) => { const D0 = Object.getPrototypeOf(Date), T = Date.now(); Date.now = () => T + (D0.now() - start); for (let i = 0; i < n; i++) Math.random(); }, START, 97 * ++pages);
   await p.setViewport({ width: 1440, height: 900 });
   return p;
 }
@@ -70,11 +76,30 @@ const openOld = async (ctx, errors, id) => {
   await settle(p);
   return p;
 };
+// A window come back to the front has caught up once it shows the newest saved comments and is not in the middle of opening the
+// download again. It looks when it gets the focus (mark/windows.js, src/saving.js tabsCatchUp), at the save stamp in its own copy of
+// localStorage, which the browser brings over from the window that saved a moment later; on a busy computer that can be after the
+// focus, and the window then only notes the save (its next save merges) and catches up the next time she comes back. So the stamp
+// is let arrive first (it names the time of the full copy, which every window reads at once), and then the window gets its focus.
+async function upToDate(p, id, kind) {
+  await p.waitForFunction(id => new Promise(res => {
+    const st = localStorage.getItem('gsc.saved.' + id), r = indexedDB.open('grading-studio-keep');
+    r.onsuccess = () => { const db = r.result, g = db.transaction('work').objectStore('work').get(id); g.onsuccess = () => { db.close(); res(!!st && !!g.result && st.split(':')[1] === String(g.result.t)); }; };
+  }), { timeout: 60000, polling: 100 }, id);
+  await p.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await p.waitForFunction((id, kind) => new Promise(res => {
+    const b = kind === 'new' ? window.__mark && window.__mark.ready && window.__mark.state().batch : window.__gs.state().batch;
+    if (!b || b.catching || b.reopening) return res(false);
+    const q = (() => { try { return JSON.parse(localStorage.getItem(id)); } catch { return null; } })();
+    const r = indexedDB.open('grading-studio-keep');
+    r.onsuccess = () => { const db = r.result, g = db.transaction('work').objectStore('work').get(id); g.onsuccess = () => { db.close(); const f = g.result, w = !q ? f : !f ? q : (f.t || 0) > (q.t || 0) ? f : q; res(b.students.every(st => ((((w.s || {})[st.key] || {}).g || {}).comment || '') === (st.grade.comment || ''))); }; };
+  }), { timeout: 60000, polling: 100 }, id, kind);
+}
 // A comment typed on student i in the new app, and saved.
-async function newComment(p, i, text) {
+async function newComment(p, i, text, id) {
   await p.bringToFront();
-  // coming to the front may open the download again with another window's newer work (mark/windows.js): let that finish
-  await p.evaluate(() => new Promise(r => setTimeout(r, 1500)));
+  // coming to the front opens the download again with another window's newer work (mark/windows.js): it has once it shows it
+  await upToDate(p, id, 'new');
   await p.waitForFunction(() => window.__mark.ready && document.querySelector('.mk-row[data-st="0"]'), { timeout: 60000 });
   if (await p.evaluate(() => window.__mark.state().cur) !== i) {
     await p.evaluate(i => document.querySelector(`.mk-row[data-st="${i}"]`).click(), i);
@@ -86,11 +111,10 @@ async function newComment(p, i, text) {
   await p.evaluate(() => window.__mark.saved());
 }
 // The same in the current app, through its own grade and save.
-async function oldComment(p, i, text) {
+async function oldComment(p, i, text, id) {
   await p.bringToFront();
   // coming to the front, the current app opens the download again with the other window's newer work (src/saving.js tabsCatchUp)
-  await p.evaluate(() => new Promise(r => setTimeout(r, 2500)));
-  await p.waitForFunction(() => window.__gs.state().batch && !window.__gs.state().batch.catching, { timeout: 60000 });
+  await upToDate(p, id, 'old');
   await goToStudent(p, i);
   await p.evaluate((i, text) => { const s = window.__gs.state(); s.batch.students[i].grade.comment = text; return window.__gs.saveNow(); }, i, text);
   await settle(p);
@@ -100,15 +124,15 @@ test('two windows of the new app mark one download: each keeps the other’s wor
   const errors = [], ctx = await browser.createBrowserContext();
   const { id, keys } = await makeWork(ctx, errors);
   const a = await openNew(ctx, errors, id), b = await openNew(ctx, errors, id);   // both open before either saves
-  await newComment(a, 0, 'From window A.');
-  await newComment(b, 1, 'From window B.');
+  await newComment(a, 0, 'From window A.', id);
+  await newComment(b, 1, 'From window B.', id);
   assert.deepEqual((await comments(a, id, keys)).slice(0, 2), ['From window A.', 'From window B.'], 'B’s save merged A’s in, never wrote over it');
   // A again, on student 2: its own save keeps B's too
-  await newComment(a, 2, 'A again.');
+  await newComment(a, 2, 'A again.', id);
   assert.deepEqual((await comments(a, id, keys)).slice(0, 3), ['From window A.', 'From window B.', 'A again.']);
   // B, coming back to the front, opens the newer work on the student it was on
-  await b.bringToFront(); await b.evaluate(() => window.dispatchEvent(new Event('focus')));
-  await b.waitForFunction(() => { const s = window.__mark.state(); return window.__mark.ready && s.batch.students[2].grade.comment === 'A again.'; }, { timeout: 60000 });
+  await b.bringToFront(); await upToDate(b, id, 'new');
+  assert.equal(await b.evaluate(() => window.__mark.state().batch.students[2].grade.comment), 'A again.');
   assert.equal(await b.evaluate(() => window.__mark.state().cur), 1, 'still on the student she was on');
   assert.deepEqual(errors, []);
   await ctx.close();
@@ -119,11 +143,100 @@ test('the new app beside the current app: either window saving keeps the other�
   const { id, keys } = await makeWork(ctx, errors);
   const old = await openOld(ctx, errors, id), nx = await openNew(ctx, errors, id);
   assert.equal(await old.evaluate(() => !!document.getElementById('gsWriterBlock')), false, 'the current app is not covered');
-  await oldComment(old, 0, 'From the current app.');
-  await newComment(nx, 1, 'From the new app.');   // the new app is behind the current app's save: it merges
+  await oldComment(old, 0, 'From the current app.', id);
+  await newComment(nx, 1, 'From the new app.', id);   // the new app is behind the current app's save: it merges
   assert.deepEqual((await comments(nx, id, keys)).slice(0, 2), ['From the current app.', 'From the new app.']);
-  await oldComment(old, 2, 'Current app again.');   // and the current app is behind the new app's: it merges by its own rule
+  await oldComment(old, 2, 'Current app again.', id);   // and the current app is behind the new app's: it merges by its own rule
   assert.deepEqual((await comments(nx, id, keys)).slice(0, 3), ['From the current app.', 'From the new app.', 'Current app again.']);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// The ordering the stopped clock let through: the new app hears the current app's save only after that save is done (a busy window
+// handles its storage events late), so it never sees the stamp between the save's two writes. The stamp itself is new, so the new
+// app still finds the current app's save and keeps it.
+test('the new app hearing the current app’s save only once it is done still keeps it', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const { id, keys } = await makeWork(ctx, errors);
+  const old = await openOld(ctx, errors, id);
+  const nx = await page(ctx, errors);
+  let heard = 0; await nx.exposeFunction('__heardLate', () => { heard++; });
+  await nx.evaluateOnNewDocument(() => {
+    window.__late = [];
+    window.addEventListener('storage', e => {
+      if (e.__late || !(e.key || '').startsWith('gsc.saved.')) return;
+      e.stopImmediatePropagation();
+      const ev = new StorageEvent('storage', { key: e.key, oldValue: e.oldValue, newValue: e.newValue, storageArea: e.storageArea, url: e.url }); ev.__late = 1;
+      window.__late.push(ev);
+    }, true);
+    window.__hearLate = () => { for (const ev of window.__late.splice(0)) { window.dispatchEvent(ev); window.__heardLate(); } };
+  });
+  await nx.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await nx.waitForFunction(() => window.__mark && window.__mark.ready && document.querySelector('.shell[data-lock="writer"]'), { timeout: 60000 });
+  const at = await nx.evaluate(() => window.__mark.state().cur), other = at === 0 ? 1 : 0;
+  await oldComment(old, other, 'From the current app.', id);
+  assert.equal((await comments(old, id, keys))[other], 'From the current app.', 'the current app saved');
+  // the save's stamps reach the new app's window a moment later (between processes); held there until the save is done
+  await nx.waitForFunction(id => { const st = localStorage.getItem('gsc.saved.' + id); return /:full$/.test(st || '') && window.__late.some(e => e.newValue === st); }, { timeout: 20000, polling: 100 }, id);
+  await nx.evaluate(() => window.__hearLate());   // now, with the current app's save done and its stamp back to ":full"
+  assert.ok(heard > 0, 'the new app heard the save late');
+  // coming back to it, the new app compares the stamp with the one it opened (mark/windows.js), and its save does the same
+  // (students/write.js saveWork): the stamp is new, so the current app's work is found either way and nothing is written over it
+  await newComment(nx, at, 'From the new app.', id);
+  const c = await comments(nx, id, keys);
+  assert.deepEqual([c[other], c[at]], ['From the current app.', 'From the new app.']);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// She comes back to the new app and goes straight on typing in the comment box, while the download opens again with the current
+// app's newer work: the box comes back with the focus and the caret where it was, and every key she typed is there and saved.
+test('typing straight away in the new app as it catches up: the box keeps the focus and caret, and nothing typed is dropped', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const { id, keys } = await makeWork(ctx, errors);
+  const nx = await openNew(ctx, errors, id);
+  const at = await nx.evaluate(() => window.__mark.state().cur), other = at === 0 ? 1 : 0;
+  await newComment(nx, at, 'Good start.', id);
+  const old = await openOld(ctx, errors, id);
+  await oldComment(old, other, 'From the current app.', id);
+  // the current app's save has reached this window, so coming back to it opens the download again
+  await nx.waitForFunction(id => { const st = localStorage.getItem('gsc.saved.' + id); return /:full$/.test(st || '') && st !== window.__mark.state().batch.seen; }, { timeout: 20000, polling: 100 }, id);
+  // her caret in the comment, after "Good", and she comes back to the window and types at once
+  const was = await nx.evaluate(() => { const b = window.__mark.state().batch, ta = document.querySelector('.mk-cmt'); ta.focus(); ta.setSelectionRange(4, 4); window.__was = b; return b.id; });
+  await nx.bringToFront(); await nx.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await nx.keyboard.type(' and clear', { delay: 25 });   // typed at once, as the download opens again
+  await nx.waitForFunction(() => window.__mark.ready && window.__mark.state().batch !== window.__was, { timeout: 30000, polling: 100 });
+  assert.equal(was, id);
+  await nx.waitForFunction(() => document.querySelector('.mk-cmt').value === 'Good and clear start.', { timeout: 20000, polling: 100 });
+  assert.equal(await nx.evaluate(() => document.activeElement === document.querySelector('.mk-cmt') && document.activeElement.selectionStart), 14, 'the focus and caret are back, after what she typed');
+  await nx.evaluate(() => window.__mark.saved());
+  const c = await comments(nx, id, keys);
+  assert.deepEqual([c[at], c[other]], ['Good and clear start.', 'From the current app.']);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// The same in the current app (src/saving.js tabsCatchUp): she comes back to it and types at once while it opens the download
+// again with the new app's newer work.
+test('typing straight away in the current app as it catches up: the box keeps the focus and caret, and nothing typed is dropped', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const { id, keys } = await makeWork(ctx, errors);
+  const old = await openOld(ctx, errors, id);
+  const at = await old.evaluate(() => window.__gs.state().cur), other = at === 0 ? 1 : 0;
+  await old.click('#cmtIn'); await old.keyboard.type('Good start.'); await settle(old);   // typed in the box, as she does
+  const nx = await openNew(ctx, errors, id);
+  await newComment(nx, other, 'From the new app.', id);
+  // the new app's save has reached the current app's window, so coming back to it opens the download again
+  await old.waitForFunction((id, k) => { const w = JSON.parse(localStorage.getItem(id) || '{}'); return /:full$/.test(localStorage.getItem('gsc.saved.' + id) || '') && ((((w.s || {})[k] || {}).g || {}).comment === 'From the new app.'); }, { timeout: 20000, polling: 100 }, id, keys[other]);
+  await old.evaluate(() => { const ta = document.querySelector('#cmtIn'); ta.focus(); ta.setSelectionRange(4, 4); window.__was = window.__gs.state().batch; });
+  await old.bringToFront(); await old.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await old.keyboard.type(' and clear', { delay: 25 });   // typed at once, as the download opens again
+  await old.waitForFunction(() => window.__gs.state().batch !== window.__was && !window.__gs.state().batch.catching, { timeout: 30000, polling: 100 });
+  await old.waitForFunction(() => document.querySelector('#cmtIn').value === 'Good and clear start.', { timeout: 20000, polling: 100 });
+  assert.equal(await old.evaluate(() => document.activeElement === document.querySelector('#cmtIn') && document.activeElement.selectionStart), 14, 'the focus and caret are back, after what she typed');
+  await settle(old);
+  const c = await comments(old, id, keys);
+  assert.deepEqual([c[at], c[other]], ['Good and clear start.', 'From the new app.']);
   assert.deepEqual(errors, []);
   await ctx.close();
 });
@@ -144,7 +257,8 @@ test('the library beside the current app: a class renamed in the new app and a t
   assert.equal(lib.classes[0].name, 'Renamed in the new app');
   assert.ok(lib.todo.items.some(it => it.x === 'Added in the current app'));
   // and the new app's window, once the write has reached it, reads the same library: nothing it saves next starts from an older one
-  await pr.waitForFunction(want => JSON.stringify(JSON.parse(localStorage.getItem('gs.lib'))) === want, { timeout: 20000 }, JSON.stringify(lib));
+  // (polled: the new app's window is behind the current app's, and a window behind draws no frames, so it would never look again)
+  await pr.waitForFunction(want => JSON.stringify(JSON.parse(localStorage.getItem('gs.lib'))) === want, { timeout: 20000, polling: 100 }, JSON.stringify(lib));
   assert.deepEqual(errors, []);
   await ctx.close();
 });

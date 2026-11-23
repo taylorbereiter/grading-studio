@@ -244,5 +244,20 @@
  "focus.wk_next": "Entrega na próxima semana",
  "focus.wk_hide": "Guardar por esta semana",
  "focus.wk_day": "Mudar o dia",
- "focus.wk_work": "Trabalhos dos alunos"
+ "focus.wk_work": "Trabalhos dos alunos",
+ "focus.sg_own": "O que você quer concluir?",
+ "focus.sg_fewer": "Menos trabalhos",
+ "focus.sg_more": "Mais trabalhos",
+ "focus.len_or": "Ou",
+ "focus.sg_met": "Meta da sessão alcançada",
+ "focus.sg_rest": "O restante vai para a sua próxima sessão.",
+ "focus.sg_it": "Vai para a sua próxima sessão.",
+ "focus.sg_nocarry": "Não levar adiante",
+ "focus.sg_did": "Consegui",
+ "focus.wk_papers": {
+  "one": "Esta semana {n} trabalho",
+  "other": "Esta semana {n} trabalhos"
+ },
+ "focus.nav_tip": "Um cronômetro para corrigir e sua meta diária",
+ "focus.k_snip": "Captura de tela: copiar uma imagem de parte da tela"
 }

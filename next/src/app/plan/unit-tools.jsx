@@ -1,8 +1,8 @@
 // A unit's occasional tools on the Course line, loaded when the page wants them (router.js PARTS.unit), doing what the current
 // Planner's unit page does (src/planner/units.js renderUnit, addUnitFiles, viewFile, askWeeks, pasteWeeksDlg):
 //   UnitSide     beside the weeks: the unit's goals (the standards its weeks name, and its summative tasks), its summative and unit
-//                files (added, opened, a new document written here, kind changed, replaced, downloaded, taken off with undo) and
-//                the screenshots of its unit plan
+//                files (added, opened, a new document written here and put in the assistant's box, kind changed, replaced, downloaded,
+//                taken off with undo) and the screenshots of its unit plan
 //   UnitAssist   the weeks filled by the teacher's assistant from those screenshots: one self-contained message (it never names a
 //                folder, path or file on anyone's computer), the screenshots attached by hand, and one .zip back with unit.json, also
 //                given as a file of its own; or its weeks pasted as lines. Looked at, then kept.
@@ -24,6 +24,8 @@ import { usePart } from '../parts.js';
 import './lines.js';
 import './more-lines.js';
 import './cal-lines.js';
+import './les-lines.js';
+import { boxAdd } from './cbox.js';
 import { UnitBank } from './bank-edit.jsx';
 import { DriveButton, useDrivePick } from '../drive-button.jsx';
 
@@ -109,12 +111,13 @@ export function UnitSide({ p, u }) {
     </section>
     <section class={'side-sec ufiles' + (overF ? ' over' : '')} aria-labelledby="h-ufiles"
       onDragOver={e => { e.preventDefault(); setOverF(true); }} onDragLeave={() => setOverF(false)} onDrop={e => { e.preventDefault(); setOverF(false); const fs = [...e.dataTransfer.files]; if (fs.length) addFiles(p, u, fs, null).catch(saveFailed); }} data-ufiles-drop><h2 id="h-ufiles" class="sub">{t('more.unit_files')}</h2>
-      {files.length > 0 && <ul class="mlist">{files.map(f => <li data-ufile={f.id}>
-        <button type="button" class="link mopen" onClick={() => open(f)}><Icon name={f.kind === 'doc' ? 'note' : 'file'} size="sm" /><span data-raw>{f.name}</span></button>
+      {files.length > 0 && <ul class="mlist">{files.map(f => { const chip = { kind: 'file', t: 'unit', owner: u.id, id: f.id, label: f.name }; return <li data-ufile={f.id}>
+        <button type="button" class="link mopen" onClick={() => open(f)} data-chip={JSON.stringify(chip)}><Icon name={f.kind === 'doc' ? 'note' : 'file'} size="sm" /><span data-raw>{f.name}</span></button>
         <small class="mute">{f.kind === 'doc' ? t('more.document') : kb(f.size)}</small>
         {f.kind !== 'doc' && <Select label={t('more.kind')} value={f.kind} options={[{ value: 'summative', label: t('more.summative') }, { value: 'other', label: t('more.unit_file') }]} onChange={v => put(n => { const y = n.files.find(z => z.id === f.id); if (y) y.kind = v; })} />}
-        <span class="row">{f.kind !== 'doc' && <IconButton icon="replace" size="sm" label={t('more.replace')} onClick={() => replace(f)} />}<IconButton icon="download" size="sm" label={t('more.download')} onClick={() => download(f)} />
-          <IconButton icon="trash" size="sm" label={t('common.remove')} onClick={() => remove(f)} /></span></li>)}</ul>}
+        <span class="row">{f.kind === 'doc' && <IconButton icon="assist" size="sm" label={t('les.to_box', { name: aiName() })} onClick={() => boxAdd(chip)} data-ufile-box={f.id} />}
+          {f.kind !== 'doc' && <IconButton icon="replace" size="sm" label={t('more.replace')} onClick={() => replace(f)} />}<IconButton icon="download" size="sm" label={t('more.download')} onClick={() => download(f)} />
+          <IconButton icon="trash" size="sm" label={t('common.remove')} onClick={() => remove(f)} /></span></li>; })}</ul>}
       <div class="row"><Button size="sm" icon="upload" onClick={() => pickFiles(null)} data-focus="unit-add-file">{t('more.add_files')}</Button><Button size="sm" icon="note" onClick={newDoc} data-focus="unit-new-doc">{t('plan.new_document')}</Button>
         <input type="file" multiple class="vh" tabIndex={-1} aria-hidden="true" ref={fileIn} onChange={took(null)} data-ufile-input /><DriveButton input={fileIn} small /></div>
       <p class="mute small">{t('more.files_help')}</p>

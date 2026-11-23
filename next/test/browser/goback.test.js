@@ -100,6 +100,11 @@ test('A-036 A-037: with no folder, Go back in time has Choose a folder…; once 
   await plant(p, gradingSeed());
   await p.goto(srv.url + 'next/#/settings/saving');
   await p.waitForSelector('[data-svhist] [data-svhistpick]', { timeout: 30000 });
+  // the School year card, drawn once the year is read (a part loaded later), comes in below: Choose a folder… stays where it was
+  const spot = () => p.$eval('[data-svhist] [data-svhistpick]', e => { const r = e.getBoundingClientRect(); return [Math.round(r.x), Math.round(r.y)]; });
+  const before = await spot();
+  await p.waitForSelector('[data-svyear]', { timeout: 30000 });
+  assert.deepEqual(await spot(), before, 'Choose a folder… did not move as the School year card came in');
   await p.click('[data-svhist] [data-svhistpick]');
   await p.waitForSelector('[data-svhist] [data-svsnap] [data-svlook]', { timeout: 30000 });
   assert.equal(await p.$('[data-svhistpick]'), null, 'chosen: the button goes');

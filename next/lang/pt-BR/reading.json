@@ -1,0 +1,62 @@
+{
+ "rd.title": "Leituras",
+ "rd.done": "Concluído",
+ "rd.about": "Arquivos mostrados acima dos trabalhos enquanto você corrige, como a leitura ou o enunciado. Ficam neste navegador e nunca são devolvidos aos alunos.",
+ "rd.everyone": "Para todos",
+ "rd.your_doc": "seu documento",
+ "rd.remove": "Remover",
+ "rd.remove_all": "Remover para todos",
+ "rd.none": "Nenhum ainda.",
+ "rd.add_all": "Adicionar um arquivo para todos…",
+ "rd.for": "Para {name}",
+ "rd.show": "Mostrar {file}",
+ "rd.only": "só para {name}",
+ "rd.add_one": "Adicionar um arquivo só para {name}…",
+ "rd.hint": "Para um aluno com outra leitura: desmarque acima o arquivo de todos e adicione o dele.",
+ "rd.doc_card": "Seu documento: {name}",
+ "rd.card_all": "aparece com cada trabalho, não é devolvido",
+ "rd.card_one": "só para este aluno, não é devolvido",
+ "rd.hide": "Ocultar para este aluno",
+ "rd.hidden": "Oculto para este aluno. Em Leituras… você o traz de volta ou adiciona outro arquivo.",
+ "rd.zoom": "Ampliar a leitura",
+ "rd.zoom_out": "Diminuir zoom",
+ "rd.zoom_in": "Aumentar zoom",
+ "rd.zoom_fit": "Voltar a ajustar à largura",
+ "rd.zoom_how": "Faça pinça ou Ctrl + rolagem na leitura para ampliar. Arraste a borda de baixo para deixá-la mais alta.",
+ "rd.grip": "Arraste para deixar a leitura mais alta ou mais baixa",
+ "rd.cant": "Este arquivo não pode ser mostrado aqui.",
+ "rd.no_room": "Este navegador está sem espaço para guardar {name}",
+ "rd.added": "“{file}” agora aparece acima de cada trabalho",
+ "rd.added_for": "“{file}” agora aparece para {name}",
+ "rd.added_n": "{n} arquivos agora aparecem acima de cada trabalho",
+ "rd.added_n_for": "{n} arquivos agora aparecem para {name}",
+ "rd.tr_title": "Transcrições",
+ "rd.tr_count": {
+  "one": "{n} gravação nesta tarefa.",
+  "other": "{n} gravações nesta tarefa."
+ },
+ "rd.tr_have": {
+  "one": "{n} já tem transcrição.",
+  "other": "{n} já têm transcrição."
+ },
+ "rd.tr_redo": "Refazer também as que já existem",
+ "rd.tr_about": "Roda neste navegador (nada é enviado). O mecanismo de fala é baixado uma vez (cerca de 150 MB). Mantenha esta aba aberta enquanto ele trabalha; você pode continuar corrigindo.",
+ "rd.tr_make": "Fazer transcrições",
+ "rd.tr_stop": "Parar",
+ "rd.tr_stopping": "Parando…",
+ "rd.tr_close": "Fechar",
+ "rd.tr_at": "Aluno {n} ({k} de {of}) · {file} · {what}",
+ "rd.tr_all_have": "Todas as gravações já têm transcrição",
+ "rd.tr_done": {
+  "one": "Concluído. {n} transcrição feita.",
+  "other": "Concluído. {n} transcrições feitas."
+ },
+ "rd.tr_stopped": {
+  "one": "Parado. {n} transcrição feita.",
+  "other": "Parado. {n} transcrições feitas."
+ },
+ "rd.tr_failed": {
+  "one": "{n} não pôde ser lida (tente o Chrome ou converta para .mp4 ou .m4a).",
+  "other": "{n} não puderam ser lidas (tente o Chrome ou converta para .mp4 ou .m4a)."
+ }
+}

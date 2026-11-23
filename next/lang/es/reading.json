@@ -1,0 +1,62 @@
+{
+ "rd.title": "Lecturas",
+ "rd.done": "Listo",
+ "rd.about": "Archivos que se muestran encima de los trabajos mientras corriges, como la lectura o el enunciado. Se quedan en este navegador y nunca se devuelven al alumnado.",
+ "rd.everyone": "Para todos",
+ "rd.your_doc": "tu documento",
+ "rd.remove": "Quitar",
+ "rd.remove_all": "Quitar para todos",
+ "rd.none": "Todavía ninguno.",
+ "rd.add_all": "Añadir un archivo para todos…",
+ "rd.for": "Para {name}",
+ "rd.show": "Mostrar {file}",
+ "rd.only": "solo para {name}",
+ "rd.add_one": "Añadir un archivo solo para {name}…",
+ "rd.hint": "Para un alumno con otra lectura: desmarca arriba el archivo de todos y añade el suyo.",
+ "rd.doc_card": "Tu documento: {name}",
+ "rd.card_all": "se muestra con cada trabajo, no se devuelve",
+ "rd.card_one": "solo para este alumno, no se devuelve",
+ "rd.hide": "Ocultar para este alumno",
+ "rd.hidden": "Oculto para este alumno. En Lecturas… puedes recuperarlo o añadir otro archivo.",
+ "rd.zoom": "Ampliar la lectura",
+ "rd.zoom_out": "Alejar",
+ "rd.zoom_in": "Acercar",
+ "rd.zoom_fit": "Volver a ajustar al ancho",
+ "rd.zoom_how": "Pellizca o usa Ctrl + rueda sobre la lectura para ampliar. Arrastra el borde inferior para hacerla más alta.",
+ "rd.grip": "Arrastra para hacer la lectura más alta o más baja",
+ "rd.cant": "Este archivo no se puede mostrar aquí.",
+ "rd.no_room": "Este navegador no tiene espacio para guardar {name}",
+ "rd.added": "«{file}» ahora se muestra encima de cada trabajo",
+ "rd.added_for": "«{file}» ahora se muestra para {name}",
+ "rd.added_n": "Ahora se muestran {n} archivos encima de cada trabajo",
+ "rd.added_n_for": "Ahora se muestran {n} archivos para {name}",
+ "rd.tr_title": "Transcripciones",
+ "rd.tr_count": {
+  "one": "{n} grabación en esta tarea.",
+  "other": "{n} grabaciones en esta tarea."
+ },
+ "rd.tr_have": {
+  "one": "{n} ya tiene transcripción.",
+  "other": "{n} ya tienen transcripción."
+ },
+ "rd.tr_redo": "Rehacer también las que ya existen",
+ "rd.tr_about": "Se hace en este navegador (no se sube nada). El motor de voz se descarga una vez (unos 150 MB). Deja esta pestaña abierta mientras trabaja; puedes seguir corrigiendo.",
+ "rd.tr_make": "Hacer transcripciones",
+ "rd.tr_stop": "Detener",
+ "rd.tr_stopping": "Deteniendo…",
+ "rd.tr_close": "Cerrar",
+ "rd.tr_at": "Alumno {n} ({k} de {of}) · {file} · {what}",
+ "rd.tr_all_have": "Todas las grabaciones ya tienen transcripción",
+ "rd.tr_done": {
+  "one": "Listo. {n} transcripción hecha.",
+  "other": "Listo. {n} transcripciones hechas."
+ },
+ "rd.tr_stopped": {
+  "one": "Detenido. {n} transcripción hecha.",
+  "other": "Detenido. {n} transcripciones hechas."
+ },
+ "rd.tr_failed": {
+  "one": "{n} no se pudo leer (prueba con Chrome o conviértela a .mp4 o .m4a).",
+  "other": "{n} no se pudieron leer (prueba con Chrome o conviértelas a .mp4 o .m4a)."
+ }
+}

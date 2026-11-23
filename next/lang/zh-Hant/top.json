@@ -1,0 +1,64 @@
+{
+ "top.pg_fb": "{of} 份中 {n} 份已完成回饋",
+ "top.pg_off": "{n} 份缺交或免交",
+ "top.pg_avg": "平均 {v}",
+ "top.pg_avg_tip": {
+  "one": "{n} 份已完成分數的百分比平均：{mean} / {max}。未完成、缺交、免交和排除的作業不計入。開啟「分析」。",
+  "other": "{n} 份已完成分數的百分比平均：{mean} / {max}。未完成、缺交、免交和排除的作業不計入。開啟「分析」。"
+ },
+ "top.pg_tip": "還沒有已完成的分數。開啟「分析」。",
+ "top.tk_so_far": "目前共 {time}",
+ "top.tk_per": {
+  "one": "每份約 {n} 分鐘",
+  "other": "每份約 {n} 分鐘"
+ },
+ "top.tk_left": "約剩 {time}",
+ "top.tk_from": {
+  "one": "根據目前的 {n} 份",
+  "other": "根據目前的 {n} 份"
+ },
+ "top.tk_tip": "批改這份作業花的時間，來自時間紀錄",
+ "top.fs_go": "全螢幕",
+ "top.fs_leave": "離開全螢幕",
+ "top.fs_tab": "顯示學生名單",
+ "top.book_tip": "這個班級的所有作業，依學期排列，附學期成績和圖表",
+ "top.su_sys_open": "班級頁面",
+ "top.su_sys_add": "連結到班級頁面…",
+ "top.su_sys_add_n": "連結到 {name}…",
+ "top.su_link_tip": "在新分頁開啟",
+ "top.bb_menu": "從你的助理帶回",
+ "top.cmd_sheet": "成績單",
+ "top.cmd_cons": "一致性檢查",
+ "top.cmd_ex": "範例",
+ "top.cmd_late": "加入遲交作業",
+ "top.sh_mk_left": {
+  "one": "未納入：{n} 位學生還沒有標記、分數或評語。檔案裡會註明人數。",
+  "other": "未納入：{n} 位學生還沒有標記、分數或評語。檔案裡會註明人數。"
+ },
+ "top.pm_more": "這份作業的更多選項",
+ "top.pm_details": "學生資料",
+ "top.pm_notes": "改為打字記筆記",
+ "top.pm_export": "立即匯出 {name} 的作業",
+ "top.pm_export_anon": "立即匯出這份作業",
+ "top.pm_sent": "已於{when}匯出。若有修改，請再匯出一次。",
+ "top.pm_edit": "編輯評分規準",
+ "top.pm_edit_pts": "編輯",
+ "top.pm_keys": "所有快速鍵",
+ "top.pm_type": "更改類型",
+ "top.pm_page": "開啟這位學生在班級中的頁面",
+ "top.rd_menu": "閱讀資料…",
+ "top.rd_menu_n": {
+  "one": "這份作業顯示 {n} 份",
+  "other": "這份作業顯示 {n} 份"
+ },
+ "top.st_not_on": "資料夾名稱 · 不在 {cls} 的名單上",
+ "top.st_no_roster": "資料夾名稱 · 這份下載沒有選擇名單",
+ "top.st_looks": "這看起來是 {name}。",
+ "top.st_is": "這是",
+ "top.st_matched": "已配對",
+ "top.st_link": "連結",
+ "top.st_saves": "連結後,「{folder}」會存為這位學生的另一種寫法,之後有這個名稱的下載會自動歸給他。",
+ "top.st_add": "先在 {cls} 的名單加入學生,才能把這個資料夾連結到其中一位。",
+ "top.st_none": "這份下載沒有名單,所以無法把這個資料夾連結到學生。",
+ "top.st_linked": "「{folder}」已連結到 {name}"
+}

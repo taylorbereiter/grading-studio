@@ -226,6 +226,10 @@ function Details({ c, n }) {
     <Spellings c={c} n={n} other={i.other || []} />
     {edit && <DetailsDialog c={c} n={n} onClose={() => setEdit(false)} />}</section>;
 }
+// The details on their own in a sheet, for the marking screen's More for this paper (gaps C-052). more: a link under them.
+export function DetailsSheet({ c, n, more, onClose }) {
+  return <Sheet open title={n} onClose={onClose}><div class="cp-sp" data-pmwho><Details c={c} n={n} />{more}</div></Sheet>;
+}
 function DetailsDialog({ c, n, onClose }) {
   const i = B.infoOf(c, n), [v, setV] = useState({ id: i.id || '', email: i.email || '', prev: i.prev || '' });
   const save = async () => { await change(t('class.u_details', { name: n }), l => { const k = classIn(l, c.id); if (k && k.names.includes(n)) B.setInfo(k, n, { id: v.id.trim(), email: v.email.trim(), prev: v.prev.trim() }); }, true); onClose(); };

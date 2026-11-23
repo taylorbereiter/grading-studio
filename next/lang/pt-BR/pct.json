@@ -1,0 +1,70 @@
+{
+ "pc.more": "e mais {n}",
+ "pc.who": "Quem conta",
+ "pc.late": "Trabalhos atrasados",
+ "pc.out": "Trabalhos que você deixou de fora",
+ "pc.part": "Trabalhos parciais, como estão",
+ "pc.mid_h": "Meio da turma",
+ "pc.middle": "Mediana",
+ "pc.target": "Marcar trabalhos abaixo de (%)",
+ "pc.target_at": "Meta {n}%",
+ "pc.bands": "Faixas",
+ "pc.band": "Faixa",
+ "pc.tens": "De 10",
+ "pc.fives": "De 5",
+ "pc.own": "Minhas",
+ "pc.cut": "Percentual mínimo de uma faixa",
+ "pc.add": "E se: pontos para todos",
+ "pc.preview": "Só uma prévia. Nenhuma nota muda.",
+ "pc.none": "Nenhuma nota terminada conta com essas escolhas.",
+ "pc.now": "agora {v}, com {d}",
+ "pc.counted": {
+  "one": "{n} trabalho contado",
+  "other": "{n} trabalhos contados"
+ },
+ "pc.range": "Amplitude",
+ "pc.gap": "Desvio típico",
+ "pc.below": "Abaixo de {n}%",
+ "pc.band_below": "Abaixo de {n}",
+ "pc.band_to": "{a} a {b}",
+ "pc.band_tip": {
+  "one": "{n} trabalho, {p}% da turma",
+  "other": "{n} trabalhos, {p}% da turma"
+ },
+ "pc.every": "O percentual de cada trabalho",
+ "pc.table": "Trabalhos por percentual",
+ "pc.copy": "Copiar esta tabela",
+ "pc.copied": {
+  "one": "{n} percentual copiado na ordem mostrada",
+  "other": "{n} percentuais copiados na ordem mostrada"
+ },
+ "pc.vs_avg": "Vs. média",
+ "pc.vs_mid": "Vs. mediana",
+ "pc.tag_out": "Fora",
+ "pc.tag_part": "Parcial",
+ "pc.score": "Nota {v}",
+ "pc.see": "Ver como tabela",
+ "pc.who_col": "Quem",
+ "pc.row_avg": "média {v}",
+ "pc.row_sum": {
+  "one": "{n} nota, {low} com {half} ou menos",
+  "other": "{n} notas, {low} com {half} ou menos"
+ },
+ "pc.lv_h": "Como cada linha foi pontuada",
+ "pc.lv_tip": "{v} em {row}",
+ "pc.lv_cap": "Quantos trabalhos tiveram cada nota em cada linha, na ordem da rubrica. Quanto mais forte o azul, maior a nota.",
+ "pc.lv_half": "Meio ponto conta com o inteiro abaixo.",
+ "pc.mv_h": "Mudança desde a última somativa",
+ "pc.mv_wait": "Aparece quando {name} tiver uma somativa anterior avaliada neste navegador.",
+ "pc.mv_none": "Nenhum aluno tem ainda nota final nesta e em {name}.",
+ "pc.mv_this": "esta",
+ "pc.mv_up": "Subiram ({n})",
+ "pc.mv_down": "Caíram ({n})",
+ "pc.mv_cap": "O percentual de cada aluno na última somativa e nesta, maior subida primeiro. Só notas finais. Clique numa linha para abrir o trabalho.",
+ "pc.ax_h": "A mesma tarefa nas suas outras turmas",
+ "pc.ax_n": {
+  "one": "{n} nota final",
+  "other": "{n} notas finais"
+ },
+ "pc.ax_cap": "O número é a média da turma e depois quantas notas finais conta."
+}

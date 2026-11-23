@@ -245,5 +245,20 @@
  "focus.wk_next": "Entrega la semana que viene",
  "focus.wk_hide": "Guardarlo por esta semana",
  "focus.wk_day": "Cambiar el día",
- "focus.wk_work": "Trabajos de estudiantes"
+ "focus.wk_work": "Trabajos de estudiantes",
+ "focus.sg_own": "¿Qué quieres terminar?",
+ "focus.sg_fewer": "Menos trabajos",
+ "focus.sg_more": "Más trabajos",
+ "focus.len_or": "O",
+ "focus.sg_met": "Objetivo de la sesión cumplido",
+ "focus.sg_rest": "Lo que falta pasa a tu próxima sesión.",
+ "focus.sg_it": "Pasa a tu próxima sesión.",
+ "focus.sg_nocarry": "No pasarlo",
+ "focus.sg_did": "Lo terminé",
+ "focus.wk_papers": {
+  "one": "Esta semana {n} trabajo",
+  "other": "Esta semana {n} trabajos"
+ },
+ "focus.nav_tip": "Un temporizador para corregir y tu objetivo diario",
+ "focus.k_snip": "Captura: copiar una imagen de parte de la pantalla"
 }

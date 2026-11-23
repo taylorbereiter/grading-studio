@@ -133,7 +133,9 @@ function UseExample({ st, redo, onClose }) {
         shown.current[k] = { W: r.W, H: r.H, side: r.side, covers: r.covers, gone: r.gone };
         const old = cell.querySelector('canvas'); if (old) { old.replaceWith(r.c); old.width = 0; } else cell.prepend(r.c);
       }
-      if (live) setNamed(shown.current.reduce((a, x) => a + (x ? groups(x.covers) : 0), 0)); })().catch(console.error);
+      // closing the dialog mid-draw destroys the documents (the effect above), and pdf.js then rejects the page being drawn with
+      // RenderingCancelledException: that is the closing, not an error
+      if (live) setNamed(shown.current.reduce((a, x) => a + (x ? groups(x.covers) : 0), 0)); })().catch(e => live && console.error(e));
     return () => { live = false; };
   }, [items, marks, score, kind, cv]);
   // a cover drawn by hand goes with the paper's other covers (shareState boxes), so it is there in Check the covers too; a click on a

@@ -1,0 +1,64 @@
+{
+ "top.pg_fb": "{n} sur {of} avec commentaires terminés",
+ "top.pg_off": "{n} non rendus ou dispensés",
+ "top.pg_avg": "Moy. {v}",
+ "top.pg_avg_tip": {
+  "one": "Moyenne du pourcentage de {n} note terminée : {mean} / {max}. Les copies partielles, non rendues, dispensées ou écartées ne comptent pas. Ouvre Analyse.",
+  "other": "Moyenne des pourcentages de {n} notes terminées : {mean} / {max}. Les copies partielles, non rendues, dispensées ou écartées ne comptent pas. Ouvre Analyse."
+ },
+ "top.pg_tip": "Aucune note terminée pour l’instant. Ouvre Analyse.",
+ "top.tk_so_far": "{time} jusqu’ici",
+ "top.tk_per": {
+  "one": "environ {n} minute par copie",
+  "other": "environ {n} minutes par copie"
+ },
+ "top.tk_left": "environ {time} restantes",
+ "top.tk_from": {
+  "one": "d’après {n} copie jusqu’ici",
+  "other": "d’après {n} copies jusqu’ici"
+ },
+ "top.tk_tip": "Temps passé à corriger ce devoir, d’après le suivi du temps",
+ "top.fs_go": "Plein écran",
+ "top.fs_leave": "Quitter le plein écran",
+ "top.fs_tab": "Afficher la liste des élèves",
+ "top.book_tip": "Tous les devoirs de cette classe, par période, avec les notes de période et des graphiques",
+ "top.su_sys_open": "Page de la classe",
+ "top.su_sys_add": "Lier à la page de la classe…",
+ "top.su_sys_add_n": "Lier à {name}…",
+ "top.su_link_tip": "S’ouvre dans un nouvel onglet",
+ "top.bb_menu": "Récupérer depuis votre assistant",
+ "top.cmd_sheet": "Feuille de notes",
+ "top.cmd_cons": "Vérifier la cohérence",
+ "top.cmd_ex": "Exemples",
+ "top.cmd_late": "Ajouter des devoirs en retard",
+ "top.sh_mk_left": {
+  "one": "Laissé de côté : {n} élève sans annotation, note ni commentaire pour l’instant. Le fichier indique combien.",
+  "other": "Laissés de côté : {n} élèves sans annotation, note ni commentaire pour l’instant. Le fichier indique combien."
+ },
+ "top.pm_more": "Plus pour ce devoir",
+ "top.pm_details": "Coordonnées de l'élève",
+ "top.pm_notes": "Taper les notes à la place",
+ "top.pm_export": "Exporter maintenant le devoir de {name}",
+ "top.pm_export_anon": "Exporter ce devoir maintenant",
+ "top.pm_sent": "Exporté {when}. Exportez à nouveau après toute modification.",
+ "top.pm_edit": "Modifier la grille",
+ "top.pm_edit_pts": "Modifier",
+ "top.pm_keys": "Tous les raccourcis",
+ "top.pm_type": "Changer le type",
+ "top.pm_page": "Ouvrir sa page dans la classe",
+ "top.rd_menu": "Lectures…",
+ "top.rd_menu_n": {
+  "one": "{n} affichée avec ce devoir",
+  "other": "{n} affichées avec ce devoir"
+ },
+ "top.st_not_on": "Nom de dossier · absent de la liste de {cls}",
+ "top.st_no_roster": "Nom de dossier · aucune liste pour ce téléchargement",
+ "top.st_looks": "On dirait {name}.",
+ "top.st_is": "C’est",
+ "top.st_matched": "Déjà associés",
+ "top.st_link": "Associer",
+ "top.st_saves": "« {folder} » devient une autre orthographe de cet élève : les prochains téléchargements à ce nom iront à lui d’eux-mêmes.",
+ "top.st_add": "Ajoutez des élèves à la liste de {cls} pour associer ce dossier à l’un d’eux.",
+ "top.st_none": "Ce téléchargement n’a pas de liste : ce dossier ne peut pas être associé à un élève.",
+ "top.st_linked": "« {folder} » est maintenant associé à {name}"
+}

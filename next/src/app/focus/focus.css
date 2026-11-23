@@ -110,3 +110,15 @@ body.fcquiet .side .nav .ct{visibility:hidden}
 .wkrow{margin-top:14px}
 .wkrow ul{margin:6px 0 0;padding-left:18px}
 .wkfoot{display:flex;align-items:center;gap:16px;margin-top:16px}
+.fcsgpick{display:flex;flex-direction:column;gap:4px}
+.fcsgrow{display:flex;gap:8px;align-items:center}
+.fcsgrow .seg,.fcsgrow .input{flex:1;min-width:0}
+.fcsgn{display:inline-flex;gap:2px}
+.fclens{display:flex;flex-direction:column;gap:4px}
+.fctk{margin:0;font-size:var(--t1);display:flex;flex-wrap:wrap;gap:4px;align-items:baseline}
+.fctk b{color:var(--ink);font-weight:600}
+.fcsgr{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.fcsgr p{margin:0}
+.fcnav .fcring{flex:none}
+.fcnav .ct.run{color:var(--acc,var(--ink));font-weight:600}
+.fcnav.brk .ct.run{color:var(--ok)}

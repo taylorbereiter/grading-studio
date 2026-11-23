@@ -1,7 +1,7 @@
 // The words and boxes around a student's files on the marking screen (src/app/replace.js, src/app/kept.js pickAdd): a menu on each
 // file with Replace… and Remove, the check before a replace (the two files side by side), Add a file…, and Removed files with Bring
 // back. What each does is mark/change.js, the current app's own steps. Loaded with it as a part of its own (router.js PARTS.fileui).
-import { h, Fragment } from 'preact';
+import { h, Fragment, render } from 'preact';
 import { useState, useRef, useEffect } from 'preact/hooks';
 import { Button, IconButton, Menu, Dialog, TextInput, toast } from '../../ui/index.js';
 import { state } from '../../engines/gcore.js';
@@ -26,7 +26,10 @@ import './setup-lines.js';
 import './inout-lines.js';
 
 import { PARTS } from '../router.js';
+import { addCommand } from '../../services/commands.js';
 import { useDrivePick } from '../drive-button.jsx';
+import { useSaving } from '../../services/saving.js';
+import * as V from '../../engines/gmedia.js';
 import { lightApply } from './light.jsx';
 import { use } from '../../engines/gcore.js';
 import { rotOf, skewOf, lightLive } from '../../engines/gdraw.js';
@@ -37,7 +40,59 @@ import { scanAsks } from '../../engines/gfiles.js';
 export const takeSplit = () => C.takeSplit();
 export const rescanCount = () => C.rescans().length;
 export const rescanList = () => C.rescans();
-export function wire(m, open) { C.wire(m, open); use({ lightPagesChanged: lightApply }); }
+// sp: the side pane's control (screens/mark.jsx Paper), for Show beside in a file's ⋯
+let spRef = null;
+export function wire(m, open, sp) { spRef = sp || null; C.wire(m, open); use({ lightPagesChanged: lightApply }); dropWire(); wordFind(open); impFind(); }
+// Find: Convert Word papers to PDF pages (src/shell.js findRows), while the assignment has Word papers: the one on screen, else the
+// first, is opened and its Convert to PDF pages asked, as the current app's openWordPdf (A-005)
+const wordsHere = () => { const bb = state().batch; return bb ? bb.students.flatMap(st => st.files.filter(C.canPdf).map(f => ({ st, f }))) : []; };
+let wordCmd = null;
+function wordFind(open) {
+  if (wordCmd) return;
+  wordCmd = addCommand({ id: 'asg-wordpdf', label: () => t('setup.f_pdf_t'), also: t('setup.f_pdf_all', { n: '' }), group: t('mark.cmd_this'), icon: 'file', when: () => wordsHere().length > 0,
+    run: () => { const s = state(), w = wordsHere(), x = w.find(y => y.st === s.batch.students[s.cur]) || w[0]; if (!x) return;
+      wordAsk = x.f.path; open(s.batch.students.indexOf(x.st)); for (const a of [...askers]) a(); } });
+}
+// The ask waits for that Word paper, however long it takes to open: taken by it as it comes on screen, or at once if it is there
+// (a poll for it gave up after 6 s on a slow machine, and the command did nothing)
+let wordAsk = null;
+const askers = new Set();
+export const takeWordAsk = path => { if (wordAsk !== path) return false; wordAsk = null; return true; };
+export const onWordAsk = f => { askers.add(f); return () => askers.delete(f); };
+// Find: Marks from other apps (src/imported.js openImported, the current app's More menu), while the assignment has PDF papers: the
+// box for every paper, the same one the note above a file opens (A-100 A-123)
+let impCmd = null, impHost = null;
+function impFind() {
+  if (impCmd) return;
+  const shut = () => { if (impHost) { render(null, impHost); impHost.remove(); impHost = null; } };
+  impCmd = addCommand({ id: 'asg-imported', label: () => t('setup.i_title'), group: t('mark.cmd_this'), icon: 'file',
+    when: () => { const bb = state().batch; return !!bb && bb.students.some(st => st.files.some(f => f.kind === 'pdf' && !f.virtual)); },
+    run: () => { shut(); impHost = document.body.appendChild(document.createElement('div')); render(<Imported onClose={shut} />, impHost); } });
+}
+// Files dropped on the marking screen (src/app/wiring.js dragover/drop, A-098 A-101): on a student's name they are added to that
+// student; on the paper, to the student on screen, and several at once go to Bring in files. Dragging a file over the folded list
+// opens it so a name can be picked. A dropped file never replaces the page. Not while a box is open over the screen.
+let dropHere = null, dropOn = null, dropWired = false;
+const hasFiles = e => !!e.dataTransfer && [...(e.dataTransfer.types || [])].includes('Files');
+const dropAt = e => { if (document.querySelector('dialog[open]') || !e.target.closest) return null; const r = e.target.closest('.mk-row[data-st]'); if (r) return { el: r, i: +r.dataset.st }; const p = e.target.closest('.mk-paper'); return p ? { el: p, i: -1 } : null; };
+const dropMark = el => { if (dropOn === el) return; if (dropOn) dropOn.classList.remove('drop-on'); dropOn = el; if (el) el.classList.add('drop-on'); };
+function dropWire() {
+  if (dropWired) return; dropWired = true;
+  document.addEventListener('dragover', e => { if (!state().batch || !document.querySelector('.markscreen') || !hasFiles(e)) return; e.preventDefault(); const x = dropAt(e); dropMark(x && x.el); e.dataTransfer.dropEffect = x ? 'copy' : 'none'; });
+  document.addEventListener('dragenter', e => { const l = hasFiles(e) && e.target.closest && e.target.closest('.mk-list.fold'); if (l) l.classList.add('peek'); });
+  document.addEventListener('dragleave', e => { if (!e.relatedTarget) { dropMark(null); const l = document.querySelector('.mk-list.peek'); if (l) l.classList.remove('peek'); } });
+  document.addEventListener('drop', async e => {
+    if (!state().batch || !document.querySelector('.markscreen') || !hasFiles(e)) return;
+    e.preventDefault(); dropMark(null); const l = document.querySelector('.mk-list.peek'); if (l) l.classList.remove('peek');
+    const x = dropAt(e), files = [...e.dataTransfer.files]; if (!x || !files.length) return;
+    const bb = state().batch;
+    if (x.i < 0 || x.i === state().cur) { if (x.i >= 0 && files.length > 1) { const st = bb.students[x.i], made = await C.addFiles(st, files.map(file => ({ path: file.name, file }))); if (made.length) toast(t('setup.f_added', { n: made.length, name: shownName(st, x.i) })); return; } if (dropHere) dropHere(files); return; }
+    const st = bb.students[x.i]; if (!st) return;
+    const made = await C.addFiles(st, files.map(file => ({ path: file.name, file })));
+    if (made.notKept) toast(t('setup.f_not_kept', { name: made.notKept[0] }));
+    if (made.length) toast(t('setup.f_added', { n: made.length, name: shownName(st, x.i) }));
+  });
+}
 const pickFile = (multiple, done) => { const i = document.createElement('input'); i.type = 'file'; i.multiple = multiple; i.onchange = () => done([...i.files]); i.click(); };
 
 // The ⋯ on a file: Move to…, Replace…, Leave out and Remove, in the current app's order (src/app/student.js). Not on her own rubric
@@ -45,16 +100,25 @@ const pickFile = (multiple, done) => { const i = document.createElement('input')
 // file has only Leave out.
 export function FileMenu({ st, path, name, d, on, auto }) {
   const [ask, setAsk] = useState(null), [busy, setBusy] = useState(false);
+  // Replace from Google Drive: Google's chooser fills this file input (drive-button.jsx), as From this computer does
+  const rIn = useRef(null), drive = useDrivePick(rIn), S = useSaving();
   const f = st.files.find(x => x.path === path);
   if (!f) return null;
   const mine = !f.virtual && !f.rubric;
   const one = mine && (!d || d.pages.every(([q]) => q === path || (st.files.find(x => x.path === q) || {}).virtual));
   // nothing is thrown away and Undo takes it back, so it isn't asked first; the toast says how many marks went with it
   const remove = async () => { const n = C.marksOn(st, path), gone = await C.removeFile(st, path); if (gone) toast(t(n ? 'setup.f_removed_marks' : 'setup.f_removed_t', { name: C.shown(st, gone.name), n }), { undo: C.undo }); };
-  const replace = () => pickFile(false, async ([file]) => { if (!file) return; setAsk({ kind: 'rpl', file, a: await C.about(st, path, file) }); });
-  const doReplace = async () => { const { file } = ask; setAsk(null); setBusy(true); try { const nf = await C.replaceFile(st, path, file); if (nf) toast(t('setup.f_replaced', { name: C.shown(st, f.name) }), { undo: C.undo }); } finally { setBusy(false); } };
+  // Replace…: a file from this computer goes straight to the check. With Google Drive here, or for a video link, she first picks where
+  // the new one comes from (src/app/replace.js pickReplace, openReplace). The check shows the two side by side, and the partners with
+  // the same copy (Also for…, ticked; a group's shared paper changes for everyone).
+  const check = async file => { if (!file) return; setAsk({ kind: 'rpl', file, a: await C.about(st, path, file), copies: C.sameCopies(st, f), grp: C.groupPaperOf(st, f), also: true }); };
+  const replace = () => (f.kind === 'link' || drive ? setAsk({ kind: 'src' }) : pickFile(false, ([file]) => check(file)));
+  const doReplace = async () => { const { file, also } = ask; setAsk(null); setBusy(true);
+    try { const r = await C.replaceDo(st, path, file, also); if (r) toast(r.who.length ? t('inout.rp_for', { name: f.kind === 'link' ? ask.a.oldName : C.shown(st, f.name), names: C.namesOf(r.who) }) : t('setup.f_replaced', { name: f.kind === 'link' ? ask.a.oldName : C.shown(st, f.name) }), { undo: C.undo }); }
+    catch (e) { console.error(e); toast(t('setup.v_fail', { why: (e && e.message) || String(e) })); } finally { setBusy(false); } };
   const leave = () => { C.setIn(st, d, false); toast(t('setup.f_left_t', { name: d.name }), { undo: C.undo }); };
   const pages = n => (n ? t('setup.f_pages', { n }) : '');
+  const vsay = x => (x.k === 'file' ? t('inout.rp_vk_file') : x.k === 'drive' ? t('inout.rp_vk_drive') : x.s || t('setup.f_new'));
   const items = [];
   if (d && (on || auto)) items.push({ label: t('setup.f_turn_all'), icon: 'turnr', onSelect: () => C.turnDoc(st, d) });
   if (one) items.push({ label: t('setup.f_move'), icon: 'arrow', onSelect: () => setAsk({ kind: 'mv' }) }, { label: t('setup.f_replace'), icon: 'replace', onSelect: replace });
@@ -62,17 +126,45 @@ export function FileMenu({ st, path, name, d, on, auto }) {
   if (one && f.data && !f.virtual) items.push({ label: t('setup.gw_menu'), icon: 'people', onSelect: () => setAsk({ kind: 'grp' }) });
   if (mine && viewable(f)) items.push({ label: t('setup.f_example'), icon: 'spark', onSelect: () => PARTS.exsave().then(m => m.useExample(st)) });   // the whole paper or part of a page (stage 5)
   if (one) items.push({ label: t('setup.f_remove'), icon: 'trash', onSelect: remove });
+  // Show beside (src/sidepane.js data-spshow, A-109): this file in the side pane, when it can go there
+  const spk = d ? 'doc:' + (d.file || d.name) : 'file:' + path, sp = spRef && spRef.current;
+  if (sp && sp.has && sp.has(spk)) items.unshift({ label: t('mark.sp_show'), icon: 'slides', onSelect: () => spRef.current.open(spk) });
   if (!items.length) return null;
+  const link = !!(ask && ask.a && ask.a.link);
   return <span class="mk-fmenu">
     <Menu label={t('setup.f_more', { name })} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('setup.f_more', { name })} disabled={busy} data-fmenu={path} />} items={items} />
+    <input ref={rIn} type="file" hidden onChange={e => { const x = e.currentTarget.files[0]; e.currentTarget.value = ''; check(x); }} data-rpldrive />
     {ask && ask.kind === 'grp' && <GroupDialog st={st} path={path} onClose={() => setAsk(null)} />}
-    {ask && ask.kind === 'rpl' && <Dialog open title={t('setup.f_rpl_q')} onClose={() => setAsk(null)}
+    {ask && ask.kind === 'src' && <ReplaceFrom st={st} f={f} drive={drive} S={S} onFile={file => check(file)} onClose={() => setAsk(null)} />}
+    {ask && ask.kind === 'rpl' && <Dialog open title={t(link ? 'inout.rp_vq' : 'setup.f_rpl_q')} onClose={() => setAsk(null)}
       actions={<><Button onClick={() => setAsk(null)}>{t('setup.cancel')}</Button><Button variant="primary" onClick={doReplace} data-ok>{t('setup.f_replace_do')}</Button></>}>
-      <div class="mk-rpl"><div><b data-raw>{ask.a.oldName}</b><small class="mute">{[pages(ask.a.oldPages), ask.a.marks ? t('setup.f_marks', { n: ask.a.marks }) : t('setup.f_no_marks')].filter(Boolean).join(' · ')}</small></div>
-        <span class="mute" aria-hidden="true">→</span><div><b data-raw>{ask.a.newName}</b><small class="mute">{[pages(ask.a.newPages), t('setup.f_new')].filter(Boolean).join(' · ')}</small></div></div>
-      <p>{ask.a.marks ? t('setup.f_rpl_marks', { n: ask.a.marks }) : t('setup.f_rpl_text')}</p></Dialog>}
+      <div class="mk-rpl"><div><b data-raw>{ask.a.oldName}</b><small class="mute" data-raw={link ? '' : undefined}>{link ? vsay(ask.a.oldSay) : [pages(ask.a.oldPages), ask.a.marks ? t('setup.f_marks', { n: ask.a.marks }) : t('setup.f_no_marks')].filter(Boolean).join(' · ')}</small></div>
+        <span class="mute" aria-hidden="true">→</span><div><b data-raw>{ask.a.newName}</b><small class="mute" data-raw={link ? '' : undefined}>{link ? vsay(ask.a.newSay) : [pages(ask.a.newPages), t('setup.f_new')].filter(Boolean).join(' · ')}</small></div></div>
+      <p>{link ? t('inout.rp_vtext') : ask.a.marks ? t('setup.f_rpl_marks', { n: ask.a.marks }) : t('setup.f_rpl_text')}</p>
+      {ask.copies.length > 0 && (ask.grp ? <p class="mute" data-rpgrp>{t('inout.rp_grp', { names: C.namesOf(ask.copies.map(c => c[0])), n: ask.copies.length })}</p>
+        : <span data-rpalso><Checkbox checked={ask.also} onChange={v => setAsk(a => ({ ...a, also: v }))} label={t('inout.rp_also', { names: C.namesOf(ask.copies.map(c => c[0])) })} /></span>)}</Dialog>}
     {ask && ask.kind === 'mv' && <MoveTo st={st} path={path} f={f} onClose={() => setAsk(null)} />}
   </span>;
+}
+// Where the new file comes from (openReplace): this computer or Google Drive, or the file dropped on the box; for a video link, a new
+// link (Next), a video file or a video in Drive. Each goes to the check before anything changes.
+function ReplaceFrom({ st, f, drive, S, onFile, onClose }) {
+  const link = f.kind === 'link', [url, setUrl] = useState(''), clean = link ? V.linkClean(url.trim()) : '', [busy, setBusy] = useState(false);
+  const go = file => { if (!file) return; onClose(); onFile(file); };
+  const run = async fn => { setBusy(true); try { await fn(); } catch (e) { console.error(e); setBusy(false); toast(t('setup.v_fail', { why: (e && e.message) || String(e) })); } };
+  const vfile = () => { const i = document.createElement('input'); i.type = 'file'; i.accept = 'video/*,audio/*'; i.onchange = () => { const x = i.files[0]; if (!x) return; if (!V.MEDIA_RX.test(x.name) && !/^(video|audio)\//.test(x.type)) return toast(t('setup.v_not_media')); run(async () => go(await C.videoFile(f, x))); }; i.click(); };
+  const vdrive = () => run(async () => { const [d] = await S.vidPick({ title: t('video.drv_choose') }); if (d) go(C.driveVideoFile(f, d)); else setBusy(false); });
+  const canDrive = !!(S && S.google().pickNow);
+  return <Dialog open title={t('inout.rp_t', { name: link ? V.linkTitle(f) : C.shown(st, f.name) })} onClose={onClose} actions={<Button onClick={onClose}>{t('setup.cancel')}</Button>}>
+    <div class="vdbox" onDragOver={e => { if (!link) e.preventDefault(); }} onDrop={e => { if (link) return; e.preventDefault(); go(e.dataTransfer.files[0]); }} data-rpsrc>
+      {link ? <><div class="mk-rplink"><TextInput label={t('inout.rp_link')} value={url} onInput={setUrl} placeholder={t('setup.v_link_ph')} autocomplete="off" spellcheck={false} error={url.trim() && !clean ? t('setup.v_bad_link') : ''}
+          onKeyDown={e => { if (e.key === 'Enter' && clean) { e.preventDefault(); go(C.linkFile(f, clean)); } }} data-rplink />
+        <Button variant="primary" disabled={!clean} onClick={() => go(C.linkFile(f, clean))} data-rplinkgo>{t('inout.rp_next')}</Button></div>
+        <p class="vdlab mute">{t('inout.rp_or')}</p>
+        <div class="vdfile"><Button onClick={vfile} disabled={busy} data-rpvfile>{t('inout.rp_vfile')}</Button>{canDrive && <Button onClick={vdrive} disabled={busy} data-rpvdrive>{t('inout.rp_vdrive')}</Button>}</div></>
+      : <div class="vdfile"><Button onClick={() => pickFile(false, ([x]) => go(x))} data-rpcomp>{t('inout.rp_comp')}</Button>{drive && <Button onClick={() => { onClose(); drive(); }} data-rpdrive>{t('inout.rp_drive')}</Button>}<span class="mute">{t('inout.rp_or_drop')}</span></div>}
+      <p class="mute vdsay">{t(link ? 'inout.rp_vsay' : 'inout.rp_say')}</p></div>
+  </Dialog>;
 }
 
 // Move to…: pick the student the file belongs to, then, if this student has a score or comment, whether it goes too (openMoveFile).
@@ -147,7 +239,13 @@ export function FilesFoot({ st, name }) {
     { label: t('setup.v_np_menu'), icon: 'note', onSelect: () => PARTS.media().then(S => setMedia({ S, k: 'notes' }), e => console.error(e)) },
     { label: t('setup.s_into'), icon: 'image', onSelect: scan }];
   if (drive) items.splice(1, 0, { label: t('file.from_drive_pick'), icon: 'drive', onSelect: drive });
-  return <div class="mk-ffoot">
+  // a file dropped on the paper adds to this student, several at once go to Bring in files (src/app/wiring.js drop; A-098)
+  useEffect(() => { dropHere = files => (files.length > 1 ? PARTS.bringin().then(B => B.bringFiles(files.map(file => ({ path: file.name, file })), o => setBring({ B, ...o }))) : addList(files)); return () => { dropHere = null; }; });
+  const none = !st.files.length;
+  return <div class={'mk-ffoot' + (none ? ' none' : '')}>
+    {/* nothing turned in yet (src/app/student.js nofile): what she can do, Add their file… first, and the other ways in the Add menu */}
+    {none && <p class="mute" data-nofile>{t('inout.nf_say')}</p>}
+    {none && <Button size="sm" variant="primary" icon="file" onClick={add} data-nfadd>{t('inout.nf_add')}</Button>}
     <Menu label={t('setup.f_add_for', { name })} trigger={b => <Button {...b} size="sm" icon="plus" data-addmenu>{t('setup.f_add_menu')}</Button>} items={items} />
     {(st.files.some(viewable) || fileSeq(st).length > 1) && <Button size="sm" icon="grip" onClick={() => setArr(true)} title={t('setup.a_open_tip')} data-arrange>{t('setup.a_open')}</Button>}
     <input ref={dIn} type="file" multiple hidden onChange={e => { const fs = [...e.currentTarget.files]; e.currentTarget.value = ''; addList(fs); }} data-adddrive />
@@ -353,7 +451,7 @@ export function Rescans({ onClose, onGo }) {
   const order = [...by.keys()].sort((a, b) => a - b);
   const line = i => shownName(bb.students[i], i) + ': ' + by.get(i).map(x => t('setup.rs_line', { n: x.p + 1, file: C.shown(x.st, x.f.name) })).join(', ');
   const copy = () => copyText(order.map(line).join('\n')).then(ok => toast(t(ok ? 'setup.rs_copied' : 'copy.failed')));
-  return <Dialog open title={all.length ? t('mark.rs_title_n', { n: by.size }) : t('setup.rs_title')} onClose={onClose}
+  return <Dialog open title={all.length ? t('mark.rs_title_n', { n: by.size }) : t('mark.rs_title')} onClose={onClose}
     actions={<>{all.length > 0 && <Button onClick={copy} data-rscopy>{t('setup.rs_copy')}</Button>}<Button onClick={onClose}>{t('setup.s_close')}</Button></>}>
     {all.length ? <><p class="mute">{t('setup.rs_text')}</p>
       <ul class="mk-rslist">{order.map(i => <li><button class="mk-rsrow" onClick={() => { onClose(); onGo(i); }} data-rsgo={i}><span data-raw>{shownName(bb.students[i], i)}</span><span class="mute">{by.get(i).map(x => t('setup.rs_p', { n: x.p + 1 })).join(', ')}</span></button></li>)}</ul></>

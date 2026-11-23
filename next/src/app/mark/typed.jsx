@@ -13,6 +13,7 @@ import { fmtTime } from '../../engines/gmedia.js';
 import { t } from '../../i18n/t.js';
 import { frameNow } from './frame.js';
 import * as C from './change.js';
+import './lines.js';
 import './setup-lines.js';
 import './paper-lines.js';
 import './video-lines.js';
@@ -175,15 +176,22 @@ export function Timer({ st }) {
   </div>;
 }
 
-// Under the comment: Typed notes, and the Timer for a student with no video. Each opens and closes; notes already typed open it.
-let openN = false, openT = false;
+// Under the comment: Typed notes, and the Timer for a student with no video, once opened (More for this paper); notes already typed open
+// it, and a Timer that has run.
+let openN = false, openT = false, bump = null;
+// Typed notes, and Type notes instead (src/typednotes.js data-tntry), from More for this paper: opened under the comment, with the
+// cursor in them. The Timer the same way. Until then neither is one more thing to press on every paper.
+export function typeNotes() { openN = true; if (bump) bump(); setTimeout(() => { const ed = document.querySelector('.mk-tn .tned'); if (ed) { ed.scrollIntoView({ block: 'nearest' }); ed.focus(); } }, 60); }
+export function timerOpen() { openT = true; if (bump) bump(); setTimeout(() => { const b = document.querySelector('[data-tmgo]'); if (b) { b.scrollIntoView({ block: 'nearest' }); b.focus(); } }, 60); }
 export function NotesPart({ st }) {
   const [, again] = useState(0), hasVid = st.files.some(f => f.kind === 'media' || f.kind === 'link');
+  useEffect(() => { bump = () => again(n => n + 1); return () => { bump = null; }; }, []);
   const nOn = openN || tnHas(st), tOn = !hasVid && (openT || N.spClockMs(N.spClockOf(st)) > 0);
+  if (!nOn && !tOn) return null;
   return <div class="mk-notes">
-    <button type="button" class="mk-disc" aria-expanded={nOn ? 'true' : 'false'} onClick={() => { openN = !nOn; again(n => n + 1); }} data-tnopen>{t('setup.tn_title')}</button>
-    {nOn && <TypedNotes st={st} />}
-    {!hasVid && <><button type="button" class="mk-disc" aria-expanded={tOn ? 'true' : 'false'} onClick={() => { openT = !tOn; again(n => n + 1); }} data-tmopen>{t('setup.tm_title')}</button>
-      {tOn && <Timer st={st} />}</>}
+    {nOn && <><button type="button" class="mk-disc" aria-expanded="true" onClick={() => { openN = false; again(n => n + 1); }} data-tnopen>{t('mark.tn_title')}</button>
+      <TypedNotes st={st} /></>}
+    {tOn && <><button type="button" class="mk-disc" aria-expanded="true" onClick={() => { openT = false; again(n => n + 1); }} data-tmopen>{t('setup.tm_title')}</button>
+      <Timer st={st} /></>}
   </div>;
 }
