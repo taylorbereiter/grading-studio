@@ -37,6 +37,8 @@ async function page(ctx, errors) {
   p.on('console', m => { if (m.type() === 'error' && !/favicon/.test(m.location().url || '')) errors.push(m.text()); });
   await p.evaluateOnNewDocument(STEADY);
   await p.setViewport({ width: 1440, height: 900 });
+  // GS_THROTTLE=6 runs the page that many times slower (CDP), to find what depends on timing before CI does
+  if (+process.env.GS_THROTTLE > 1) await (await p.target().createCDPSession()).send('Emulation.setCPUThrottlingRate', { rate: +process.env.GS_THROTTLE });
   return p;
 }
 
@@ -957,6 +959,27 @@ test('Progress sheets: every student\'s page has the current app\'s numbers, the
   await old2.goto(srv.url); await appReady(old2);
   assert.deepEqual(await old2.evaluate(() => window.__gs.state().lib.book.sheet), { notes: false });
   await old2.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// The chunk that brings the class boxes (app/class/setlist.jsx), wherever the build put the new app's code (next/dist, or dist since the switch).
+const classListChunk = () => { for (const d of ['next/dist', 'dist']) { const dir = path.join(ROOT, d); if (!fs.existsSync(dir)) continue; const f = fs.readdirSync(dir).find(n => /\.js$/.test(n) && /export\{\w+ as ClassList\};?\s*$/.test(fs.readFileSync(path.join(dir, n), 'utf8'))); if (f) return f; } return null; };
+
+test('Settings > Classes comes in whole: a part that arrives late never pushes Email opens in from under the pointer', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, bookSeed());
+  // Forced order: the class boxes' part arrives two seconds after the rest of the page's parts.
+  const late = classListChunk(); assert.ok(late, 'the class list chunk is in the build');
+  await p.setRequestInterception(true);
+  p.on('request', r => { if (r.url().endsWith('/' + late)) setTimeout(() => r.continue().catch(() => {}), 2000); else r.continue().catch(() => {}); });
+  await p.goto(srv.url + 'next/#/settings/classes');
+  await p.waitForSelector('[data-sgmail] [data-v="outlook"]', { timeout: 60000 });
+  const at = () => p.$eval('[data-sgmail] [data-v="outlook"]', e => Math.round(e.getBoundingClientRect().top));
+  const first = await at();
+  await p.waitForSelector('[data-stcls-add]', { timeout: 30000 });   // the class boxes, from the late part, are drawn
+  assert.equal(await at(), first, 'Email opens in stays where it was first drawn');
   assert.deepEqual(errors, []);
   await ctx.close();
 });

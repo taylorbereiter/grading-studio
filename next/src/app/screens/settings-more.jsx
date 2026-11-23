@@ -209,12 +209,6 @@ function PlannerFolder() {
   useEffect(() => { PARTS.pfolder().then(setP); }, []);
   return P ? <P.FolderCard /> : null;
 }
-// Classes and rosters loads with its card (PARTS.setclasses): the class boxes come with it.
-export function ClassesList() {
-  const [P, setP] = useState(null);
-  useEffect(() => { PARTS.setclasses().then(setP); }, []);
-  return P ? <P.ClassList /> : null;
-}
 // My setup loads with its card (PARTS.mysetup): it brings the reading and the preview.
 export function ClassesSetup() {
   const [P, setP] = useState(null);
