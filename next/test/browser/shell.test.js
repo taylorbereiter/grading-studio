@@ -95,6 +95,8 @@ test('the previous version’s addresses, the Planner’s and next/ land on the 
   await lands('planner.html#timetable', '#/settings/timetable');
   await lands('planner.html#present/L1/A1', '#/lesson/L1/present/A1');   // presents at once for that class, as the Planner's did
   await lands('planner.html#plan/c1/2026-09-07', '#/plan/c1/2026-09-07');
+  // Forced order: let that meeting's lesson be made and opened before the next address, as a teacher who waits sees it.
+  await p.waitForFunction(() => /^#\/lesson\/[\w-]+$/.test(location.hash), { timeout: 15000 });
   await lands('planner.html#lesson/L1', '#/lesson/L1');
   await lands('planner.html', '#/week');
   await lands('next/#/calendar', '#/calendar');
