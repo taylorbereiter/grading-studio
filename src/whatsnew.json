@@ -4,6 +4,9 @@
     "The previous version stays one click away, in Settings, About and updates: Open the previous version. Both use the same saved work, and Open the new version brings you back.",
     "Bookmarks to the old screens and to the Planner open the matching screen in the new version. The installed app and the phone’s home screen icon open the new version with no reinstall."
   ],
+  "1.28.81": [
+    "Saved rubrics and grading scales now stay when you use more than one device: a sync adds the other device’s rubrics to yours one by one, instead of letting the device that synced last replace the whole list."
+  ],
   "1.28.80": [
     "Only this student is no longer copied between computers by Google Drive sync, so an old one can’t keep taking over your screen. One left over from before, or from more than three hours ago, is let go by itself."
   ],

@@ -736,6 +736,31 @@ function typedMerge(a, b, bLater) {
 }
 // The Planner on two devices (src/app/drive.js, planSync): each lesson by its own time (updated), each kept setting by its time; a lesson
 // deleted on either side after its last change stays deleted (gone: { 'l:<id>': time }).
+// The rubric bank on two devices ({ rubrics, scales, gone }): each rubric and scale by its own time (at), the same time Drive's, so a
+// rubric saved on one device is never lost because the other device synced after it. One deleted after its last save stays deleted
+// (gone: { id: time }), and of two with the same name (saved on both sides) the newer stays, as a save on one device replaces by name.
+function mergeBank(a, b) {
+  const ok = x => x && typeof x === 'object' && !Array.isArray(x), A = ok(a) ? a : {}, B = ok(b) ? b : {};
+  const gone = { ...(ok(B.gone) ? B.gone : {}) };
+  for (const [id, t] of Object.entries(ok(A.gone) ? A.gone : {})) if (!(gone[id] >= t)) gone[id] = t;
+  const list = k => {
+    const la = Array.isArray(A[k]) ? A[k] : [], lb = Array.isArray(B[k]) ? B[k] : [], by = new Map(), loose = [];
+    for (const x of lb.concat(la)) {   // Drive's first, so a tie goes to Drive's
+      if (!ok(x) || !x.id) { if (x != null) loose.push(x); continue; }
+      const was = by.get(x.id); if (!was || (+x.at || 0) > (+was.at || 0)) by.set(x.id, x);
+    }
+    const byName = new Map();
+    for (const x of by.values()) {
+      if (gone[x.id] >= (+x.at || 0)) continue;
+      const n = String(x.name || '').toLowerCase(), was = byName.get(n);
+      if (!was || (+x.at || 0) > (+was.at || 0)) byName.set(n, x);
+    }
+    return [...byName.values()].sort((x, y) => String(x.name || '').localeCompare(String(y.name || ''), undefined, { numeric: true, sensitivity: 'base' })).concat(loose);
+  };
+  const rubrics = list('rubrics'), scales = list('scales');
+  for (const x of rubrics.concat(scales)) if (x && x.id) delete gone[x.id];   // saved again after it was deleted
+  return { ...A, ...B, rubrics, scales, gone };
+}
 function mergePlan(A, B) {
   const gone = { ...(B.gone || {}) };
   for (const [k, t] of Object.entries(A.gone || {})) if (!(gone[k] >= t)) gone[k] = t;
@@ -754,7 +779,7 @@ function mergePlan(A, B) {
   }
   for (const k of Object.keys(gone)) if (k.startsWith('l:') && (lessons[k.slice(2)] || lite[k.slice(2)])) delete gone[k];   // written again after it was deleted
   const kv = {}, ka = A.kv || {}, kb = B.kv || {};
-  for (const k of new Set([...Object.keys(ka), ...Object.keys(kb)])) { const a = ka[k], b = kb[k]; kv[k] = !a ? b : !b ? a : (b.t || 0) >= (a.t || 0) ? b : a; }
+  for (const k of new Set([...Object.keys(ka), ...Object.keys(kb)])) { const a = ka[k], b = kb[k]; kv[k] = !a ? b : !b ? a : k === 'bank' ? { v: mergeBank(a.v, b.v), t: Math.max(a.t || 0, b.t || 0) } : (b.t || 0) >= (a.t || 0) ? b : a; }
   return Object.keys(lite).length ? { lessons, kv, gone, lite } : { lessons, kv, gone };
 }
 function mergeFields(x, y, win, dev, now, said) {
